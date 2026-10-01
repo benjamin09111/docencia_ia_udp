@@ -23,7 +23,7 @@ export const AttendanceConfirmationTicket: React.FC<AttendanceConfirmationTicket
   onResetDemo,
 }) => {
   return (
-    <div className="bg-white border border-[#E0E3E6] rounded-[6px] shadow-canvas-card p-6 max-w-md w-full mx-auto space-y-5 animate-fadeIn">
+    <div className="bg-white border border-[#E0E3E6] rounded-[6px] shadow-canvas-card p-4 sm:p-6 max-w-md w-full mx-auto space-y-5 animate-fadeIn">
       {/* Icono de Éxito */}
       <div className="text-center space-y-2">
         <div className="w-14 h-14 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center mx-auto shadow-xs">

@@ -81,7 +81,7 @@ export const StudentView: React.FC<StudentViewProps> = ({
         </div>
 
         {/* Las 3 Tabs Requeridas */}
-        <div className="flex gap-4 border-b border-gray-200 mt-5 pt-1 text-xs font-medium">
+        <div className="flex gap-4 border-b border-gray-200 mt-5 pt-1 text-xs font-medium overflow-x-auto no-scrollbar flex-nowrap">
           <button
             onClick={() => setActiveTab("aprendizaje")}
             className={`pb-2.5 px-1 border-b-2 transition-all flex items-center gap-1.5 ${

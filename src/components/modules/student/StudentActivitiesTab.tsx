@@ -124,7 +124,7 @@ export const StudentActivitiesTab: React.FC<StudentActivitiesTabProps> = ({
           </span>
         </div>
 
-        <CanvasTable>
+        <CanvasTable tableClassName="min-w-[640px]">
           <CanvasTableHeader>
             <tr>
               <th className="p-3">Nombre de la Actividad</th>
@@ -285,8 +285,9 @@ export const StudentActivitiesTab: React.FC<StudentActivitiesTabProps> = ({
                         size="sm"
                         onClick={() => setShowAppealModal(true)}
                         icon={<ShieldAlert size={13} className="text-amber-600" />}
+                        title="Presentar solicitud formal de reconsideración de nota"
                       >
-                        Apelar Calificación
+                        Apelar
                       </CanvasButton>
                     )}
                     <CanvasButton
@@ -294,8 +295,9 @@ export const StudentActivitiesTab: React.FC<StudentActivitiesTabProps> = ({
                       size="sm"
                       onClick={() => setShowReviewModal(true)}
                       icon={<Eye size={13} />}
+                      title="Ver desglose de criterios evaluados y citas textuales"
                     >
-                      Ver Revisión Detallada con Citas
+                      Ver revisión
                     </CanvasButton>
                   </div>
                 </div>
@@ -303,20 +305,21 @@ export const StudentActivitiesTab: React.FC<StudentActivitiesTabProps> = ({
                 <div className="p-4 border-2 border-dashed border-gray-300 rounded-[4px] text-center space-y-3 bg-[#FAFBFD]">
                   <Upload size={24} className="mx-auto text-gray-400" />
                   <div>
-                    <h4 className="text-xs font-bold text-[#2D3B45]">Subir Solución del Taller (PDF o Documento)</h4>
+                    <h4 className="text-xs font-bold text-[#2D3B45]">Subir Solución del Taller</h4>
                     <p className="text-[11px] text-[#6B7780] mt-0.5">
-                      Para la demo: presiona &quot;Entregar Solución (Mock)&quot; para simular la entrega y obtener revisión instantánea.
+                      Entrega tu documento o simula el envío para obtener retroalimentación instantánea.
                     </p>
                   </div>
 
                   <CanvasButton
                     variant="primary-udp"
-                    size="md"
+                    size="sm"
                     onClick={handleQuickSubmit}
                     disabled={isSubmitting}
                     icon={<Send size={13} />}
+                    title="Simular entrega del taller y obtener corrección automática"
                   >
-                    {isSubmitting ? "Agente Corrector Evaluando Rúbrica..." : "Entregar Solución (Mock con Corrección Inmediata)"}
+                    {isSubmitting ? "Evaluando rúbrica..." : "Entregar solución"}
                   </CanvasButton>
                 </div>
               )}
@@ -324,7 +327,7 @@ export const StudentActivitiesTab: React.FC<StudentActivitiesTabProps> = ({
           </div>
 
           {/* Panel Derecho: Chat con el Agente de la Actividad (5 Cols) */}
-          <div className="lg:col-span-5 bg-white border border-[#E0E3E6] rounded-[4px] shadow-canvas-card flex flex-col h-[520px]">
+          <div className="lg:col-span-5 bg-white border border-[#E0E3E6] rounded-[4px] shadow-canvas-card flex flex-col h-[460px] xl:h-[520px] max-h-[72vh]">
             <div className="p-3.5 border-b border-gray-200 bg-[#F9FAFB] flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <div className="w-7 h-7 rounded-full bg-purple-100 text-purple-800 flex items-center justify-center font-bold text-xs">
@@ -398,8 +401,8 @@ export const StudentActivitiesTab: React.FC<StudentActivitiesTabProps> = ({
 
       {/* Modal Ver Revisión Detallada con Citas */}
       {showReviewModal && userSubmission && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-[6px] max-w-2xl w-full p-6 shadow-xl border border-gray-200 space-y-4 animate-scaleUp max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-xs z-50 flex items-center justify-center p-3 sm:p-4">
+          <div className="bg-white rounded-[6px] max-w-2xl w-full p-4 sm:p-6 shadow-xl border border-gray-200 space-y-4 animate-scaleUp max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-start border-b pb-3">
               <div>
                 <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded">
@@ -457,8 +460,8 @@ export const StudentActivitiesTab: React.FC<StudentActivitiesTabProps> = ({
 
       {/* Modal / Panel de Apelación */}
       {showAppealModal && userSubmission && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-[6px] max-w-lg w-full p-6 shadow-xl border border-gray-200 space-y-4 animate-scaleUp">
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-xs z-50 flex items-center justify-center p-3 sm:p-4">
+          <div className="bg-white rounded-[6px] max-w-lg w-full p-4 sm:p-6 shadow-xl border border-gray-200 space-y-4 animate-scaleUp max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-start border-b pb-3">
               <div>
                 <h3 className="text-base font-bold text-[#2D3B45]">Solicitud de Apelación al Docente</h3>

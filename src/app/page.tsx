@@ -7,7 +7,7 @@ import { CanvasHeader } from "@/components/canvas/CanvasHeader";
 import { AdminView } from "@/components/modules/AdminView";
 import { TeacherView } from "@/components/modules/TeacherView";
 import { StudentView } from "@/components/modules/StudentView";
-import { initialCourseData } from "@/services/courseStore";
+import { initialCourseData, getStoredCourseGrades, saveStoredCourseGrades } from "@/services/courseStore";
 
 export default function DashboardPage() {
   const [currentRole, setCurrentRole] = useState<UserRole>("admin");
@@ -29,8 +29,14 @@ export default function DashboardPage() {
   const [perillas, setPerillas] = useState<AgentPerillas>(initialCourseData.perillas);
   const [cronograma, setCronograma] = useState(initialCourseData.cronograma);
   const [entregables, setEntregables] = useState<CourseDeliverable[]>(initialCourseData.entregables);
-  const [estudiantesExcel, setEstudiantesExcel] = useState<StudentExcelRow[]>(initialCourseData.estudiantes_excel);
+  const [estudiantesExcel, setEstudiantesExcel] = useState<StudentExcelRow[]>(() => {
+    return getStoredCourseGrades("CIT3000_CA02");
+  });
   const [entregasAlumnos, setEntregasAlumnos] = useState(initialCourseData.entregas_alumnos);
+
+  useEffect(() => {
+    saveStoredCourseGrades("CIT3000_CA02", estudiantesExcel);
+  }, [estudiantesExcel]);
 
   useEffect(() => {
     // Carga de datos reales desde Canvas UDP API
@@ -173,13 +179,11 @@ export default function DashboardPage() {
   };
 
   const getBreadcrumbs = () => {
-    if (currentRole === "admin") {
-      return ["Universidad Diego Portales", "Facultad de Ingeniería", "Gobernanza de Agentes"];
-    }
-    if (currentRole === "teacher") {
-      return ["Cursos", "ARQUITECTURA DE SOFTWARE (CIT3000)", "Docencia y Ayudantías"];
-    }
-    return ["Cursos", "ARQUITECTURA DE SOFTWARE", "Actividades del Estudiante"];
+    return [
+      "Universidad Diego Portales",
+      "Facultad de Ingeniería",
+      "Ingeniería Civil en Informática y Telecomunicaciones",
+    ];
   };
 
   const handleSendAppeal = (submissionId: string, appealText: string) => {
@@ -241,7 +245,7 @@ export default function DashboardPage() {
           userName={canvasUser.short_name}
         />
 
-        <main className="p-6 max-w-7xl w-full mx-auto flex-1">
+        <main className="p-3 sm:p-5 lg:p-6 max-w-7xl w-full mx-auto flex-1 min-w-0">
           {currentRole === "admin" && (
             <AdminView />
           )}

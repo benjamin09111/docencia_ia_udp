@@ -64,7 +64,7 @@ export const StudentDashboardTab: React.FC<StudentDashboardTabProps> = ({ entreg
       {/* Columna Izquierda: Ficha Técnica y Próximas Entregas (7 Cols) */}
       <div className="lg:col-span-7 space-y-4">
         {/* Ficha Técnica del Curso */}
-        <div className="bg-white border border-[#E0E3E6] rounded-[4px] p-5 shadow-canvas-card space-y-4">
+        <div className="bg-white border border-[#E0E3E6] rounded-[4px] p-4 sm:p-5 shadow-canvas-card space-y-4">
           <div className="flex justify-between items-start border-b border-gray-200 pb-3">
             <div>
               <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block">
@@ -108,7 +108,7 @@ export const StudentDashboardTab: React.FC<StudentDashboardTabProps> = ({ entreg
         </div>
 
         {/* Cronograma de Entregas Oficiales (5 x 20%) */}
-        <div className="bg-white border border-[#E0E3E6] rounded-[4px] p-5 shadow-canvas-card space-y-3">
+        <div className="bg-white border border-[#E0E3E6] rounded-[4px] p-4 sm:p-5 shadow-canvas-card space-y-3">
           <div className="flex justify-between items-center">
             <h3 className="text-xs font-bold text-[#2D3B45] uppercase tracking-wider flex items-center gap-1.5">
               <Calendar size={14} className="text-[#008EE2]" />
@@ -147,7 +147,7 @@ export const StudentDashboardTab: React.FC<StudentDashboardTabProps> = ({ entreg
       </div>
 
       {/* Columna Derecha: Chat Técnico con el Agente del Curso (5 Cols) */}
-      <div className="lg:col-span-5 bg-white border border-[#E0E3E6] rounded-[4px] shadow-canvas-card flex flex-col h-[580px]">
+      <div className="lg:col-span-5 bg-white border border-[#E0E3E6] rounded-[4px] shadow-canvas-card flex flex-col h-[480px] xl:h-[580px] max-h-[72vh]">
         <div className="p-3.5 border-b border-gray-200 bg-[#F9FAFB] flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="w-7 h-7 rounded-full bg-red-100 text-[#C8102E] flex items-center justify-center font-bold text-xs">

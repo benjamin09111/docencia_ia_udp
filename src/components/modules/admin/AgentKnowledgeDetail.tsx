@@ -60,11 +60,11 @@ const agentesDelCurso: CourseAgentInfo[] = [
     colorIcono: "text-[#C8102E]",
     bgIcono: "bg-red-100",
     mision:
-      "Custodia los parámetros particulares de cada sección y profesor titular: Sección 1 (Prof. Jorge Cruz León / Mié 14:30 / Eximición ≥ 5.5), Sección 2 (Prof. Claudio Meneses / Mié 10:00 / Eximición ≥ 5.0), y Sección 3 (Prof. Jorge Cruz León / Mié 17:00 / Régimen 100% taller).",
+      "Custodia los parámetros particulares de cada sección y profesor titular: Sección 1 (Prof. Jorge Cruz León / Mié 14:30 / Eximición ≥ 5.5), Sección 2 (Prof. Claudio Meneses / Mié 10:00 / Eximición ≥ 5.0), y Sección 3 (Prof. Leandro Lanza / Mié 17:00 / Régimen 100% taller).",
     conocimientoClave: [
       "Sección 1 (CIT3203_CA01): Prof. Jorge Esteban Cruz León • Eximición ≥ 5.5 + 75% asist.",
       "Sección 2 (CIT3203_CA02): Prof. Claudio Meneses Silva • Eximición ≥ 5.0 + 75% asist.",
-      "Sección 3 (CIT3203_CA03): Prof. Jorge Esteban Cruz León • Régimen 100% taller (sin examen).",
+      "Sección 3 (CIT3203_CA03): Prof. Leandro Lanza • Régimen 100% taller (sin examen).",
       "Descriptor Oficial CIT3621 / CIT3203 (Vigencia Marzo 2026, 6 RAPs y 7 Unidades).",
       "Reglamento de evaluación y causal de Reprobación por Inasistencia (RI < 75%).",
     ],
@@ -177,28 +177,34 @@ export const AgentKnowledgeDetail: React.FC<AgentKnowledgeDetailProps> = ({ onBa
   return (
     <div className="space-y-5">
       {/* Header y Navegación hacia atrás */}
-      <div className="bg-white border border-[#E0E3E6] rounded-[4px] p-5 shadow-canvas-card flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-        <div className="flex items-center gap-3">
-          <CanvasButton variant="outline" size="sm" onClick={onBack} icon={<ArrowLeft size={14} />}>
-            Volver a Sistemas de Agentes
-          </CanvasButton>
+      <div className="bg-white border border-[#E0E3E6] rounded-[4px] p-4 sm:p-5 shadow-canvas-card flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+          <button
+            type="button"
+            onClick={onBack}
+            title="Volver a Sistemas de Agentes"
+            aria-label="Volver a Sistemas de Agentes"
+            className="w-8 h-8 rounded-[4px] border border-gray-300 hover:border-gray-400 bg-white hover:bg-gray-100 text-[#2D3B45] hover:text-[#008EE2] transition-colors flex items-center justify-center shrink-0 shadow-2xs"
+          >
+            <ArrowLeft size={16} />
+          </button>
           <div>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <span className="font-mono text-xs font-bold text-[#2D3B45] bg-gray-100 px-2 py-0.5 rounded border border-gray-200">
                 CIT3621 / CIT3203
               </span>
               <CanvasBadge variant="udp">Semestre 10 • 6 Créditos</CanvasBadge>
               <CanvasBadge variant="success">Clúster de 2 Agentes Activo</CanvasBadge>
             </div>
-            <h1 className="text-lg font-bold text-[#2D3B45] mt-0.5">
+            <h1 className="text-base sm:text-lg font-bold text-[#2D3B45] mt-1">
               Sistema de Agentes: PROYECTO EN TICS II
             </h1>
           </div>
         </div>
 
-        <div className="text-right text-xs text-[#6B7780]">
+        <div className="text-left md:text-right text-xs text-[#6B7780]">
           <span>Directorio oficial: </span>
-          <code className="bg-gray-100 px-2 py-0.5 rounded text-[11px] font-mono text-[#2D3B45]">
+          <code className="bg-gray-100 px-2 py-0.5 rounded text-[11px] font-mono text-[#2D3B45] break-all">
             knowledge/CIT3203_PROYECTO_EN_TICS_II/
           </code>
         </div>
@@ -206,12 +212,12 @@ export const AgentKnowledgeDetail: React.FC<AgentKnowledgeDetailProps> = ({ onBa
 
       {/* Los 2 Agentes Asociados al Curso */}
       <div className="space-y-3">
-        <div className="flex justify-between items-center px-1">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-1 px-1">
           <h2 className="text-xs font-bold text-[#2D3B45] uppercase tracking-wider flex items-center gap-2">
             <Bot size={15} className="text-[#008EE2]" />
             Agentes Especializados Asociados al Curso
           </h2>
-          <span className="text-xs text-[#6B7780]">
+          <span className="text-[11px] sm:text-xs text-[#6B7780]">
             Ambos agentes cooperan sincrónicamente compartiendo el contexto del curso
           </span>
         </div>
@@ -229,28 +235,28 @@ export const AgentKnowledgeDetail: React.FC<AgentKnowledgeDetailProps> = ({ onBa
                   const firstFile = mockKnowledgeFiles.find((f) => f.agenteAsociado === agente.id);
                   if (firstFile) setSelectedFile(firstFile);
                 }}
-                className={`bg-white border rounded-[4px] p-5 shadow-canvas-card cursor-pointer transition-all flex flex-col justify-between space-y-3.5 ${
+                className={`bg-white border rounded-[4px] p-4 sm:p-5 shadow-canvas-card cursor-pointer transition-all flex flex-col justify-between space-y-3.5 ${
                   isTabActive
                     ? "border-[#008EE2] ring-2 ring-[#008EE2]/20 shadow-md"
                     : "border-[#E0E3E6] hover:border-gray-300"
                 }`}
               >
                 <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2.5">
-                      <div className={`w-9 h-9 rounded flex items-center justify-center ${agente.bgIcono} ${agente.colorIcono}`}>
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className={`w-9 h-9 shrink-0 rounded flex items-center justify-center ${agente.bgIcono} ${agente.colorIcono}`}>
                         <Icon size={18} />
                       </div>
-                      <div>
-                        <h3 className="text-sm font-bold text-[#2D3B45] leading-tight">
+                      <div className="min-w-0">
+                        <h3 className="text-sm font-bold text-[#2D3B45] leading-tight truncate">
                           {agente.nombre}
                         </h3>
-                        <span className="text-[11px] text-[#6B7780] block">
+                        <span className="text-[11px] text-[#6B7780] block truncate">
                           {agente.subtitulo}
                         </span>
                       </div>
                     </div>
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-gray-100 text-[#55636E]">
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-gray-100 text-[#55636E] shrink-0">
                       {agente.badge}
                     </span>
                   </div>
@@ -286,21 +292,22 @@ export const AgentKnowledgeDetail: React.FC<AgentKnowledgeDetailProps> = ({ onBa
         </div>
 
         {/* Banner de Cooperación Inter-Agentes del Curso */}
-        <div className="bg-[#F0F8FF] border border-[#B3E5FC] rounded-[4px] p-3.5 flex items-center justify-between text-xs text-[#0277BD]">
-          <div className="flex items-center gap-2">
-            <Sparkles size={16} />
+        <div className="bg-[#F0F8FF] border border-[#B3E5FC] rounded-[4px] p-3 sm:p-3.5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs text-[#0277BD]">
+          <div className="flex items-start sm:items-center gap-2">
+            <Sparkles size={16} className="shrink-0 mt-0.5 sm:mt-0" />
             <span>
               <strong>Cooperación Continua:</strong> El <strong>Agente Técnico</strong> fija los RAPs y condiciones formales de aprobación, mientras que el <strong>Agente Teórico</strong> provee los fundamentos del PMBOK y las metodologías para cada taller y evaluación.
             </span>
           </div>
           <button
             onClick={() => setActiveAgentTab("todos")}
-            className="text-[11px] underline font-bold shrink-0 ml-3 hover:text-[#01579B]"
+            className="text-[11px] underline font-bold shrink-0 hover:text-[#01579B] self-end sm:self-auto"
           >
             Ver todos los archivos
           </button>
         </div>
       </div>
+
 
       {/* Visor de Conocimiento Indexado */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 pt-1">
@@ -360,11 +367,11 @@ export const AgentKnowledgeDetail: React.FC<AgentKnowledgeDetailProps> = ({ onBa
         </div>
 
         {/* Visor de Contenido del Archivo Seleccionado */}
-        <div className="lg:col-span-2 bg-white border border-[#E0E3E6] rounded-[4px] p-6 shadow-canvas-card space-y-4 flex flex-col">
-          <div className="border-b border-[#E0E3E6] pb-3 flex justify-between items-start">
+        <div className="lg:col-span-2 bg-white border border-[#E0E3E6] rounded-[4px] p-4 sm:p-6 shadow-canvas-card space-y-4 flex flex-col">
+          <div className="border-b border-[#E0E3E6] pb-3 flex flex-col sm:flex-row justify-between items-start gap-2">
             <div>
               <div className="flex items-center gap-2">
-                <FileText size={16} className="text-[#C8102E]" />
+                <FileText size={16} className="text-[#C8102E] shrink-0" />
                 <h2 className="text-sm font-bold text-[#2D3B45]">{selectedFile.nombre}</h2>
               </div>
               <p className="text-xs text-[#6B7780] mt-0.5">{selectedFile.resumen}</p>
@@ -374,13 +381,13 @@ export const AgentKnowledgeDetail: React.FC<AgentKnowledgeDetailProps> = ({ onBa
             </CanvasBadge>
           </div>
 
-          <div className="bg-[#F9FAFB] border border-[#E0E3E6] rounded-[4px] p-4 font-mono text-xs text-[#2D3B45] whitespace-pre-wrap leading-relaxed flex-1 overflow-y-auto max-h-[480px]">
+          <div className="bg-[#F9FAFB] border border-[#E0E3E6] rounded-[4px] p-3 sm:p-4 font-mono text-xs text-[#2D3B45] whitespace-pre-wrap leading-relaxed flex-1 overflow-y-auto max-h-[380px] xl:max-h-[480px]">
             {selectedFile.contenidoPreview}
           </div>
 
-          <div className="pt-2 flex justify-between items-center text-xs text-[#6B7780] border-t border-gray-100">
+          <div className="pt-2 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-1.5 text-xs text-[#6B7780] border-t border-gray-100">
             <span>RAG Vectorial: Indexado con 6 RAPs, 7 unidades temáticas y Guía PMBOK.</span>
-            <span className="text-emerald-700 font-semibold flex items-center gap-1">
+            <span className="text-emerald-700 font-semibold flex items-center gap-1 shrink-0">
               <CheckCircle size={14} /> Activo y Sincronizado
             </span>
           </div>

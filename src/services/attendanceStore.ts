@@ -48,7 +48,7 @@ export const INITIAL_SECTIONS: CourseSection[] = [
     codigo: "CIT3203_CA03",
     cursoNombre: "Proyecto en TICs II",
     nombre: "Sección 3",
-    profesor: "Jorge Esteban Cruz León",
+    profesor: "Leandro Lanza",
     ayudante: "Benjamín Morales Pizarro",
     horarioCatedra: { dias: [3], horaInicio: "17:00", horaFin: "20:00", sala: "SALA X" },
     horarioAyudantia: { dias: [3], horaInicio: "16:00", horaFin: "17:20", sala: "SALA X" },
@@ -94,6 +94,23 @@ export const INITIAL_SECTIONS: CourseSection[] = [
     ubicacionLng: -70.6622,
     radioMetros: 500,
   },
+  {
+    id: "sec_prog_1",
+    codigo: "CIT1010_CA01",
+    cursoNombre: "Programación",
+    nombre: "Sección 1",
+    profesor: "Cristián Andrés Muñoz",
+    ayudante: "Lucas Tomás Navarrete",
+    horarioCatedra: { dias: [1, 3], horaInicio: "08:30", horaFin: "10:00", sala: "LAB-COMP 2" },
+    horarioAyudantia: { dias: [5], horaInicio: "14:30", horaFin: "16:00", sala: "LAB-COMP 2" },
+    pinActivo: "3310",
+    requierePin: true,
+    requiereGeolocalizacion: true,
+    ubicacionNombre: "Facultad de Ingeniería y Ciencias UDP (Av. Ejército Libertador 441)",
+    ubicacionLat: -33.4501,
+    ubicacionLng: -70.6622,
+    radioMetros: 500,
+  },
 ];
 
 export function getCourseNameByCode(codigo?: string): string {
@@ -102,15 +119,16 @@ export function getCourseNameByCode(codigo?: string): string {
   if (upper.includes("CIT3203") || upper.includes("3203")) return "Proyecto en TICs II";
   if (upper.includes("CIT2206") || upper.includes("2206")) return "Gestión Organizacional";
   if (upper.includes("CIT3100") || upper.includes("3100")) return "Arquitecturas Emergentes de Software";
+  if (upper.includes("CIT1010") || upper.includes("1010") || upper.includes("PROG")) return "Programación";
   return "Asignatura UDP";
 }
 
-const SECTIONS_STORAGE_KEY = "udp_course_sections_v2026_5secciones_ca03_fixed_v3";
+const SECTIONS_STORAGE_KEY = "udp_course_sections_v2026_5secciones_ca03_leandro_lanza_v4";
 
 export function getSavedSections(): CourseSection[] {
   if (typeof window === "undefined") return INITIAL_SECTIONS;
   try {
-    const raw = localStorage.getItem(SECTIONS_STORAGE_KEY);
+    const raw = localStorage.getItem(SECTIONS_STORAGE_KEY) || localStorage.getItem("udp_course_sections_v2026_5secciones_ca03_fixed_v3");
     if (!raw) return INITIAL_SECTIONS;
     const parsed = JSON.parse(raw);
     if (!Array.isArray(parsed) || parsed.length === 0) return INITIAL_SECTIONS;
@@ -128,13 +146,19 @@ export function getSavedSections(): CourseSection[] {
       const ayudRaw = (sec.horarioAyudantia?.dias || []).filter((d) => d >= 1 && d <= 5);
       const ayudDias = ayudRaw.length === 1 ? ayudRaw : (matchInit?.horarioAyudantia?.dias || [3]);
 
+      let prof = sec.profesor || matchInit?.profesor || "Docente UDP";
+      // Corrección específica para Sección 3: Prof. Leandro Lanza
+      if (sec.codigo?.includes("CA03") && (prof === "Jorge Esteban Cruz León" || prof === "Docente UDP")) {
+        prof = "Leandro Lanza";
+      }
+
       return {
         ...sec,
         id: sec.id || matchInit?.id || sec.codigo,
         codigo: sec.codigo,
         cursoNombre: sec.cursoNombre || matchInit?.cursoNombre || getCourseNameByCode(sec.codigo),
         nombre: sec.nombre || matchInit?.nombre || "Sección 1",
-        profesor: sec.profesor || matchInit?.profesor || "Docente UDP",
+        profesor: prof,
         ayudante: sec.ayudante || matchInit?.ayudante || "Benjamín Morales Pizarro",
         pinActivo: sec.pinActivo || matchInit?.pinActivo || "4821",
         requierePin: sec.requierePin !== undefined ? sec.requierePin : true,
@@ -511,6 +535,11 @@ export function getSectionByCourseCode(courseCode?: string, customSections?: Cou
   if (codeUpper.includes("CIT3100") || codeUpper.includes("3100") || codeUpper.includes("ARQ")) {
     const sArq = sections.find((s) => s.id === "sec_arq_emergentes" || s.codigo.includes("CIT3100"));
     if (sArq) return sArq;
+  }
+
+  if (codeUpper.includes("CIT1010") || codeUpper.includes("1010") || codeUpper.includes("PROG")) {
+    const sProg = sections.find((s) => s.id === "sec_prog_1" || s.codigo.includes("CIT1010"));
+    if (sProg) return sProg;
   }
 
   if (codeUpper.includes("CA03") || codeUpper.includes("SECCIÓN 3") || codeUpper.includes("SECCION 3") || codeUpper.includes("SEC 3")) {

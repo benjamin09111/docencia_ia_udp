@@ -172,7 +172,7 @@ export const initialCourseData: CourseData = {
       solemne_1_final: 6.0,
       solemne_2: 5.9,
       taller_proyecto: 6.5,
-      asistencia_pct: 0,
+      asistencia_pct: 92,
       nota_final: 6.2,
       estado_curso: "Aprobado",
     },
@@ -187,7 +187,7 @@ export const initialCourseData: CourseData = {
       solemne_1_final: 5.7,
       solemne_2: 5.8,
       taller_proyecto: 6.3,
-      asistencia_pct: 0,
+      asistencia_pct: 88,
       nota_final: 5.9,
       estado_curso: "Aprobado",
     },
@@ -202,7 +202,7 @@ export const initialCourseData: CourseData = {
       solemne_1_final: 6.5,
       solemne_2: 6.0,
       taller_proyecto: 6.8,
-      asistencia_pct: 0,
+      asistencia_pct: 95,
       nota_final: 6.5,
       estado_curso: "Aprobado",
     },
@@ -217,7 +217,7 @@ export const initialCourseData: CourseData = {
       solemne_1_final: 5.1,
       solemne_2: 5.2,
       taller_proyecto: 5.8,
-      asistencia_pct: 0,
+      asistencia_pct: 84,
       nota_final: 5.3,
       estado_curso: "Aprobado",
     },
@@ -232,7 +232,7 @@ export const initialCourseData: CourseData = {
       solemne_1_final: 3.8,
       solemne_2: 4.2,
       taller_proyecto: 4.5,
-      asistencia_pct: 0,
+      asistencia_pct: 78,
       nota_final: 4.1,
       estado_curso: "Aprobado",
     },
@@ -278,3 +278,37 @@ export const initialCourseData: CourseData = {
     },
   ],
 };
+
+const GRADES_STORAGE_PREFIX = "udp_course_grades_";
+
+/**
+ * Obtiene las notas anonimizadas del curso desde localStorage o retorna las notas base.
+ */
+export function getStoredCourseGrades(courseCode: string): StudentExcelRow[] {
+  if (typeof window === "undefined") return initialCourseData.estudiantes_excel;
+  try {
+    const raw = localStorage.getItem(`${GRADES_STORAGE_PREFIX}${courseCode}`);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    }
+  } catch (e) {
+    console.error("Error loading course grades", e);
+  }
+  return initialCourseData.estudiantes_excel;
+}
+
+/**
+ * Guarda las notas anonimizadas del curso en localStorage para sincronización en tiempo real
+ * con la vista pública de alumnos.
+ */
+export function saveStoredCourseGrades(courseCode: string, grades: StudentExcelRow[]): void {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(`${GRADES_STORAGE_PREFIX}${courseCode}`, JSON.stringify(grades));
+    window.dispatchEvent(new Event("udp_grades_updated"));
+  } catch (e) {
+    console.error("Error saving course grades", e);
+  }
+}
+

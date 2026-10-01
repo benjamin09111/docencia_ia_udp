@@ -438,7 +438,7 @@ export const PublicAttendanceVisualView: React.FC<PublicAttendanceVisualViewProp
           </div>
 
           {/* Barra de Búsqueda con Botón Limpiar */}
-          <div className="flex items-center gap-2 w-full md:w-auto">
+          <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
             <div className="relative w-full sm:w-80">
               <Search size={14} className="absolute left-2.5 top-2.5 text-gray-400" />
               <input
@@ -608,7 +608,7 @@ export const PublicAttendanceVisualView: React.FC<PublicAttendanceVisualViewProp
           </div>
         ) : (
           <div className="overflow-y-auto overflow-x-auto max-h-[640px] xl:max-h-[720px] rounded-[4px] border-t border-[#E0E3E6]">
-            <table className="w-full text-left border-collapse text-xs">
+            <table className="w-full text-left border-collapse text-xs min-w-[720px]">
               <thead className="sticky top-0 z-20 bg-[#2D3B45] text-white shadow-xs">
                 <tr>
                   <th className="p-2.5 border-r border-[#1E272E] sticky left-0 z-30 bg-[#2D3B45] w-12 min-w-[48px] max-w-[48px] text-center text-[10px] font-bold">

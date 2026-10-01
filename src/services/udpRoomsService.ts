@@ -100,6 +100,26 @@ export const UDP_ROOMS_REGISTRY: UDPRoomScheduleEntry[] = [
     capacidadSala: 30,
     estadoSala: "asignada",
   },
+  // Sección 3
+  {
+    id: "room_cit3203_s3_ayu",
+    cursoCodigo: "CIT3203",
+    cursoNombre: "PROYECTO EN TICS II",
+    seccionCodigo: "CIT3203_CA03",
+    seccionNombre: "Sección 3",
+    tipo: "ayudantia",
+    diaSemana: 3, // Miércoles
+    diaNombre: "Miércoles",
+    horaInicio: "16:00",
+    horaFin: "17:20",
+    profesor: "Leandro Lanza",
+    ayudante: "Benjamín Morales Pizarro",
+    sala: "Laboratorio TIC 2",
+    edificio: "Edificio Informática",
+    campus: "Campus República - Ejército 441",
+    capacidadSala: 30,
+    estadoSala: "asignada",
+  },
 ];
 
 export interface SessionActiveStatus {

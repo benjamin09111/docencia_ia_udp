@@ -48,14 +48,14 @@ export const templatesDinamicas: DinamicaTemplate[] = [
     color: "#6A1B9A",
     duracion: "40 min en Ayudantía",
     descripcion:
-      "El mandante del proyecto recorta el presupuesto en un 30% y exige adelantar la entrega 2 semanas. El equipo asume roles (Scrum Master, Product Owner, Tech Lead), renegocia el alcance esencial y defiende técnicamente la Matriz de Riesgos PMBOK sin sacrificar la arquitectura.",
-    agenteCreativo: "Diseña la dinámica inmersiva: Asigna roles conflictivos y tarjetas de eventos sorpresa durante la simulación.",
-    agenteGenero: "Auditoría de Sesgos superada: Asignación paritaria rotativa. Los roles de liderazgo técnico (Tech Lead) y facilitación (Scrum Master) rotan equitativamente, evitando asignar tareas administrativas o secundarias a estudiantes mujeres.",
-    agenteDocenteCREA: "Marco CREA UDP: Aprendizaje experiencial de alto compromiso con clima seguro de aula. Fomenta el andamiaje afectivo para tolerar la incertidumbre en situaciones críticas simuladas.",
-    agenteTecnico: "Alinea con RAP 3 (Planificación, Costos y Riesgos) y RAP 5 (Trabajo Colaborativo), aplicando la Guía PMBOK 7.",
-    agenteGestionador: "Programa la actividad para la Semana 4 y fija la bonificación vinculada al Reporte de Avance 1.",
-    agenteCorrector: "Genera rúbrica de 2 criterios objetivos (Trade-offs técnicos y Mitigación de Riesgos) con citas textuales obligatorias.",
-    agenteExcel: "Abre la columna '+0.3 Décimas Ayudantía' en la matriz de calificaciones para sumarse directamente al Avance 1.",
+      "El mandante del proyecto recorta el presupuesto en un 30% y exige adelantar la entrega 2 semanas. El equipo asume roles (Scrum Master, Product Owner, Tech Lead), renegocia el alcance esencial y defiende técnicamente la Matriz de Riesgos sin sacrificar la arquitectura.",
+    agenteCreativo: "Diseña la dinámica inmersiva: Asigna roles y tarjetas de eventos durante la simulación.",
+    agenteGenero: "Dinámica con participación equitativa y roles técnicos rotativos.",
+    agenteDocenteCREA: "Marco CREA UDP: Aprendizaje experiencial con clima seguro de aula.",
+    agenteTecnico: "Alinea con planificación, costos, riesgos y trabajo colaborativo.",
+    agenteGestionador: "Programa la actividad y fija la bonificación extra.",
+    agenteCorrector: "Genera rúbrica de criterios objetivos con feedback constructivo.",
+    agenteExcel: "Registra la bonificación de décimas en la planilla.",
     rubricaSugerida: [
       { criterio: "Defensa Técnica de Trade-offs y Repriorización de Backlog", puntos: 50, detalle: "Justificación arquitectónica del alcance esencial vs prescindible." },
       { criterio: "Aplicación de Matriz de Riesgos y Plan de Mitigación PMBOK", puntos: 50, detalle: "Identificación de riesgos críticos y plan de contingencia viable." },
@@ -72,12 +72,12 @@ export const templatesDinamicas: DinamicaTemplate[] = [
     descripcion:
       "Competencia grupal donde los equipos reciben 5 historias de usuario complejas extraídas de proyectos TICs reales de la UDP. Deben estimar story points mediante la serie Fibonacci, justificar supuestos de base de datos e integraciones de API, y calibrar la velocidad de equipo.",
     agenteCreativo: "Gamifica la sesión con rondas de votación ciega por turnos, premiando al equipo con mayor consenso argumentado.",
-    agenteGenero: "Auditoría de Sesgos superada: Votación ciega inicial y turnos de palabra regulados. Garantiza que voces no dominantes o de estudiantes mujeres tengan el mismo peso argumentativo en decisiones de arquitectura.",
-    agenteDocenteCREA: "Marco CREA UDP: Calibración metacognitiva del error y co-evaluación formativa sin penalizaciones intimidatorias.",
-    agenteTecnico: "Cubre la Unidad 2 del programa (Técnicas de Estimación de Esfuerzo, Restricciones de Tiempo y Recursos).",
-    agenteGestionador: "Establece fecha límite de subida y verifica que los grupos cumplan con la composición oficial de equipos.",
-    agenteCorrector: "Evalúa la solidez de los supuestos técnicos (arquitectura de datos y testing) y coherencia del Definition of Done (DoD).",
-    agenteExcel: "Registra participación activa y suma +0.3 décimas para el entregable 'Presentación e Informe Inicial'.",
+    agenteGenero: "Votación ciega inicial que asegura participación equitativa de todos los estudiantes.",
+    agenteDocenteCREA: "Marco CREA UDP: Calibración metacognitiva del error y co-evaluación formativa.",
+    agenteTecnico: "Cubre técnicas de estimación de esfuerzo, restricciones de tiempo y recursos.",
+    agenteGestionador: "Establece fecha límite de subida y verifica la composición oficial de equipos.",
+    agenteCorrector: "Evalúa la solidez de los supuestos técnicos y coherencia del Definition of Done.",
+    agenteExcel: "Registra participación activa y suma décimas en la planilla.",
     rubricaSugerida: [
       { criterio: "Fundamentación de Complejidad e Incertidumbre Técnica", puntos: 50, detalle: "Argumentación basada en APIs, modelos de base de datos e integraciones." },
       { criterio: "Coherencia en la Definición de 'Hecho' (DoD) y Testing", puntos: 50, detalle: "Inclusión explícita de pruebas unitarias, CI/CD y criterios de aceptación." },
@@ -87,14 +87,14 @@ export const templatesDinamicas: DinamicaTemplate[] = [
     id: "din_postmortem",
     tipo: "Estudio de Caso y Reflexión",
     titulo: "Análisis Post-Mortem de un Proyecto TIC Fallido",
-    subtitulo: "Auditoría forense de contratos, SLAs y aseguramiento de calidad de software",
+    subtitulo: "Análisis forense de contratos, SLAs y aseguramiento de calidad de software",
     icono: Brain,
     color: "#00838F",
     duracion: "45 min en Ayudantía",
     descripcion:
       "Los estudiantes analizan el caso real de una plataforma gubernamental chilena que colapsó en su primer día de producción. Elaboran un dictamen forense identificando qué cláusula del contrato y qué pruebas de aseguramiento de calidad (QA) fueron omitidas.",
     agenteCreativo: "Estructura la reflexión guiada: plantea preguntas provocadoras para fomentar el pensamiento crítico ético y profesional.",
-    agenteGenero: "Auditoría de Sesgos superada: El caso incluye equipos directivos de composición diversa y analiza sesgos de atribución que pudieron afectar la comunicación inter-equipos.",
+    agenteGenero: "Análisis de casos con equipos multidisciplinarios diversos y comunicación inclusiva.",
     agenteDocenteCREA: "Marco CREA UDP: Pedagogía del error constructivo; conecta la responsabilidad profesional de ingeniería con el impacto ético en la sociedad.",
     agenteTecnico: "Aplica Unidad 5 (Gestión de Riesgos) y Unidad 6 (Gestión de Contratos y Modelos de Adquisición TIC).",
     agenteGestionador: "Registra la actividad como preparación previa obligatoria para el Hito Solemne Oficial.",
@@ -152,8 +152,8 @@ export const CreateActivityModal: React.FC<CreateActivityModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/40 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-[6px] max-w-4xl w-full p-6 shadow-xl border border-gray-200 space-y-4 animate-scaleUp max-h-[92vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black/40 backdrop-blur-xs z-50 flex items-center justify-center p-3 sm:p-4">
+      <div className="bg-white rounded-[6px] max-w-4xl w-full p-4 sm:p-6 shadow-xl border border-gray-200 space-y-4 animate-scaleUp max-h-[92vh] overflow-y-auto">
         {/* Cabecera Modal */}
         <div className="flex justify-between items-start border-b pb-3">
           <div>
@@ -227,15 +227,15 @@ export const CreateActivityModal: React.FC<CreateActivityModalProps> = ({
           })}
         </div>
 
-        {/* Auditoría Ética y Pedagógica: Género + CREA */}
+        {/* Validación Pedagógica y Equidad */}
         <div className="bg-[#FAF5FF] border border-[#E9D5FF] rounded-[4px] p-3 space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-purple-900 flex items-center gap-1.5">
               <ShieldCheck size={14} className="text-purple-700" />
-              Auditoría Ética & Pedagógica previa (Agente de Género + Docente CREA UDP)
+              Validación Pedagógica y Equidad de Participación
             </span>
             <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded flex items-center gap-1">
-              <CheckCircle2 size={11} /> 100% Sin Sesgos & Alineado CREA
+              <CheckCircle2 size={11} /> Validada
             </span>
           </div>
 
@@ -267,7 +267,7 @@ export const CreateActivityModal: React.FC<CreateActivityModalProps> = ({
             Coordinación Operativa del Curso: &quot;{selectedTemplate.titulo}&quot;
           </span>
 
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-2 text-xs">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2 text-xs">
             <div className="bg-white p-2 rounded border border-gray-200 space-y-0.5">
               <span className="font-bold text-purple-700 block text-[10.5px]">🎨 Agente Creativo</span>
               <p className="text-[10px] text-[#55636E] leading-relaxed">{selectedTemplate.agenteCreativo}</p>
@@ -312,7 +312,7 @@ export const CreateActivityModal: React.FC<CreateActivityModalProps> = ({
         </div>
 
         {/* Footer Modal */}
-        <div className="flex justify-between items-center pt-2 border-t">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 pt-2 border-t">
           <span className="text-xs text-[#6B7780]">
             Al confirmar, la actividad queda disponible para los estudiantes y se habilita la columna de bonificación.
           </span>

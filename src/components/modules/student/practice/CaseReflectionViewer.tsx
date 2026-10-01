@@ -38,7 +38,7 @@ export const CaseReflectionViewer: React.FC<CaseReflectionViewerProps> = ({
     <div className="space-y-4">
       {/* Contexto del Caso de Negocio */}
       {contexto && (
-        <div className="p-4 rounded-[4px] bg-amber-50/70 border border-amber-200 text-xs text-amber-950 space-y-1.5">
+        <div className="p-3 sm:p-4 rounded-[4px] bg-amber-50/70 border border-amber-200 text-xs text-amber-950 space-y-1.5">
           <span className="font-bold flex items-center gap-1.5 text-amber-900 uppercase tracking-wider text-[10px]">
             <Bookmark size={13} /> Escenario del Caso Práctico:
           </span>
@@ -48,7 +48,7 @@ export const CaseReflectionViewer: React.FC<CaseReflectionViewerProps> = ({
 
       {/* Preguntas de Reflexión */}
       {preguntas.map((p, pIdx) => (
-        <div key={p.id} className="p-4 rounded-[4px] border border-gray-200 bg-white space-y-2.5">
+        <div key={p.id} className="p-3 sm:p-4 rounded-[4px] border border-gray-200 bg-white space-y-2.5">
           <div className="flex items-start gap-2">
             <span className="w-5 h-5 rounded-full bg-purple-100 text-purple-700 flex items-center justify-center text-[11px] font-bold shrink-0 mt-0.5">
               {pIdx + 1}
@@ -93,12 +93,12 @@ export const CaseReflectionViewer: React.FC<CaseReflectionViewerProps> = ({
 
       {/* Botón de Evaluación */}
       {!evaluated ? (
-        <div className="flex justify-end pt-2">
+        <div className="flex flex-col sm:flex-row justify-end items-stretch sm:items-center pt-2">
           <button
             type="button"
             disabled={!allFilled || isEvaluating}
             onClick={handleEvaluate}
-            className="px-5 py-2.5 bg-[#2D3B45] hover:bg-[#1E272E] text-white rounded-[4px] text-xs font-bold transition-colors disabled:opacity-50 flex items-center gap-2"
+            className="px-5 py-2.5 bg-[#2D3B45] hover:bg-[#1E272E] text-white rounded-[4px] text-xs font-bold transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
           >
             {isEvaluating ? (
               <>

@@ -93,6 +93,42 @@ El agente **NUNCA asigna una calificación final de forma autónoma**. El agente
 
 ---
 
+## 📝 4. Estándar de Evaluaciones UDP y Conexión con Canvas Tareas (Assignments)
+
+Para resolver la dispersión de formatos y la falta de tiempo de los equipos docentes, se incorpora la **Plataforma Estandarizada de Evaluaciones UDP**, conectada directamente con el módulo oficial de **Tareas de Canvas**:
+
+### 🎯 La Problemática Resuelta:
+1. **Pruebas Colegiadas y Coordinación Docente**: Varios profesores imparten la misma asignatura en paralelo pero carecen de un espacio común para calibrar enunciados, tiempos y rúbricas.
+2. **El "Copy-Paste" de Años Anteriores**: En electivos y cursos regulares, por falta de tiempo para redactar nuevas evaluaciones completas, suele repetirse la prueba del semestre pasado. Los estudiantes no aprenden y se genera memorización inerte.
+3. **Impresión Desprolija**: Cada profesor genera su propio documento Word con márgenes dispares y formatos rotos.
+
+### 📐 Las 6 Categorías Oficiales de Evaluación:
+- **`Control`**: Evaluaciones cortas de conceptos clave y lectura previa (15-30 min).
+- **`Laboratorio`**: Experiencias prácticas en máquina, scripts o modelado (60-90 min).
+- **`Solemne`**: Exámenes oficiales de cátedra presenciales (90 min, membrete institucional).
+- **`Tarea / Investigación`**: Informes y estados del arte de resolución asíncrona.
+- **`Proyecto`**: Entregas integrales de desarrollo de software y defensas ante comisión.
+- **`Avances`**: Hitos iterativos de sprint y verificación de progreso de prototipo (MVP).
+
+### 🤖 Asistente de Creatividad IA para Pruebas:
+- Permite subir o referenciar una prueba de un año anterior o definir RAPs específicos.
+- **Varia el caso de negocio, la data y el contexto sin alterar el nivel de dificultad ni "matar" a los estudiantes**.
+- Garantiza que la prueba evalúe la misma competencia curricular con preguntas frescas.
+
+### 🖨️ Impresión Directa a PDF Estándar UDP:
+- Genera el documento con membrete institucional: *Universidad Diego Portales > Facultad de Ingeniería > Escuela de Informática y Telecomunicaciones*.
+- Incluye casillas oficiales de identificación: Nombre, RUT, Sección y Casilla de Puntaje/Nota.
+- Instrucciones formales contra dispositivos móviles y espacios acotados para respuestas.
+
+### 🔗 Arquitectura de Navegación y Conexión con Canvas:
+- **Página de Inicio con Índice Interno**: Aloja la Portada Canvas (Wiki) y los **Entregables Oficiales** en un solo lugar con un índice interno para saltar rápidamente entre secciones.
+- **Evaluaciones**: Tab principal donde reside el diseño de pruebas estándar y su exportación hacia Canvas Assignments con fechas límite y pautas.
+- **Diferenciación Estricta**:
+  - **Evaluaciones**: Hitos formales que componen la nota final (100% oficial) sincronizados con Tareas de Canvas.
+  - **Actividades Extra**: Desafíos de ayudantía, ejercicios en aula y décimas formativas.
+
+---
+
 ## 📊 4. Pilar de Asistencia y Gestión en Vivo (PassLink)
 
 El seguimiento de asistencia y participación es un factor determinante en la retención estudiantil, pero su captura suele ser lenta e ineficiente. PassLink resuelve esto de punta a punta:

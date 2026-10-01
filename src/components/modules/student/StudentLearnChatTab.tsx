@@ -101,7 +101,7 @@ export const StudentLearnChatTab: React.FC<StudentLearnChatTabProps> = ({
       </div>
 
       {/* Caja de Conversación */}
-      <div className="border border-gray-200 rounded-[4px] bg-[#F9FAFB] flex flex-col h-[500px]">
+      <div className="border border-gray-200 rounded-[4px] bg-[#F9FAFB] flex flex-col h-[460px] xl:h-[520px] max-h-[62vh]">
         {/* Historial de Mensajes */}
         <div className="flex-1 overflow-y-auto p-4 space-y-3.5 text-xs">
           {chatMessages.map((m, idx) => (

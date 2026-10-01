@@ -71,7 +71,7 @@ export const StudentLearnTab: React.FC = () => {
   };
 
   return (
-    <div className="bg-white border border-[#E0E3E6] rounded-[4px] p-6 shadow-canvas-card space-y-4 animate-fadeIn">
+    <div className="bg-white border border-[#E0E3E6] rounded-[4px] p-4 sm:p-6 shadow-canvas-card space-y-4 animate-fadeIn">
       {/* Header del Espacio de Aprendizaje */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b pb-4">
         <div>
@@ -90,13 +90,13 @@ export const StudentLearnTab: React.FC = () => {
           </p>
         </div>
 
-        <div className="text-right">
+        <div className="text-left sm:text-right">
           <CanvasBadge variant="info">Base Teórica: 100% Verificada</CanvasBadge>
         </div>
       </div>
 
       {/* Caja del Chat */}
-      <div className="border border-gray-200 rounded-[4px] bg-[#F9FAFB] flex flex-col h-[520px]">
+      <div className="border border-gray-200 rounded-[4px] bg-[#F9FAFB] flex flex-col h-[460px] xl:h-[520px] max-h-[70vh]">
         {/* Mensajes */}
         <div className="flex-1 overflow-y-auto p-4 space-y-4 text-xs">
           {chatMessages.map((m, idx) => (

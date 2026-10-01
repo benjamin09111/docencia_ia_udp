@@ -125,7 +125,7 @@ export const StudentAttendanceGradesTab: React.FC<StudentAttendanceGradesTabProp
         </div>
 
         {/* Tarjetas Visuales de Asistencia */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 items-center">
           <div className="p-4 bg-[#F9FAFB] border border-gray-200 rounded-[4px] text-center">
             <span className="text-xs text-[#6B7780] block font-medium">Porcentaje Total a la Fecha</span>
             <span
@@ -188,7 +188,7 @@ export const StudentAttendanceGradesTab: React.FC<StudentAttendanceGradesTabProp
         </div>
 
         {/* Tabla Oficial de Calificaciones del Alumno */}
-        <CanvasTable>
+        <CanvasTable tableClassName="min-w-[620px]">
           <CanvasTableHeader>
             <tr>
               <th className="p-3">Evaluación</th>

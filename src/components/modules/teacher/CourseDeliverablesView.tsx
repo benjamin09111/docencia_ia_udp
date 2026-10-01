@@ -3,6 +3,9 @@
 import React, { useState } from "react";
 import { CanvasBadge } from "@/components/canvas/CanvasBadge";
 import { CanvasButton } from "@/components/canvas/CanvasButton";
+import { CanvasActionMenu } from "@/components/canvas/CanvasActionMenu";
+import { CanvasOfficialRubricTable } from "@/components/canvas/CanvasOfficialRubricTable";
+import { matricesOficialesEntregables } from "@/services/officialRubricsService";
 import {
   CanvasTable,
   CanvasTableHeader,
@@ -18,6 +21,8 @@ import {
   AlertTriangle,
   FileText,
   Calendar,
+  Calculator,
+  Award,
 } from "lucide-react";
 
 interface OfficialDeliverableItem {
@@ -103,6 +108,7 @@ export const CourseDeliverablesView: React.FC<CourseDeliverablesViewProps> = ({
 }) => {
   const [deliverables, setDeliverables] = useState<OfficialDeliverableItem[]>(initialDeliverablesList);
   const [selectedToCreate, setSelectedToCreate] = useState<OfficialDeliverableItem | null>(null);
+  const [viewingPautaItem, setViewingPautaItem] = useState<OfficialDeliverableItem | null>(null);
 
   // Form State
   const [formName, setFormName] = useState("");
@@ -183,26 +189,81 @@ export const CourseDeliverablesView: React.FC<CourseDeliverablesViewProps> = ({
   return (
     <div className="space-y-5">
       {/* Banner Informativo */}
-      <div className="bg-white border border-[#E0E3E6] rounded-[4px] p-5 shadow-canvas-card flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
+      <div className="bg-white border border-[#E0E3E6] rounded-[4px] p-4 sm:p-5 shadow-canvas-card">
+        <div className="flex items-center gap-2">
+          <span className="px-2 py-0.5 bg-[#E3F2FD] text-[#0277BD] text-[11px] font-bold rounded uppercase">
+            Módulo de Tareas Canvas UDP
+          </span>
+          <span className="text-xs text-[#6B7780]">Integración Bidireccional</span>
+        </div>
+        <h2 className="text-base font-bold text-[#2D3B45] mt-1">
+          Entregables Oficiales y Ponderación del Semestre
+        </h2>
+        <p className="text-xs text-[#6B7780] mt-0.5">
+          Configuración oficial de hitos de entrega sincronizados directamente con las tareas de Canvas.
+        </p>
+      </div>
+
+      {/* Tarjeta de Fórmula Oficial de Ponderación UDP */}
+      <div className="bg-white border border-[#E0E3E6] rounded-[4px] p-4 sm:p-5 shadow-canvas-card space-y-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-gray-100 pb-2.5">
           <div className="flex items-center gap-2">
-            <span className="px-2 py-0.5 bg-[#E3F2FD] text-[#0277BD] text-[11px] font-bold rounded uppercase">
-              Módulo de Tareas Canvas UDP
-            </span>
-            <span className="text-xs text-[#6B7780]">Integración Bidireccional</span>
+            <Calculator size={16} className="text-[#008EE2]" />
+            <h3 className="text-xs font-bold text-[#2D3B45] uppercase tracking-wider">
+              Fórmula Oficial de Ponderación Semestral
+            </h3>
           </div>
-          <h2 className="text-base font-bold text-[#2D3B45] mt-1">
-            Entregables Oficiales del Semestre (5 Hitos x 20%)
-          </h2>
-          <p className="text-xs text-[#6B7780] mt-0.5">
-            Crea cada entregable directamente en el módulo nativo de <strong>Tareas de Canvas</strong>. Se crearán como <strong>borradores ocultos</strong> (no publicados).
-          </p>
+          <span className="text-[11px] font-mono font-medium text-[#55636E] bg-gray-100 px-2 py-0.5 rounded border border-gray-200">
+            Reglamento Académico EIT UDP
+          </span>
         </div>
 
-        <div className="flex items-center gap-2 shrink-0">
-          <CanvasBadge variant="warning">
-            🛡️ Creación en Borrador (Sin Publicar)
-          </CanvasBadge>
+        {/* Expresión Visual de la Fórmula */}
+        <div className="bg-[#FAFBFB] border border-[#E0E3E6] rounded-[4px] p-3 sm:p-4 text-center">
+          <div className="inline-block font-mono text-sm sm:text-base font-bold text-[#2D3B45] tracking-wide">
+            <span className="text-[#008EE2]">Nota Presentación (NP)</span> ={" "}
+            <span className="bg-white px-3 py-1.5 rounded border border-gray-300 shadow-2xs">
+              (S1 · 0.30 + S2 · 0.30 + NT · 0.10) / 0.70
+            </span>
+          </div>
+          <span className="block text-[11px] text-[#6B7780] mt-1.5 font-sans">
+            Para cursos con régimen de taller 100% (como Proyecto en TICs II), cada hito entregable pondera un 20% equivalente.
+          </span>
+        </div>
+
+        {/* Leyenda Explicativa de Variables */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 pt-1 text-xs">
+          <div className="p-2.5 bg-gray-50 rounded border border-gray-200 space-y-0.5">
+            <span className="font-bold text-[#008EE2] font-mono">S1 (30%)</span>
+            <strong className="block text-[#2D3B45] text-[11px]">Solemne 1</strong>
+            <p className="text-[10.5px] text-[#6B7780] leading-tight">
+              Primera evaluación teórica institucional del semestre.
+            </p>
+          </div>
+
+          <div className="p-2.5 bg-gray-50 rounded border border-gray-200 space-y-0.5">
+            <span className="font-bold text-[#008EE2] font-mono">S2 (30%)</span>
+            <strong className="block text-[#2D3B45] text-[11px]">Solemne 2</strong>
+            <p className="text-[10.5px] text-[#6B7780] leading-tight">
+              Segunda evaluación teórica acumulativa del semestre.
+            </p>
+          </div>
+
+          <div className="p-2.5 bg-gray-50 rounded border border-gray-200 space-y-0.5">
+            <span className="font-bold text-emerald-700 font-mono">NT (10%)</span>
+            <strong className="block text-[#2D3B45] text-[11px]">Nota de Talleres</strong>
+            <p className="text-[10.5px] text-[#6B7780] leading-tight">
+              Promedio de ayudantías prácticas y décimas acumuladas en aula.
+            </p>
+          </div>
+
+          <div className="p-2.5 bg-gray-50 rounded border border-gray-200 space-y-0.5">
+            <span className="font-bold text-purple-800 font-mono">/ 0.70</span>
+            <strong className="block text-[#2D3B45] text-[11px]">Factor Normalizador</strong>
+            <p className="text-[10.5px] text-[#6B7780] leading-tight">
+              Normaliza la base de presentación del 70% previo al examen final.
+            </p>
+          </div>
         </div>
       </div>
 
@@ -231,7 +292,7 @@ export const CourseDeliverablesView: React.FC<CourseDeliverablesViewProps> = ({
       )}
 
       {/* Tabla Oficial de Entregables */}
-      <CanvasTable>
+      <CanvasTable tableClassName="min-w-[700px]">
         <CanvasTableHeader>
           <tr>
             <th className="p-3 w-16 text-center">Hito</th>
@@ -239,12 +300,12 @@ export const CourseDeliverablesView: React.FC<CourseDeliverablesViewProps> = ({
             <th className="p-3 text-center">Ponderación</th>
             <th className="p-3">Descripción Oficial UDP</th>
             <th className="p-3 text-center">Estado Canvas</th>
-            <th className="p-3 text-right">Acción</th>
+            <th className="p-3 text-right w-16">Acciones</th>
           </tr>
         </CanvasTableHeader>
         <tbody>
           {deliverables.map((item) => (
-            <CanvasTableRow key={item.id} hoverable={false}>
+            <CanvasTableRow key={item.id} hoverable={true}>
               <CanvasTableCell align="center">
                 <span className="w-7 h-7 rounded-full bg-gray-100 border border-gray-300 flex items-center justify-center font-bold text-xs text-[#2D3B45] mx-auto">
                   {item.numero}
@@ -270,33 +331,43 @@ export const CourseDeliverablesView: React.FC<CourseDeliverablesViewProps> = ({
 
               <CanvasTableCell align="center">
                 {item.estado === "creado_borrador" ? (
-                  <CanvasBadge variant="success">✓ Creado en Canvas (Borrador)</CanvasBadge>
+                  <CanvasBadge variant="success">✓ Creado en Canvas</CanvasBadge>
                 ) : (
                   <CanvasBadge variant="neutral">No Creado Aún</CanvasBadge>
                 )}
               </CanvasTableCell>
 
               <CanvasTableCell align="right">
-                {item.estado === "creado_borrador" ? (
-                  <a
-                    href={item.canvasUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-[#C7CDD1] text-[#2D3B45] hover:text-[#008EE2] hover:border-[#008EE2] text-xs font-semibold rounded-[4px] shadow-sm transition-all"
-                  >
-                    <span>Ver en Canvas</span>
-                    <ExternalLink size={13} />
-                  </a>
-                ) : (
-                  <CanvasButton
-                    variant="primary-udp"
-                    size="sm"
-                    onClick={() => openCreateModal(item)}
-                    icon={<Sparkles size={13} />}
-                  >
-                    Crear en Tareas
-                  </CanvasButton>
-                )}
+                <CanvasActionMenu
+                  ariaLabel={`Acciones para ${item.titulo}`}
+                  items={[
+                    ...(item.estado === "creado_borrador"
+                      ? [
+                          {
+                            label: "Ver en Canvas Tareas",
+                            icon: <ExternalLink size={14} className="text-[#008EE2]" />,
+                            onClick: () => window.open(item.canvasUrl, "_blank"),
+                          },
+                        ]
+                      : [
+                          {
+                            label: "Crear en Tareas Canvas",
+                            icon: <Sparkles size={14} className="text-[#008EE2]" />,
+                            onClick: () => openCreateModal(item),
+                          },
+                        ]),
+                    {
+                      label: "Ver pauta oficial",
+                      icon: <Award size={14} className="text-[#C8102E]" />,
+                      onClick: () => setViewingPautaItem(item),
+                    },
+                    {
+                      label: "Reconfigurar entrega",
+                      icon: <FileText size={14} className="text-[#2D3B45]" />,
+                      onClick: () => openCreateModal(item),
+                    },
+                  ]}
+                />
               </CanvasTableCell>
             </CanvasTableRow>
           ))}
@@ -305,8 +376,8 @@ export const CourseDeliverablesView: React.FC<CourseDeliverablesViewProps> = ({
 
       {/* Modal Crear en Tareas de Canvas */}
       {selectedToCreate && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-[6px] max-w-lg w-full p-6 shadow-xl border border-gray-200 space-y-4 animate-scaleUp">
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-xs z-50 flex items-center justify-center p-3 sm:p-4">
+          <div className="bg-white rounded-[6px] max-w-lg w-full p-4 sm:p-6 shadow-xl border border-gray-200 space-y-4 animate-scaleUp max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-start border-b pb-3">
               <div>
                 <h3 className="text-base font-bold text-[#2D3B45] flex items-center gap-2">
@@ -408,11 +479,55 @@ export const CourseDeliverablesView: React.FC<CourseDeliverablesViewProps> = ({
                   size="sm"
                   type="submit"
                   disabled={isSubmitting}
+                  title="Crear tarea oficial en Canvas LMS"
                 >
-                  {isSubmitting ? "Creando en Canvas..." : "Confirmar y Crear en Canvas Tareas"}
+                  {isSubmitting ? "Creando..." : "Crear en Canvas"}
                 </CanvasButton>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Ver Pauta Oficial del Entregable */}
+      {viewingPautaItem && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-xs z-50 flex items-center justify-center p-3 sm:p-4">
+          <div className="bg-white rounded-[4px] max-w-4xl w-full p-4 sm:p-6 shadow-xl border border-gray-200 space-y-4 animate-scaleUp max-h-[92vh] overflow-y-auto">
+            <div className="flex justify-between items-start border-b pb-3">
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-[#C8102E] bg-red-50 px-2 py-0.5 rounded border border-red-200">
+                    Entregable Oficial (Ponderación {viewingPautaItem.ponderacion})
+                  </span>
+                  <span className="text-xs text-gray-500 font-mono">Hito #{viewingPautaItem.numero}</span>
+                </div>
+                <h3 className="text-base font-bold text-[#2D3B45] mt-1">
+                  {viewingPautaItem.titulo}
+                </h3>
+                <p className="text-xs text-[#6B7780] mt-0.5 leading-relaxed">
+                  {viewingPautaItem.descripcion}
+                </p>
+              </div>
+              <button
+                onClick={() => setViewingPautaItem(null)}
+                className="text-gray-400 hover:text-gray-600 font-bold text-lg"
+              >
+                ✕
+              </button>
+            </div>
+
+            <CanvasOfficialRubricTable
+              rubros={matricesOficialesEntregables[viewingPautaItem.numero] || matricesOficialesEntregables[1]}
+              isEditable={false}
+              tituloPauta={`PAUTA OFICIAL: ${viewingPautaItem.titulo.toUpperCase()}`}
+              subtituloPauta={`Pauta institucional de evaluación (100 pts) • Pondera ${viewingPautaItem.ponderacion} de la nota final`}
+            />
+
+            <div className="pt-2 border-t flex justify-end">
+              <CanvasButton variant="outline" size="sm" onClick={() => setViewingPautaItem(null)}>
+                Cerrar
+              </CanvasButton>
+            </div>
           </div>
         </div>
       )}

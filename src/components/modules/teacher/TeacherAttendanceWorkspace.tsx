@@ -796,7 +796,7 @@ export const TeacherAttendanceWorkspace: React.FC<TeacherAttendanceWorkspaceProp
             )}
           </span>
         </div>
-        <div className="flex items-center gap-2 self-start sm:self-auto">
+        <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
           {isCloudSynced && (
             <span className="inline-flex items-center gap-1.5 font-mono text-[11px] text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
@@ -868,8 +868,8 @@ export const TeacherAttendanceWorkspace: React.FC<TeacherAttendanceWorkspaceProp
       )}
 
       {/* Selector de Pestañas: Planilla vs Historial de Cancelaciones */}
-      <div className="flex items-center justify-between border-b border-[#E0E3E6] pt-1">
-        <div className="flex items-center gap-1">
+      <div className="flex flex-wrap items-center justify-between border-b border-[#E0E3E6] pt-1 gap-2">
+        <div className="flex flex-wrap items-center gap-1">
           <button
             type="button"
             onClick={() => setWorkspaceTab("matrix")}

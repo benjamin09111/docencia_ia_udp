@@ -27,6 +27,7 @@ import {
 import { AttendanceExportScope } from "@/services/excelExportService";
 import { StudentAttendanceSummary, TodaySessionInfo, AttendanceValue, StudentWorkRecord, CourseSection } from "@/types/attendance";
 import { getPublicVisualUrl, getPublicCheckinUrl } from "@/utils/urlHelper";
+import { AttendanceShareDailyModal } from "./AttendanceShareDailyModal";
 
 interface AttendanceFilterBarProps {
   filterType: "catedras" | "ayudantias";
@@ -88,6 +89,7 @@ export const AttendanceFilterBar: React.FC<AttendanceFilterBarProps> = ({
   const [copiedCheckin, setCopiedCheckin] = useState(false);
   const [copiedPin, setCopiedPin] = useState(false);
   const [showProjectModal, setShowProjectModal] = useState(false);
+  const [showDailyShareModal, setShowDailyShareModal] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   const effectivePin = activePin || currentSection?.pinActivo || "4821";
@@ -133,9 +135,9 @@ export const AttendanceFilterBar: React.FC<AttendanceFilterBarProps> = ({
   return (
     <div className="bg-white border border-[#E0E3E6] rounded-[4px] p-3 shadow-canvas-card space-y-3">
       {/* Fila Principal: Tabs Clases + Selector Global de Trabajos + Acciones */}
-      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-3">
+      <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-3">
         {/* Módulo de Ayudantías Activo y Trabajos Globales */}
-        <div className="flex flex-wrap items-center gap-2 w-full lg:w-auto">
+        <div className="flex flex-wrap items-center gap-2 w-full xl:w-auto">
           <div className="flex items-center gap-1.5 p-1 bg-purple-50 rounded-[4px] border border-purple-200">
             <div className="px-3 py-1.5 rounded-[3px] text-xs font-bold flex items-center gap-2 bg-[#2D3B45] text-white shadow-xs">
               <GraduationCap size={15} className="text-purple-300" />
@@ -200,9 +202,20 @@ export const AttendanceFilterBar: React.FC<AttendanceFilterBarProps> = ({
           </div>
         </div>
 
-        {/* 3 Botones de Acción Oficiales */}
-        <div className="flex flex-wrap items-center gap-2 w-full lg:w-auto">
-          {/* 1. Copiar enlace visual */}
+        {/* Botones de Acción Oficiales */}
+        <div className="flex flex-wrap items-center gap-2 w-full xl:w-auto">
+          {/* 1. Compartir link del día & PIN de pizarra */}
+          <button
+            type="button"
+            onClick={() => setShowDailyShareModal(true)}
+            className="px-3 py-1.5 rounded-[4px] text-xs font-bold flex items-center gap-1.5 transition-all shadow-xs bg-[#2D3B45] hover:bg-[#1E272E] text-white"
+            title="Genera el link del día y muestra el PIN de 4 dígitos para escribirlo en la pizarra"
+          >
+            <KeyRound size={14} className="text-amber-300" />
+            <span>PIN Pizarra</span>
+          </button>
+
+          {/* 2. Copiar enlace visual */}
           <button
             type="button"
             onClick={handleCopyVisualLink}
@@ -214,71 +227,40 @@ export const AttendanceFilterBar: React.FC<AttendanceFilterBarProps> = ({
             title="Copia el enlace de solo lectura para que los alumnos revisen su asistencia y décimas"
           >
             {copiedVisual ? <Check size={14} /> : <Eye size={14} />}
-            <span>{copiedVisual ? "¡Enlace visual copiado!" : "Copiar enlace visual"}</span>
-          </button>
-
-          {/* 2. Copiar enlace llenar asistencia */}
-          <button
-            type="button"
-            onClick={handleCopyCheckinLink}
-            className={`px-3 py-1.5 rounded-[4px] text-xs font-bold flex items-center gap-1.5 transition-all shadow-2xs ${
-              copiedCheckin
-                ? "bg-emerald-600 text-white border border-emerald-600"
-                : "bg-purple-50 hover:bg-purple-100 border border-purple-200 text-purple-800"
-            }`}
-            title="Copia el enlace para que los alumnos marquen su asistencia con PIN"
-          >
-            {copiedCheckin ? <Check size={14} /> : <Link2 size={14} />}
-            <span>{copiedCheckin ? "¡Enlace asistencia copiado!" : "Copiar enlace llenar asistencia"}</span>
+            <span>{copiedVisual ? "Copiado" : "Ver pública"}</span>
           </button>
 
           {/* 3. Descargar Excel */}
           <button
             type="button"
             onClick={() => onExportExcel("ayudantias")}
-            className="px-3.5 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-[4px] text-xs font-bold flex items-center gap-1.5 transition-colors shadow-xs"
+            className="px-3 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-[4px] text-xs font-bold flex items-center gap-1.5 transition-colors shadow-xs"
             title="Descargar planilla Excel oficial (.xlsx) de ayudantías"
           >
             <Download size={13} />
-            <span>Descargar Excel</span>
+            <span>Excel</span>
           </button>
         </div>
       </div>
 
-      {/* Fila Especial: Control de PIN de Sala, Comparador en Vivo y Configuración */}
-      <div className="flex flex-col lg:flex-row justify-between items-stretch lg:items-center gap-2.5 p-2.5 bg-gradient-to-r from-amber-50/70 via-blue-50/40 to-purple-50/60 border border-amber-200/80 rounded-[4px] shadow-2xs">
-        {/* Control de PIN y Proyección */}
+      {/* Fila Especial: Acceso Rápido a PIN de Pizarra y Comparador en Vivo */}
+      <div className="flex flex-col xl:flex-row justify-between items-stretch xl:items-center gap-2.5 p-2.5 bg-gradient-to-r from-amber-50/70 via-blue-50/40 to-purple-50/60 border border-amber-200/80 rounded-[4px] shadow-2xs">
+        {/* Acceso rápido a PIN de Pizarra */}
         <div className="flex flex-wrap items-center gap-2">
-          <div className="flex items-center gap-1.5 px-2.5 py-1 bg-white border border-amber-300 rounded-[3px] shadow-2xs">
+          <button
+            type="button"
+            onClick={() => setShowDailyShareModal(true)}
+            className="flex items-center gap-2 px-3 py-1 bg-white hover:bg-amber-50 border border-amber-300 rounded-[3px] shadow-2xs transition-colors cursor-pointer group"
+            title="Haz clic para ver el PIN en grande y copiar el link del día para la pizarra"
+          >
             <KeyRound size={13} className="text-amber-600 shrink-0" />
-            <span className="text-[11px] font-bold text-amber-950">PIN de Sala:</span>
-            <span className="px-2 py-0.5 bg-amber-100/70 text-[#2D3B45] font-mono font-black text-xs rounded border border-amber-300 tracking-wider">
+            <span className="text-[11px] font-bold text-amber-950">PIN Pizarra Hoy:</span>
+            <span className="px-2 py-0.5 bg-amber-100 text-[#2D3B45] font-mono font-black text-xs rounded border border-amber-300 tracking-wider group-hover:bg-amber-200 transition-colors">
               {effectivePin}
             </span>
-          </div>
-
-          <button
-            type="button"
-            onClick={handleCopyPin}
-            className={`px-2.5 py-1 rounded-[3px] text-[11px] font-bold border flex items-center gap-1 transition-all ${
-              copiedPin
-                ? "bg-emerald-600 text-white border-emerald-600 shadow-2xs"
-                : "bg-white hover:bg-amber-100/70 text-amber-900 border-amber-300"
-            }`}
-            title="Copiar PIN de 4 dígitos para compartir por chat o pizarra"
-          >
-            {copiedPin ? <Check size={12} /> : <Copy size={12} />}
-            <span>{copiedPin ? "¡PIN Copiado!" : "Copiar PIN"}</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setShowProjectModal(true)}
-            className="px-2.5 py-1 bg-[#2D3B45] hover:bg-[#1E272E] text-white rounded-[3px] text-[11px] font-bold flex items-center gap-1.5 shadow-xs transition-colors"
-            title="Abrir pantalla de proyección para mostrar el PIN en pantalla gigante en la sala"
-          >
-            <Tv size={12} className="text-purple-300" />
-            <span>Proyectar en Sala</span>
+            <span className="text-[10px] text-[#008EE2] underline font-semibold ml-1">
+              Ver Link & Proyectar
+            </span>
           </button>
 
           {onRegeneratePin && (
@@ -289,7 +271,7 @@ export const AttendanceFilterBar: React.FC<AttendanceFilterBarProps> = ({
               title="Generar un nuevo PIN aleatorio para esta sesión"
             >
               <RefreshCw size={11} className="text-gray-500" />
-              <span>Regenerar PIN</span>
+              <span>Nuevo PIN</span>
             </button>
           )}
         </div>
@@ -315,7 +297,7 @@ export const AttendanceFilterBar: React.FC<AttendanceFilterBarProps> = ({
               title="Modificar ubicación GPS, radio de cobertura o días y horarios de la sección"
             >
               <Settings size={12} className="text-[#008EE2]" />
-              <span>Configurar Sala / GPS</span>
+              <span>Configurar</span>
             </button>
           )}
         </div>
@@ -570,6 +552,18 @@ export const AttendanceFilterBar: React.FC<AttendanceFilterBarProps> = ({
             </div>
           </div>
         </div>
+      )}
+
+      {/* Modal Pase de Asistencia del Día (PIN Pizarra y Link del Día) */}
+      {showDailyShareModal && currentSection && (
+        <AttendanceShareDailyModal
+          section={currentSection}
+          todayDateStr={todaySessionInfo?.todayDateStr || new Date().toISOString().split("T")[0]}
+          isOpen={showDailyShareModal}
+          onClose={() => setShowDailyShareModal(false)}
+          pin={effectivePin}
+          onRegeneratePin={onRegeneratePin}
+        />
       )}
     </div>
   );

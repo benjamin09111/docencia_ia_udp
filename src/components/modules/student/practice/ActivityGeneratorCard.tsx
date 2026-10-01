@@ -28,8 +28,8 @@ export const ActivityGeneratorCard: React.FC<ActivityGeneratorCardProps> = ({
   };
 
   return (
-    <div className="bg-white border border-[#E0E3E6] rounded-[4px] p-5 shadow-canvas-card space-y-4">
-      <div className="flex items-center justify-between border-b border-gray-200 pb-3">
+    <div className="bg-white border border-[#E0E3E6] rounded-[4px] p-4 sm:p-5 shadow-canvas-card space-y-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-gray-200 pb-3">
         <div>
           <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block">
             Generador de Evaluaciones Formativas
@@ -39,7 +39,7 @@ export const ActivityGeneratorCard: React.FC<ActivityGeneratorCardProps> = ({
             Configurar Actividad de Estudio para la Solemne
           </h3>
         </div>
-        <span className="text-[11px] text-[#6B7780] bg-gray-100 px-2 py-0.5 rounded">
+        <span className="text-[11px] text-[#6B7780] bg-gray-100 px-2 py-0.5 rounded shrink-0">
           Alimentado por Agente IA Cátedra UDP
         </span>
       </div>
@@ -116,12 +116,12 @@ export const ActivityGeneratorCard: React.FC<ActivityGeneratorCardProps> = ({
 
         {/* Input Libre Personalizado */}
         <div className="space-y-1.5">
-          <label className="text-xs font-medium text-[#2D3B45] flex items-center justify-between">
+          <label className="text-xs font-medium text-[#2D3B45] flex flex-col sm:flex-row justify-between items-start sm:items-center gap-1">
             <span className="flex items-center gap-1.5 font-bold">
               <Sparkles size={13} className="text-purple-600" />
               3. ¿Deseas enfocarlo en algo específico? (Opcional):
             </span>
-            <span className="text-[10px] text-[#6B7780]">Ej: "Generar preguntas sobre cálculo de RTO y RPO con failover"</span>
+            <span className="text-[10px] text-[#6B7780]">Ej: &quot;Generar preguntas sobre cálculo de RTO y RPO con failover&quot;</span>
           </label>
           <input
             type="text"
@@ -133,11 +133,11 @@ export const ActivityGeneratorCard: React.FC<ActivityGeneratorCardProps> = ({
         </div>
 
         {/* Botón de Generación */}
-        <div className="flex justify-end pt-1">
+        <div className="flex flex-col sm:flex-row justify-end items-stretch sm:items-center pt-1">
           <button
             type="submit"
             disabled={isGenerating}
-            className="px-5 py-2.5 bg-[#C8102E] hover:bg-[#A00D24] text-white rounded-[4px] text-xs font-bold flex items-center gap-2 transition-colors disabled:opacity-50 shadow-xs"
+            className="px-5 py-2.5 bg-[#C8102E] hover:bg-[#A00D24] text-white rounded-[4px] text-xs font-bold flex items-center justify-center gap-2 transition-colors disabled:opacity-50 shadow-xs"
           >
             {isGenerating ? (
               <>

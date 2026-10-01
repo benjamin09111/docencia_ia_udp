@@ -34,13 +34,13 @@ export const CanvasSidebar: React.FC<CanvasSidebarProps> = ({
   ];
 
   return (
-    <aside className="w-[84px] bg-canvas-dark text-white flex flex-col items-center py-2 shrink-0 select-none border-r border-[#1E272E] z-30 min-h-screen">
+    <aside className="w-14 sm:w-16 md:w-[84px] bg-canvas-dark text-white flex flex-col items-center py-2 shrink-0 select-none border-r border-[#1E272E] z-30 sticky top-0 h-screen overflow-y-auto no-scrollbar">
       {/* UDP Logo / Shield */}
       <div className="mb-2 text-center flex flex-col items-center cursor-pointer group" title="Universidad Diego Portales">
-        <div className="w-11 h-11 bg-udp-red rounded-[4px] flex items-center justify-center font-bold text-base tracking-wider text-white shadow-sm border border-red-700">
+        <div className="w-9 h-9 sm:w-10 sm:h-10 md:w-11 md:h-11 bg-udp-red rounded-[4px] flex items-center justify-center font-bold text-xs sm:text-sm md:text-base tracking-wider text-white shadow-sm border border-red-700">
           UDP
         </div>
-        <span className="text-[10px] text-gray-300 font-medium tracking-tight mt-1 opacity-90 group-hover:opacity-100">
+        <span className="text-[9px] md:text-[10px] text-gray-300 font-medium tracking-tight mt-1 opacity-90 group-hover:opacity-100 hidden sm:block">
           Portal
         </span>
       </div>
@@ -48,18 +48,18 @@ export const CanvasSidebar: React.FC<CanvasSidebarProps> = ({
       {/* User Account */}
       <button
         onClick={() => onNavClick("account")}
-        className={`w-full flex flex-col items-center py-2 px-1 text-center transition-colors relative ${
+        className={`w-full flex flex-col items-center py-1.5 sm:py-2 px-1 text-center transition-colors relative ${
           activeNav === "account" ? "bg-canvas-darker text-white" : "text-gray-300 hover:bg-canvas-hover"
         }`}
       >
-        <div className="w-8 h-8 rounded-full border border-gray-400 overflow-hidden flex items-center justify-center bg-gray-700 mb-1">
+        <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-gray-400 overflow-hidden flex items-center justify-center bg-gray-700 mb-1">
           {userAvatar ? (
             <img src={userAvatar} alt={userName} className="w-full h-full object-cover" />
           ) : (
-            <User size={18} className="text-gray-200" />
+            <User size={16} className="text-gray-200" />
           )}
         </div>
-        <span className="text-[11px] font-normal leading-tight truncate max-w-[76px]">
+        <span className="text-[10px] md:text-[11px] font-normal leading-tight truncate max-w-[48px] sm:max-w-[58px] md:max-w-[76px] hidden sm:block">
           Cuenta
         </span>
       </button>
@@ -73,25 +73,26 @@ export const CanvasSidebar: React.FC<CanvasSidebarProps> = ({
             <button
               key={item.id}
               onClick={() => onNavClick(item.id)}
-              className={`w-full flex flex-col items-center py-2.5 px-1 transition-all relative group ${
+              className={`w-full flex flex-col items-center py-2 sm:py-2.5 px-1 transition-all relative group ${
                 isActive
                   ? "bg-canvas-darker text-white"
                   : "text-gray-300 hover:bg-canvas-hover hover:text-white"
               }`}
+              title={item.label}
             >
               {isActive && (
                 <div className="absolute left-0 top-0 bottom-0 w-1 bg-udp-red" />
               )}
               <div className="relative">
                 <Icon
-                  size={22}
-                  className={
+                  size={20}
+                  className={`md:w-[22px] md:h-[22px] ${
                     item.isSpecial
                       ? "text-udp-red group-hover:scale-105 transition-transform"
                       : isActive
                       ? "text-white"
                       : "text-gray-300 group-hover:text-white"
-                  }
+                  }`}
                 />
                 {item.isSpecial && (
                   <span className="absolute -top-1 -right-1 flex h-2 w-2">
@@ -101,7 +102,7 @@ export const CanvasSidebar: React.FC<CanvasSidebarProps> = ({
                 )}
               </div>
               <span
-                className={`text-[11px] font-medium leading-tight mt-1 text-center truncate max-w-[76px] ${
+                className={`text-[9px] md:text-[11px] font-medium leading-tight mt-1 text-center truncate max-w-[48px] sm:max-w-[58px] md:max-w-[76px] hidden sm:block ${
                   item.isSpecial ? "text-red-300 font-semibold" : ""
                 }`}
               >
@@ -115,11 +116,11 @@ export const CanvasSidebar: React.FC<CanvasSidebarProps> = ({
       {/* Footer / Help */}
       <div className="w-full flex flex-col items-center mt-auto py-2">
         <button
-          className="w-full flex flex-col items-center py-2 text-gray-400 hover:text-white hover:bg-canvas-hover transition-colors"
+          className="w-full flex flex-col items-center py-1.5 sm:py-2 text-gray-400 hover:text-white hover:bg-canvas-hover transition-colors"
           title="Ayuda CREA UDP"
         >
-          <HelpCircle size={20} />
-          <span className="text-[10px] mt-1">Ayuda</span>
+          <HelpCircle size={18} className="md:w-5 md:h-5" />
+          <span className="text-[9px] md:text-[10px] mt-1 hidden sm:block">Ayuda</span>
         </button>
       </div>
     </aside>

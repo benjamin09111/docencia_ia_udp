@@ -431,7 +431,7 @@ export const PublicAttendanceCheckin: React.FC<PublicAttendanceCheckinProps> = (
 
       <form onSubmit={handleSubmit} className="space-y-4 text-xs">
         {/* 1. Sección Oficial Asignada por el Enlace (Fija, sin dropdown para evitar errores) */}
-        <div className="p-3 bg-gray-50 border border-gray-200 rounded-[4px] flex items-center justify-between shadow-2xs">
+        <div className="p-3 bg-gray-50 border border-gray-200 rounded-[4px] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 shadow-2xs">
           <div>
             <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wide block">
               1. Sección Asignada:
@@ -443,7 +443,7 @@ export const PublicAttendanceCheckin: React.FC<PublicAttendanceCheckinProps> = (
               Docente: {currentSection.profesor} • Ayudante: {currentSection.ayudante}
             </span>
           </div>
-          <span className="text-[10px] font-bold text-[#008EE2] bg-blue-50 border border-blue-200 px-2 py-1 rounded">
+          <span className="text-[10px] font-bold text-[#008EE2] bg-blue-50 border border-blue-200 px-2 py-0.5 rounded shrink-0">
             Fijada
           </span>
         </div>

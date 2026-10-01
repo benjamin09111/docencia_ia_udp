@@ -3,12 +3,13 @@ import React from "react";
 interface CanvasTableProps {
   children: React.ReactNode;
   className?: string;
+  tableClassName?: string;
 }
 
-export const CanvasTable: React.FC<CanvasTableProps> = ({ children, className = "" }) => {
+export const CanvasTable: React.FC<CanvasTableProps> = ({ children, className = "", tableClassName = "" }) => {
   return (
     <div className={`overflow-x-auto border border-[#E0E3E6] rounded-[4px] bg-white shadow-canvas-card ${className}`}>
-      <table className="w-full text-left border-collapse text-xs">
+      <table className={`w-full text-left border-collapse text-xs ${tableClassName}`}>
         {children}
       </table>
     </div>

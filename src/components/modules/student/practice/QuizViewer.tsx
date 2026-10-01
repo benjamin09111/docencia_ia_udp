@@ -47,17 +47,17 @@ export const QuizViewer: React.FC<QuizViewerProps> = ({
         return (
           <div
             key={q.id}
-            className="p-4 rounded-[4px] border border-gray-200 bg-white shadow-xs space-y-3"
+            className="p-3 sm:p-4 rounded-[4px] border border-gray-200 bg-white shadow-xs space-y-3"
           >
             <div className="flex items-start justify-between gap-3">
               <span className="text-xs font-bold text-[#2D3B45] flex items-center gap-2">
-                <span className="w-5 h-5 rounded-full bg-blue-100 text-[#008EE2] flex items-center justify-center text-[11px] font-bold">
+                <span className="w-5 h-5 rounded-full bg-blue-100 text-[#008EE2] flex items-center justify-center text-[11px] font-bold shrink-0">
                   {qIndex + 1}
                 </span>
-                {q.pregunta}
+                <span className="leading-tight">{q.pregunta}</span>
               </span>
               {submitted && (
-                <div>
+                <div className="shrink-0">
                   {isCorrect ? (
                     <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded flex items-center gap-1">
                       <CheckCircle2 size={12} /> Correcto
@@ -72,7 +72,7 @@ export const QuizViewer: React.FC<QuizViewerProps> = ({
             </div>
 
             {/* Opciones */}
-            <div className="space-y-1.5 pl-7">
+            <div className="space-y-1.5 pl-0 sm:pl-7">
               {q.opciones.map((opt, optIndex) => {
                 const isThisSelected = selected === optIndex;
                 let optionStyle = "border-gray-200 bg-[#F9FAFB] hover:bg-gray-100 text-[#2D3B45]";
@@ -108,7 +108,7 @@ export const QuizViewer: React.FC<QuizViewerProps> = ({
 
             {/* Explicación tras validar */}
             {submitted && (
-              <div className="mt-2 ml-7 p-3 rounded-[4px] bg-blue-50/70 border border-blue-200 text-xs text-[#0277BD] space-y-1">
+              <div className="mt-2 ml-0 sm:ml-7 p-3 rounded-[4px] bg-blue-50/70 border border-blue-200 text-xs text-[#0277BD] space-y-1">
                 <span className="font-bold flex items-center gap-1 text-[11px]">
                   <HelpCircle size={13} /> Justificación Teórica:
                 </span>
@@ -120,12 +120,12 @@ export const QuizViewer: React.FC<QuizViewerProps> = ({
       })}
 
       {!submitted ? (
-        <div className="flex justify-end pt-2">
+        <div className="flex flex-col sm:flex-row justify-end items-stretch sm:items-center pt-2">
           <button
             type="button"
             disabled={!allAnswered}
             onClick={handleSubmit}
-            className="px-5 py-2 bg-[#2D3B45] hover:bg-[#1E272E] text-white rounded-[4px] text-xs font-bold transition-colors disabled:opacity-50 flex items-center gap-1.5"
+            className="px-5 py-2.5 bg-[#2D3B45] hover:bg-[#1E272E] text-white rounded-[4px] text-xs font-bold transition-colors disabled:opacity-50 flex items-center justify-center gap-1.5"
           >
             <span>Validar Mis Respuestas</span>
             <ArrowRight size={13} />

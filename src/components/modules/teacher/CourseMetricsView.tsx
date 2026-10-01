@@ -19,6 +19,10 @@ import {
   CheckCircle2,
 } from "lucide-react";
 
+import { CanvasButton } from "@/components/canvas/CanvasButton";
+import { CanvasCourse } from "@/types";
+import { CourseFinalReportModal } from "./CourseFinalReportModal";
+
 interface StudentMetric {
   nombre: string;
   asistenciaPct: number;
@@ -39,33 +43,51 @@ const mockStudentMetrics: StudentMetric[] = [
   { nombre: "Sebastián", asistenciaPct: 0, consultasAgente: 8, actividadesEntregadas: 2, decimasGanadas: 0.3, notaProyectada: 5.5, estadoRiesgo: "Bajo" },
 ];
 
-export const CourseMetricsView: React.FC = () => {
+interface CourseMetricsViewProps {
+  course?: CanvasCourse;
+}
+
+export const CourseMetricsView: React.FC<CourseMetricsViewProps> = ({ course }) => {
   const [metricTab, setMetricTab] = useState<"generales" | "alumnos">("generales");
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
 
   return (
     <div className="space-y-5">
-      {/* Selector de Sub-tabs de Métricas */}
-      <div className="flex gap-2 border-b border-gray-200 pb-2">
-        <button
-          onClick={() => setMetricTab("generales")}
-          className={`px-3 py-1.5 rounded-[4px] text-xs font-semibold transition-all ${
-            metricTab === "generales"
-              ? "bg-[#2D3B45] text-white shadow-sm"
-              : "bg-white text-[#2D3B45] border border-gray-200 hover:bg-gray-50"
-          }`}
+      {/* Selector de Sub-tabs y Botón de Generar Informe Final */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-gray-200 pb-2">
+        <div className="flex gap-2">
+          <button
+            onClick={() => setMetricTab("generales")}
+            className={`px-3 py-1.5 rounded-[4px] text-xs font-semibold transition-all ${
+              metricTab === "generales"
+                ? "bg-[#2D3B45] text-white shadow-sm"
+                : "bg-white text-[#2D3B45] border border-gray-200 hover:bg-gray-50"
+            }`}
+          >
+            Métricas Generales del Curso
+          </button>
+          <button
+            onClick={() => setMetricTab("alumnos")}
+            className={`px-3 py-1.5 rounded-[4px] text-xs font-semibold transition-all ${
+              metricTab === "alumnos"
+                ? "bg-[#2D3B45] text-white shadow-sm"
+                : "bg-white text-[#2D3B45] border border-gray-200 hover:bg-gray-50"
+            }`}
+          >
+            Métricas Individuales por Alumno
+          </button>
+        </div>
+
+        {/* Botón Automático: Generar informe final del curso */}
+        <CanvasButton
+          variant="primary-canvas"
+          size="sm"
+          icon={<Sparkles size={14} className="text-yellow-300" />}
+          onClick={() => setIsReportModalOpen(true)}
+          title="Generar informe final integral con evidencia del semestre para toma de decisiones"
         >
-          Métricas Generales del Curso
-        </button>
-        <button
-          onClick={() => setMetricTab("alumnos")}
-          className={`px-3 py-1.5 rounded-[4px] text-xs font-semibold transition-all ${
-            metricTab === "alumnos"
-              ? "bg-[#2D3B45] text-white shadow-sm"
-              : "bg-white text-[#2D3B45] border border-gray-200 hover:bg-gray-50"
-          }`}
-        >
-          Métricas Individuales por Alumno
-        </button>
+          Generar informe final del curso
+        </CanvasButton>
       </div>
 
       {/* SUBTAB 1: Métricas Generales */}
@@ -145,7 +167,7 @@ export const CourseMetricsView: React.FC = () => {
             </span>
           </div>
 
-          <CanvasTable>
+          <CanvasTable tableClassName="min-w-[680px]">
             <CanvasTableHeader>
               <tr>
                 <th className="p-3">Estudiante</th>
@@ -191,6 +213,13 @@ export const CourseMetricsView: React.FC = () => {
           </CanvasTable>
         </div>
       )}
+
+      {/* Modal: Generador de Informe Final del Curso */}
+      <CourseFinalReportModal
+        isOpen={isReportModalOpen}
+        onClose={() => setIsReportModalOpen(false)}
+        course={course}
+      />
     </div>
   );
 };

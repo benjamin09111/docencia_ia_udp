@@ -146,8 +146,8 @@ export const AttendanceMatrixTable: React.FC<AttendanceMatrixTableProps> = ({
     <div className="bg-white border border-[#E0E3E6] rounded-[4px] shadow-canvas-card overflow-hidden">
       {/* Barra de control de meses horizontales */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between px-3 py-2 bg-[#FAFBFB] border-b border-[#E0E3E6] text-xs gap-2">
-        <div className="flex items-center gap-2 text-[#2D3B45]">
-          <Calendar size={14} className="text-[#008EE2]" />
+        <div className="flex flex-wrap items-center gap-1.5 text-[#2D3B45]">
+          <Calendar size={14} className="text-[#008EE2] shrink-0" />
           <span className="font-semibold">Acordeón Horizontal por Meses:</span>
           <span className="text-[11px] text-[#6B7780]">
             Haz clic en la cabecera de cualquier mes para contraerlo/expandirlo y ahorrar espacio
@@ -194,7 +194,7 @@ export const AttendanceMatrixTable: React.FC<AttendanceMatrixTableProps> = ({
       </div>
 
       <div className="overflow-x-auto max-w-full">
-        <table className="w-full text-xs border-collapse">
+        <table className="w-full text-xs border-collapse min-w-[760px]">
           <thead>
             {/* Fila 1: Grupos de Meses (Acordeones Horizontales) */}
             <tr className="bg-[#2D3B45] text-white border-b border-gray-700">

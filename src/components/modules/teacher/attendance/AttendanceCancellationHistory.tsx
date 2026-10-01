@@ -250,7 +250,7 @@ export const AttendanceCancellationHistory: React.FC<AttendanceCancellationHisto
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse text-xs">
+            <table className="w-full text-left border-collapse text-xs min-w-[680px]">
               <thead className="bg-[#2D3B45] text-white">
                 <tr>
                   <th className="p-2.5 border-r border-[#1E272E] w-12 text-center text-[10px] font-bold uppercase">

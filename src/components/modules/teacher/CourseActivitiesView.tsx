@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { CourseDeliverable, StudentSubmission } from "@/types";
 import { CanvasBadge } from "@/components/canvas/CanvasBadge";
 import { CanvasButton } from "@/components/canvas/CanvasButton";
+import { CanvasActionMenu } from "@/components/canvas/CanvasActionMenu";
 import {
   CanvasTable,
   CanvasTableHeader,
@@ -11,18 +12,21 @@ import {
   CanvasTableCell,
 } from "@/components/canvas/CanvasTable";
 import { CreateActivityWorkspace } from "./CreateActivityWorkspace";
+import { ActivityEditModal } from "./activities/ActivityEditModal";
+import { ActivityDeleteConfirmModal } from "./activities/ActivityDeleteConfirmModal";
+import { CanvasOfficialRubricTable } from "@/components/canvas/CanvasOfficialRubricTable";
+import { convertRubricCriteriaToMatrix } from "@/services/officialRubricsService";
 import {
   Plus,
   Eye,
-  Bot,
-  Sparkles,
-  Layers,
+  Edit3,
   FileText,
   CheckCircle2,
   AlertCircle,
-  Quote,
-  Scale,
-  ShieldCheck,
+  Trash2,
+  Globe,
+  EyeOff,
+  Award,
 } from "lucide-react";
 
 interface CourseActivitiesViewProps {
@@ -41,11 +45,30 @@ export const CourseActivitiesView: React.FC<CourseActivitiesViewProps> = ({
   onResolveAppeal,
 }) => {
   const [isCreatingWorkspace, setIsCreatingWorkspace] = useState(false);
-  const [viewingRubricItem, setViewingRubricItem] = useState<CourseDeliverable | null>(null);
+  const [activitiesList, setActivitiesList] = useState<CourseDeliverable[]>(() =>
+    entregables.filter((e) => e.tipo === "actividad_ayudantia")
+  );
+
+  // Modales de acciones
+  const [editingActivity, setEditingActivity] = useState<CourseDeliverable | null>(null);
+  const [deletingActivity, setDeletingActivity] = useState<CourseDeliverable | null>(null);
   const [viewingSubmissionsItem, setViewingSubmissionsItem] = useState<CourseDeliverable | null>(null);
+  const [viewingPautaActivity, setViewingPautaActivity] = useState<CourseDeliverable | null>(null);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [appealMessage, setAppealMessage] = useState<string | null>(null);
 
-  const actividades = entregables.filter((e) => e.tipo === "actividad_ayudantia");
+  // Sincronizar si se añade un entregable desde el creador
+  useEffect(() => {
+    const filtered = entregables.filter((e) => e.tipo === "actividad_ayudantia");
+    setActivitiesList((prev) => {
+      const prevIds = new Set(prev.map((p) => p.id));
+      const newItems = filtered.filter((f) => !prevIds.has(f.id));
+      if (newItems.length > 0) {
+        return [...prev, ...newItems];
+      }
+      return prev;
+    });
+  }, [entregables]);
 
   // Si el docente presiona "Crear Actividad con Agente", se abre la página entera aparte
   if (isCreatingWorkspace) {
@@ -55,6 +78,7 @@ export const CourseActivitiesView: React.FC<CourseActivitiesViewProps> = ({
         onBack={() => setIsCreatingWorkspace(false)}
         onPublish={(activity) => {
           onAddDeliverable(activity);
+          setActivitiesList((prev) => [activity, ...prev]);
           setIsCreatingWorkspace(false);
         }}
       />
@@ -77,168 +101,222 @@ export const CourseActivitiesView: React.FC<CourseActivitiesViewProps> = ({
     return entregasAlumnos.filter((s) => s.deliverable_id === activityId);
   };
 
+  const getDecimasValue = (str: string) => {
+    const match = str.match(/[\d.]+/);
+    return match ? `+${match[0]}` : "+0.3";
+  };
+
+  const handleTogglePublish = (act: CourseDeliverable) => {
+    const newStatus = act.estado === "publicada" ? "borrador" : "publicada";
+    setActivitiesList((prev) =>
+      prev.map((a) => (a.id === act.id ? { ...a, estado: newStatus } : a))
+    );
+    setToastMessage(
+      newStatus === "publicada"
+        ? `Actividad "${act.titulo}" publicada correctamente.`
+        : `Actividad "${act.titulo}" guardada como borrador (oculta).`
+    );
+    setTimeout(() => setToastMessage(null), 3000);
+  };
+
+  const handleSaveEdit = (updated: CourseDeliverable) => {
+    setActivitiesList((prev) =>
+      prev.map((a) => (a.id === updated.id ? updated : a))
+    );
+    setToastMessage(`Cambios guardados en "${updated.titulo}".`);
+    setTimeout(() => setToastMessage(null), 3000);
+  };
+
+  const handleConfirmDelete = () => {
+    if (!deletingActivity) return;
+    const title = deletingActivity.titulo;
+    setActivitiesList((prev) => prev.filter((a) => a.id !== deletingActivity.id));
+    setDeletingActivity(null);
+    setToastMessage(`Actividad "${title}" eliminada.`);
+    setTimeout(() => setToastMessage(null), 3000);
+  };
+
   return (
-    <div className="space-y-5">
-      {/* Banner Superior con el Enjambre Multi-Agente */}
-      <div className="bg-white border border-[#E0E3E6] rounded-[4px] p-5 shadow-canvas-card flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    <div className="space-y-4">
+      {/* Banner Superior Limpio y Profesional */}
+      <div className="bg-white border border-[#E0E3E6] rounded-[4px] p-4 sm:p-5 shadow-canvas-card flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <div className="flex items-center gap-2">
-            <span className="px-2 py-0.5 bg-purple-100 text-purple-800 text-[11px] font-bold rounded uppercase">
-              Actividades Dinámicas de Ayudantía
-            </span>
-            <span className="text-xs text-[#6B7780] flex items-center gap-1">
-              <Bot size={13} className="text-[#008EE2]" />
-              Enjambre de 5 Agentes del Curso (Creativo + Teórico + Técnico + Corrector + Excel)
-            </span>
-          </div>
+          <span className="px-2 py-0.5 bg-blue-50 text-[#008EE2] text-[11px] font-bold rounded uppercase border border-blue-200">
+            Actividades extra
+          </span>
           <h2 className="text-base font-bold text-[#2D3B45] mt-1">
-            Talleres Prácticos Recreativos con Incentivo de Décimas o Nota
+            Actividades extra
           </h2>
           <p className="text-xs text-[#6B7780] mt-0.5">
-            Supervisa las entregas revisadas automáticamente y gestiona las solicitudes de apelación de los estudiantes.
+            Gestión de actividades formativas, entregas y apelaciones.
           </p>
         </div>
 
         <CanvasButton
           variant="primary-udp"
-          size="md"
+          size="sm"
           onClick={() => setIsCreatingWorkspace(true)}
           icon={<Plus size={15} />}
+          title="Crear nueva actividad pedagógica con agentes"
         >
-          Crear Actividad con Agente
+          Nueva actividad
         </CanvasButton>
       </div>
 
+      {/* Toast Notification */}
+      {toastMessage && (
+        <div className="p-3 bg-blue-50 border border-blue-200 text-blue-900 rounded text-xs flex items-center gap-2 animate-fadeIn">
+          <CheckCircle2 size={15} className="text-[#008EE2] shrink-0" />
+          <span>{toastMessage}</span>
+        </div>
+      )}
+
       {/* Tabla Oficial de Actividades */}
-      <CanvasTable>
+      <CanvasTable tableClassName="min-w-[700px]">
         <CanvasTableHeader>
           <tr>
-            <th className="p-3">Nombre del Taller / Dinámica</th>
-            <th className="p-3">Metodología Pedagógica</th>
-            <th className="p-3 text-center">Incentivo</th>
-            <th className="p-3 text-center">Entregas y Apelaciones</th>
-            <th className="p-3 text-center">Estado</th>
-            <th className="p-3 text-right">Acción</th>
+            <th className="p-3">Nombre de la Actividad</th>
+            <th className="p-3">Rúbrica</th>
+            <th className="p-3 text-center w-24">Décimas</th>
+            <th className="p-3 text-center w-24">Entregas</th>
+            <th className="p-3 text-center w-36">Apelaciones</th>
+            <th className="p-3 text-center w-28">Estado</th>
+            <th className="p-3 text-right w-16">Acciones</th>
           </tr>
         </CanvasTableHeader>
         <tbody>
-          {actividades.map((act) => {
-            const subs = getSubmissionsForActivity(act.id);
-            const appealsCount = subs.filter((s) => s.apelacion?.estado === "pendiente").length;
+          {activitiesList.length === 0 ? (
+            <tr>
+              <td colSpan={7} className="p-8 text-center text-xs text-[#6B7780] bg-gray-50/50">
+                No hay actividades registradas aún. Presiona <strong>"Nueva actividad"</strong> para crear una.
+              </td>
+            </tr>
+          ) : (
+            activitiesList.map((act) => {
+              const subs = getSubmissionsForActivity(act.id);
+              const appealsCount = subs.filter((s) => s.apelacion?.estado === "pendiente").length;
 
-            return (
-              <CanvasTableRow key={act.id} hoverable={false}>
-                <CanvasTableCell>
-                  <div className="space-y-0.5">
-                    <span className="font-bold text-[#2D3B45] text-xs block">{act.titulo}</span>
-                    <span className="text-[11px] text-[#6B7780] line-clamp-1 max-w-sm">{act.descripcion}</span>
-                  </div>
-                </CanvasTableCell>
+              return (
+                <CanvasTableRow key={act.id} hoverable={true}>
+                  <CanvasTableCell>
+                    <div className="space-y-0.5">
+                      <span className="font-bold text-[#2D3B45] text-xs block">{act.titulo}</span>
+                      <span className="text-[11px] text-[#6B7780] line-clamp-1 max-w-sm">
+                        {act.descripcion}
+                      </span>
+                    </div>
+                  </CanvasTableCell>
 
-                <CanvasTableCell>
-                  <span className="text-xs text-[#55636E] font-medium">
-                    {act.rubrica.length} Criterios Objetivos (PMBOK + RAPs)
-                  </span>
-                </CanvasTableCell>
-
-                <CanvasTableCell align="center">
-                  <span className="font-bold text-purple-800 bg-purple-100 px-2 py-0.5 rounded text-xs">
-                    {act.ponderacion_o_decimas}
-                  </span>
-                </CanvasTableCell>
-
-                <CanvasTableCell align="center">
-                  <div className="flex flex-col items-center gap-1">
-                    <span className="text-xs font-semibold text-[#2D3B45]">
-                      {subs.length} {subs.length === 1 ? "Entrega" : "Entregas"}
+                  <CanvasTableCell>
+                    <span className="text-xs text-[#55636E] font-medium">
+                      {act.rubrica.length} criterios
                     </span>
+                  </CanvasTableCell>
+
+                  {/* Columna Décimas: Solo el número como dato */}
+                  <CanvasTableCell align="center">
+                    <span className="font-mono font-bold text-[#2D3B45] text-xs bg-gray-100 px-2 py-0.5 rounded border border-gray-200">
+                      {getDecimasValue(act.ponderacion_o_decimas)}
+                    </span>
+                  </CanvasTableCell>
+
+                  {/* Columna Entregas Separada */}
+                  <CanvasTableCell align="center">
+                    <span className="font-bold text-[#2D3B45] text-xs">
+                      {subs.length}
+                    </span>
+                  </CanvasTableCell>
+
+                  {/* Columna Apelaciones Separada */}
+                  <CanvasTableCell align="center">
                     {appealsCount > 0 ? (
-                      <span className="px-1.5 py-0.5 bg-amber-100 text-amber-900 border border-amber-300 rounded text-[10px] font-bold">
-                        ⚠️ {appealsCount} Apelación pendiente
+                      <span className="px-2 py-0.5 bg-amber-50 text-amber-800 border border-amber-300 rounded text-[11px] font-bold inline-flex items-center gap-1">
+                        <span>⚠️ {appealsCount} pendiente{appealsCount > 1 ? "s" : ""}</span>
                       </span>
                     ) : (
-                      <span className="text-[10px] text-emerald-700 font-medium">Sin apelaciones</span>
+                      <span className="text-[#6B7780] text-xs font-mono">0</span>
                     )}
-                  </div>
-                </CanvasTableCell>
+                  </CanvasTableCell>
 
-                <CanvasTableCell align="center">
-                  <CanvasBadge variant="success">Publicada y Activa</CanvasBadge>
-                </CanvasTableCell>
+                  {/* Estado de Publicación */}
+                  <CanvasTableCell align="center">
+                    {act.estado === "publicada" ? (
+                      <CanvasBadge variant="success">Publicada</CanvasBadge>
+                    ) : (
+                      <CanvasBadge variant="neutral">Borrador</CanvasBadge>
+                    )}
+                  </CanvasTableCell>
 
-                <CanvasTableCell align="right">
-                  <div className="flex items-center justify-end gap-1.5">
-                    <CanvasButton
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setViewingRubricItem(act)}
-                      icon={<Eye size={13} />}
-                    >
-                      Rúbrica
-                    </CanvasButton>
-                    <CanvasButton
-                      variant="primary-canvas"
-                      size="sm"
-                      onClick={() => setViewingSubmissionsItem(act)}
-                      icon={<FileText size={13} />}
-                    >
-                      Ver Entregas {subs.length > 0 && `(${subs.length})`}
-                    </CanvasButton>
-                  </div>
-                </CanvasTableCell>
-              </CanvasTableRow>
-            );
-          })}
+                  {/* Menú de Acciones en 3 Puntitos */}
+                  <CanvasTableCell align="right">
+                    <CanvasActionMenu
+                      ariaLabel={`Acciones para ${act.titulo}`}
+                      items={[
+                        {
+                          label: "Ver y editar",
+                          icon: <Edit3 size={14} className="text-[#008EE2]" />,
+                          onClick: () => setEditingActivity(act),
+                        },
+                        {
+                          label: "Ver entregas",
+                          icon: <FileText size={14} className="text-[#2D3B45]" />,
+                          onClick: () => setViewingSubmissionsItem(act),
+                        },
+                        {
+                          label: "Ver pauta oficial",
+                          icon: <Award size={14} className="text-[#C8102E]" />,
+                          onClick: () => setViewingPautaActivity(act),
+                        },
+                        {
+                          label: act.estado === "publicada" ? "Despublicar" : "Publicar",
+                          icon:
+                            act.estado === "publicada" ? (
+                              <EyeOff size={14} className="text-[#6B7780]" />
+                            ) : (
+                              <Globe size={14} className="text-emerald-600" />
+                            ),
+                          onClick: () => handleTogglePublish(act),
+                        },
+                        {
+                          label: "Eliminar",
+                          icon: <Trash2 size={14} className="text-red-600" />,
+                          danger: true,
+                          onClick: () => setDeletingActivity(act),
+                        },
+                      ]}
+                    />
+                  </CanvasTableCell>
+                </CanvasTableRow>
+              );
+            })
+          )}
         </tbody>
       </CanvasTable>
 
-      {/* Modal Ver Rúbrica Detallada */}
-      {viewingRubricItem && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-[6px] max-w-lg w-full p-6 shadow-xl border border-gray-200 space-y-4 animate-scaleUp">
-            <div className="flex justify-between items-start border-b pb-3">
-              <div>
-                <h3 className="text-base font-bold text-[#2D3B45]">{viewingRubricItem.titulo}</h3>
-                <span className="text-xs text-purple-800 font-semibold bg-purple-50 px-2 py-0.5 rounded">
-                  Incentivo: {viewingRubricItem.ponderacion_o_decimas} en {viewingRubricItem.target_evaluacion}
-                </span>
-              </div>
-              <button onClick={() => setViewingRubricItem(null)} className="text-gray-400 hover:text-gray-600 font-bold">
-                ✕
-              </button>
-            </div>
+      {/* Modal Ver y Editar Actividad */}
+      {editingActivity && (
+        <ActivityEditModal
+          activity={editingActivity}
+          isOpen={true}
+          onClose={() => setEditingActivity(null)}
+          onSave={handleSaveEdit}
+        />
+      )}
 
-            <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-1">
-              {viewingRubricItem.rubrica.map((crit) => (
-                <div key={crit.id} className="p-3 border border-gray-200 rounded text-xs space-y-2">
-                  <div className="flex justify-between font-bold text-[#2D3B45]">
-                    <span>• {crit.descripcion}</span>
-                    <span className="text-[#008EE2]">{crit.puntaje_max} pts</span>
-                  </div>
-                  <div className="space-y-1">
-                    {crit.indicadores.map((ind, idx) => (
-                      <div key={idx} className="bg-gray-50 p-2 rounded text-[11px] text-[#55636E]">
-                        <strong className="text-gray-800">{ind.nivel} ({ind.puntos}p):</strong> {ind.detalle}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <div className="flex justify-end pt-2 border-t">
-              <CanvasButton variant="outline" size="sm" onClick={() => setViewingRubricItem(null)}>
-                Cerrar
-              </CanvasButton>
-            </div>
-          </div>
-        </div>
+      {/* Modal Confirmación de Eliminación */}
+      {deletingActivity && (
+        <ActivityDeleteConfirmModal
+          activity={deletingActivity}
+          isOpen={true}
+          onClose={() => setDeletingActivity(null)}
+          onConfirm={handleConfirmDelete}
+        />
       )}
 
       {/* Modal / Panel: Ver Entregas, Revisiones y Apelaciones de Alumnos */}
       {viewingSubmissionsItem && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-[6px] max-w-3xl w-full p-6 shadow-xl border border-gray-200 space-y-4 animate-scaleUp max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-xs z-50 flex items-center justify-center p-3 sm:p-4">
+          <div className="bg-white rounded-[6px] max-w-3xl w-full p-4 sm:p-6 shadow-xl border border-gray-200 space-y-4 animate-scaleUp max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-start border-b pb-3">
               <div>
                 <span className="text-[10px] font-bold text-[#008EE2] bg-blue-50 px-2 py-0.5 rounded uppercase">
@@ -248,7 +326,10 @@ export const CourseActivitiesView: React.FC<CourseActivitiesViewProps> = ({
                   Entregas y Apelaciones: {viewingSubmissionsItem.titulo}
                 </h3>
               </div>
-              <button onClick={() => setViewingSubmissionsItem(null)} className="text-gray-400 hover:text-gray-600 font-bold">
+              <button
+                onClick={() => setViewingSubmissionsItem(null)}
+                className="text-gray-400 hover:text-gray-600 font-bold"
+              >
                 ✕
               </button>
             </div>
@@ -279,12 +360,11 @@ export const CourseActivitiesView: React.FC<CourseActivitiesViewProps> = ({
                         </span>
                       </div>
 
-                      {/* Badge Mandatorio: Revisado automáticamente según la rúbrica */}
                       <div className="text-right">
                         <span className="px-2.5 py-1 bg-white border border-emerald-400 text-emerald-800 rounded text-xs font-bold shadow-xs block">
                           Revisado automáticamente según la rúbrica
                         </span>
-                        <span className="text-xs font-bold text-purple-900 mt-1 block">
+                        <span className="text-xs font-bold text-[#2D3B45] mt-1 block">
                           Calificación: +{sub.decimas_sugeridas || 0.3} décimas
                         </span>
                       </div>
@@ -344,15 +424,17 @@ export const CourseActivitiesView: React.FC<CourseActivitiesViewProps> = ({
                               variant="outline"
                               size="sm"
                               onClick={() => handleAppealAction(sub.id, "ratificar")}
+                              title="Mantener calificación automática original"
                             >
-                              Ratificar Dictamen Automático
+                              Ratificar
                             </CanvasButton>
                             <CanvasButton
                               variant="primary-udp"
                               size="sm"
                               onClick={() => handleAppealAction(sub.id, "aceptar")}
+                              title="Aceptar solicitud del estudiante y sumar 0.1 décimas"
                             >
-                              Aceptar Apelación (+0.1 Décima Adicional)
+                              Aceptar (+0.1)
                             </CanvasButton>
                           </div>
                         )}
@@ -369,6 +451,51 @@ export const CourseActivitiesView: React.FC<CourseActivitiesViewProps> = ({
 
             <div className="flex justify-end pt-2 border-t">
               <CanvasButton variant="outline" size="sm" onClick={() => setViewingSubmissionsItem(null)}>
+                Cerrar
+              </CanvasButton>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Ver Pauta Oficial de la Actividad */}
+      {viewingPautaActivity && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-xs z-50 flex items-center justify-center p-3 sm:p-4">
+          <div className="bg-white rounded-[4px] max-w-4xl w-full p-4 sm:p-6 shadow-xl border border-gray-200 space-y-4 animate-scaleUp max-h-[92vh] overflow-y-auto">
+            <div className="flex justify-between items-start border-b pb-3">
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-[#008EE2] bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
+                    Pauta de Evaluación Oficial (Actividad Extra)
+                  </span>
+                  <span className="text-xs text-gray-500 font-mono">
+                    {viewingPautaActivity.ponderacion_o_decimas}
+                  </span>
+                </div>
+                <h3 className="text-base font-bold text-[#2D3B45] mt-1">
+                  {viewingPautaActivity.titulo}
+                </h3>
+                <p className="text-xs text-[#6B7780] mt-0.5 leading-relaxed">
+                  {viewingPautaActivity.descripcion}
+                </p>
+              </div>
+              <button
+                onClick={() => setViewingPautaActivity(null)}
+                className="text-gray-400 hover:text-gray-600 font-bold text-lg"
+              >
+                ✕
+              </button>
+            </div>
+
+            <CanvasOfficialRubricTable
+              rubros={convertRubricCriteriaToMatrix(viewingPautaActivity.rubrica)}
+              isEditable={false}
+              tituloPauta={`PAUTA OFICIAL: ${viewingPautaActivity.titulo.toUpperCase()}`}
+              subtituloPauta="Matriz institucional de rubros, criterios y subcriterios de desempeño (100 pts)"
+            />
+
+            <div className="pt-2 border-t flex justify-end">
+              <CanvasButton variant="outline" size="sm" onClick={() => setViewingPautaActivity(null)}>
                 Cerrar
               </CanvasButton>
             </div>

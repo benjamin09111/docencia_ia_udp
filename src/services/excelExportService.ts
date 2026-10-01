@@ -207,3 +207,119 @@ export function exportAttendanceToExcel(params: {
   const filename = `Asistencia_${prefijo}_${seccionNombre.replace(/\s+/g, "_")}_UDP.xlsx`;
   XLSX.writeFile(wb, filename);
 }
+
+/**
+ * Exporta la planilla oficial de calificaciones en formato Excel (.xlsx)
+ * anonimizada estrictamente por RUT (sin nombres ni apellidos), en cumplimiento con la
+ * normativa de privacidad UDP y Ley N° 19.628.
+ */
+export function exportAnonymousGradesToExcel(params: {
+  cursoCodigo: string;
+  cursoNombre: string;
+  seccionNombre?: string;
+  estudiantesExcel: StudentExcelRow[];
+}) {
+  const { cursoCodigo, cursoNombre, seccionNombre = "", estudiantesExcel } = params;
+  const wb = XLSX.utils.book_new();
+
+  const data: any[][] = [];
+  data.push(["UNIVERSIDAD DIEGO PORTALES — ESCUELA DE INFORMÁTICA Y TELECOMUNICACIONES"]);
+  data.push([
+    `CURSO: ${cursoCodigo} — ${cursoNombre} ${seccionNombre ? `(${seccionNombre})` : ""}`,
+  ]);
+  data.push([
+    `FECHA DE PUBLICACIÓN: ${new Date().toLocaleDateString("es-CL")}`,
+    `RÉGIMEN: PLANILLA OFICIAL DE CALIFICACIONES ANONIMIZADA (SOLO RUT)`,
+  ]);
+  data.push([
+    "AVISO DE PRIVACIDAD: En conformidad con la Ley N° 19.628 de Protección de Datos Personales, esta nómina no publica nombres ni apellidos.",
+  ]);
+  data.push([
+    "CRITERIO DE ASISTENCIA: Mínimo 75% reglamentario. RI = Reprobado por Inasistencia.",
+  ]);
+  data.push([]);
+
+  // Cabeceras de evaluación
+  data.push([
+    "RUT",
+    "Informe Inicial (20%)",
+    "+Décimas Ayud.",
+    "Solemne (20%)",
+    "Avance 1 (20%)",
+    "Avance 2 (20%)",
+    "Final/Examen (20%)",
+    "% Asistencia",
+    "Nota Final",
+    "Estado",
+  ]);
+
+  estudiantesExcel.forEach((row) => {
+    const estado =
+      row.asistencia_pct < 75
+        ? "RI (Reprobado por Inasistencia)"
+        : row.nota_final >= 4.0
+        ? "Aprobado"
+        : "Reprobado";
+
+    data.push([
+      row.rut,
+      row.solemne_1,
+      Number(row.decimas_act1.toFixed(1)),
+      row.solemne_2,
+      6.0,
+      5.8,
+      row.taller_proyecto,
+      `${row.asistencia_pct}%`,
+      row.nota_final,
+      estado,
+    ]);
+  });
+
+  data.push([]);
+
+  // Resumen estadístico anónimo
+  const total = estudiantesExcel.length || 1;
+  const aprobados = estudiantesExcel.filter(
+    (r) => r.asistencia_pct >= 75 && r.nota_final >= 4.0
+  ).length;
+  const reprobados = estudiantesExcel.filter(
+    (r) => r.asistencia_pct >= 75 && r.nota_final < 4.0
+  ).length;
+  const inasistencias = estudiantesExcel.filter((r) => r.asistencia_pct < 75).length;
+  const promedio = (
+    estudiantesExcel.reduce((acc, r) => acc + r.nota_final, 0) / total
+  ).toFixed(1);
+
+  data.push([
+    "TOTAL ALUMNOS",
+    total,
+    "APROBADOS",
+    aprobados,
+    "REPROBADOS",
+    reprobados,
+    "RI",
+    inasistencias,
+    "PROMEDIO CURSO",
+    promedio,
+  ]);
+
+  const ws = XLSX.utils.aoa_to_sheet(data);
+  ws["!cols"] = [
+    { wch: 16 }, // RUT
+    { wch: 22 }, // Informe Inicial
+    { wch: 15 }, // Décimas
+    { wch: 15 }, // Solemne
+    { wch: 15 }, // Avance 1
+    { wch: 15 }, // Avance 2
+    { wch: 18 }, // Final
+    { wch: 14 }, // Asistencia
+    { wch: 13 }, // Nota Final
+    { wch: 32 }, // Estado
+  ];
+
+  XLSX.utils.book_append_sheet(wb, ws, "Calificaciones RUT");
+  const cleanCode = cursoCodigo.replace(/[^a-zA-Z0-9_-]/g, "_");
+  const filename = `Planilla_Calificaciones_${cleanCode}_UDP.xlsx`;
+  XLSX.writeFile(wb, filename);
+}
+

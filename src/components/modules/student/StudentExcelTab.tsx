@@ -12,7 +12,7 @@ import { FileSpreadsheet, ShieldCheck, CheckCircle2, Award } from "lucide-react"
 
 export const StudentExcelTab: React.FC = () => {
   return (
-    <div className="bg-white border border-[#E0E3E6] rounded-[4px] p-6 shadow-canvas-card space-y-5 animate-fadeIn">
+    <div className="bg-white border border-[#E0E3E6] rounded-[4px] p-4 sm:p-6 shadow-canvas-card space-y-5 animate-fadeIn">
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b pb-4">
         <div>
@@ -40,7 +40,7 @@ export const StudentExcelTab: React.FC = () => {
       </div>
 
       {/* Tabla con Únicamente la Fila del Alumno */}
-      <CanvasTable>
+      <CanvasTable tableClassName="min-w-[780px]">
         <CanvasTableHeader>
           <tr>
             <th className="p-3">Estudiante</th>
