@@ -30,6 +30,9 @@ export const CanvasHeader: React.FC<CanvasHeaderProps> = ({
       <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-[13px] text-canvas-muted min-w-0 flex-1 overflow-x-auto no-scrollbar py-1">
         {breadcrumbs.map((crumb, idx) => {
           const isLast = idx === breadcrumbs.length - 1;
+          const isFirst = idx === 0;
+          const isMiddle = idx > 0 && !isLast;
+
           return (
             <React.Fragment key={idx}>
               <span
@@ -37,12 +40,16 @@ export const CanvasHeader: React.FC<CanvasHeaderProps> = ({
                   isLast
                     ? "font-bold text-canvas-dark text-[13px] sm:text-[14px]"
                     : "hover:underline cursor-pointer text-canvas-muted hover:text-[#008EE2]"
-                }`}
+                } ${isFirst ? "hidden md:inline" : ""} ${isMiddle ? "hidden xl:inline" : ""}`}
               >
                 {crumb}
               </span>
               {!isLast && (
-                <span className="text-gray-400 font-light select-none shrink-0">
+                <span
+                  className={`text-gray-400 font-light select-none shrink-0 ${
+                    isFirst ? "hidden md:inline" : ""
+                  } ${isMiddle ? "hidden xl:inline" : ""}`}
+                >
                   &gt;
                 </span>
               )}

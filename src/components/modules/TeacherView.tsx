@@ -33,37 +33,19 @@ interface TeacherViewProps {
 const getCourseDifficulty = (code: string) => {
   if (code.includes("CIT1010") || code.includes("1010")) {
     return {
-      nivel: "Básica",
-      semestre: "Semestre 1 (1er Año)",
-      color: "bg-emerald-50 text-emerald-800 border-emerald-200",
-      dot: "bg-emerald-500",
-      tipo: "Primerizo",
+      nivel: "Baja",
+      color: "bg-emerald-50 text-emerald-700 border-emerald-200",
     };
   }
   if (code.includes("CIT2206") || code.includes("2206")) {
     return {
-      nivel: "Intermedia",
-      semestre: "Semestre 4 (2do Año)",
-      color: "bg-blue-50 text-[#008EE2] border-blue-200",
-      dot: "bg-[#008EE2]",
-      tipo: "Intermedio",
-    };
-  }
-  if (code.includes("CIT3100") || code.includes("3100")) {
-    return {
-      nivel: "Avanzada",
-      semestre: "Semestre 6 (3er Año)",
-      color: "bg-purple-50 text-purple-800 border-purple-200",
-      dot: "bg-purple-600",
-      tipo: "Avanzado",
+      nivel: "Media",
+      color: "bg-amber-50 text-amber-700 border-amber-200",
     };
   }
   return {
-    nivel: "Alta / Capstone",
-    semestre: "Semestre 7 (4to Año)",
-    color: "bg-red-50 text-[#C8102E] border-red-200",
-    dot: "bg-[#C8102E]",
-    tipo: "Avanzado",
+    nivel: "Alta",
+    color: "bg-rose-50 text-[#C8102E] border-rose-200",
   };
 };
 
@@ -363,13 +345,9 @@ export const TeacherView: React.FC<TeacherViewProps> = ({
 
                     {/* Columna Dificultad */}
                     <CanvasTableCell align="center">
-                      <div className="flex flex-col items-center gap-0.5">
-                        <span className={`inline-flex items-center gap-1.5 text-xs font-bold px-2 py-0.5 rounded border ${diff.color}`}>
-                          <span className={`w-1.5 h-1.5 rounded-full ${diff.dot}`} />
-                          <span>{diff.nivel}</span>
-                        </span>
-                        <span className="text-[10px] text-gray-500 font-medium">{diff.semestre}</span>
-                      </div>
+                      <span className={`inline-block text-xs font-semibold px-2 py-0.5 rounded border ${diff.color}`}>
+                        {diff.nivel}
+                      </span>
                     </CanvasTableCell>
 
                     <CanvasTableCell>

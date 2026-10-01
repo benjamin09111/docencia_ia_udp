@@ -233,7 +233,7 @@ export const AutomatedCourseWorkspace: React.FC<AutomatedCourseWorkspaceProps> =
         <div className="flex gap-4 border-b border-gray-200 mt-5 pt-1 text-xs font-medium overflow-x-auto no-scrollbar flex-nowrap">
           <button
             onClick={() => setActiveTab("inicio")}
-            className={`pb-2.5 px-1 border-b-2 transition-all flex items-center gap-1.5 ${
+            className={`pb-2.5 px-1 border-b-2 transition-all flex items-center gap-1.5 shrink-0 whitespace-nowrap ${
               activeTab === "inicio"
                 ? "border-[#008EE2] text-[#008EE2] font-bold"
                 : "border-transparent text-[#6B7780] hover:text-[#2D3B45]"
@@ -245,7 +245,7 @@ export const AutomatedCourseWorkspace: React.FC<AutomatedCourseWorkspaceProps> =
 
           <button
             onClick={() => setActiveTab("evaluaciones")}
-            className={`pb-2.5 px-1 border-b-2 transition-all flex items-center gap-1.5 ${
+            className={`pb-2.5 px-1 border-b-2 transition-all flex items-center gap-1.5 shrink-0 whitespace-nowrap ${
               activeTab === "evaluaciones" || activeTab === "solemnes"
                 ? "border-[#008EE2] text-[#008EE2] font-bold"
                 : "border-transparent text-[#6B7780] hover:text-[#2D3B45]"
@@ -257,7 +257,7 @@ export const AutomatedCourseWorkspace: React.FC<AutomatedCourseWorkspaceProps> =
 
           <button
             onClick={() => setActiveTab("actividades")}
-            className={`pb-2.5 px-1 border-b-2 transition-all flex items-center gap-1.5 ${
+            className={`pb-2.5 px-1 border-b-2 transition-all flex items-center gap-1.5 shrink-0 whitespace-nowrap ${
               activeTab === "actividades"
                 ? "border-[#008EE2] text-[#008EE2] font-bold"
                 : "border-transparent text-[#6B7780] hover:text-[#2D3B45]"
@@ -269,7 +269,7 @@ export const AutomatedCourseWorkspace: React.FC<AutomatedCourseWorkspaceProps> =
 
           <button
             onClick={() => setActiveTab("cronograma")}
-            className={`pb-2.5 px-1 border-b-2 transition-all flex items-center gap-1.5 ${
+            className={`pb-2.5 px-1 border-b-2 transition-all flex items-center gap-1.5 shrink-0 whitespace-nowrap ${
               activeTab === "cronograma"
                 ? "border-[#008EE2] text-[#008EE2] font-bold"
                 : "border-transparent text-[#6B7780] hover:text-[#2D3B45]"
@@ -281,7 +281,7 @@ export const AutomatedCourseWorkspace: React.FC<AutomatedCourseWorkspaceProps> =
 
           <button
             onClick={() => setActiveTab("anuncios")}
-            className={`pb-2.5 px-1 border-b-2 transition-all flex items-center gap-1.5 ${
+            className={`pb-2.5 px-1 border-b-2 transition-all flex items-center gap-1.5 shrink-0 whitespace-nowrap ${
               activeTab === "anuncios"
                 ? "border-[#008EE2] text-[#008EE2] font-bold"
                 : "border-transparent text-[#6B7780] hover:text-[#2D3B45]"
@@ -293,7 +293,7 @@ export const AutomatedCourseWorkspace: React.FC<AutomatedCourseWorkspaceProps> =
 
           <button
             onClick={() => setActiveTab("asistencia")}
-            className={`pb-2.5 px-1 border-b-2 transition-all flex items-center gap-1.5 ${
+            className={`pb-2.5 px-1 border-b-2 transition-all flex items-center gap-1.5 shrink-0 whitespace-nowrap ${
               activeTab === "asistencia"
                 ? "border-[#008EE2] text-[#008EE2] font-bold"
                 : "border-transparent text-[#6B7780] hover:text-[#2D3B45]"
@@ -305,7 +305,7 @@ export const AutomatedCourseWorkspace: React.FC<AutomatedCourseWorkspaceProps> =
 
           <button
             onClick={() => setActiveTab("excel")}
-            className={`pb-2.5 px-1 border-b-2 transition-all flex items-center gap-1.5 ${
+            className={`pb-2.5 px-1 border-b-2 transition-all flex items-center gap-1.5 shrink-0 whitespace-nowrap ${
               activeTab === "excel"
                 ? "border-[#008EE2] text-[#008EE2] font-bold"
                 : "border-transparent text-[#6B7780] hover:text-[#2D3B45]"
@@ -317,7 +317,7 @@ export const AutomatedCourseWorkspace: React.FC<AutomatedCourseWorkspaceProps> =
 
           <button
             onClick={() => setActiveTab("metricas")}
-            className={`pb-2.5 px-1 border-b-2 transition-all flex items-center gap-1.5 ${
+            className={`pb-2.5 px-1 border-b-2 transition-all flex items-center gap-1.5 shrink-0 whitespace-nowrap ${
               activeTab === "metricas"
                 ? "border-[#008EE2] text-[#008EE2] font-bold"
                 : "border-transparent text-[#6B7780] hover:text-[#2D3B45]"

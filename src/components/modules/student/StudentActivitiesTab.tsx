@@ -238,7 +238,7 @@ export const StudentActivitiesTab: React.FC<StudentActivitiesTabProps> = ({
             <div className="pt-2 border-t border-gray-200">
               {userSubmission ? (
                 <div className="p-4 bg-emerald-50/70 border border-emerald-300 rounded-[4px] space-y-3">
-                  <div className="flex justify-between items-start">
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
                     <div>
                       <span className="text-[10px] font-bold text-emerald-900 bg-emerald-200 px-2 py-0.5 rounded uppercase">
                         Entrega Procesada
@@ -252,8 +252,8 @@ export const StudentActivitiesTab: React.FC<StudentActivitiesTabProps> = ({
                     </div>
 
                     {/* Badge Mandatorio */}
-                    <div className="text-right">
-                      <span className="px-2.5 py-1 bg-white border border-emerald-400 text-emerald-800 rounded text-xs font-bold shadow-xs block">
+                    <div className="text-left sm:text-right">
+                      <span className="px-2.5 py-1 bg-white border border-emerald-400 text-emerald-800 rounded text-xs font-bold shadow-xs inline-block">
                         Revisado automáticamente según la rúbrica
                       </span>
                       <span className="text-xs font-extrabold text-purple-900 mt-1 block">

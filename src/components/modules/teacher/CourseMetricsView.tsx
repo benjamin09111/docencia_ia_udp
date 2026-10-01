@@ -17,6 +17,7 @@ import {
   Brain,
   Lightbulb,
   CheckCircle2,
+  Sparkles,
 } from "lucide-react";
 
 import { CanvasButton } from "@/components/canvas/CanvasButton";
