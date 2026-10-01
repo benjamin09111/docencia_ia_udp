@@ -45,14 +45,26 @@ export const CanvasTableRow: React.FC<{
   );
 };
 
-export const CanvasTableCell: React.FC<{
-  children: React.ReactNode;
+export interface CanvasTableCellProps extends React.TdHTMLAttributes<HTMLTableCellElement> {
+  children?: React.ReactNode;
   className?: string;
   align?: "left" | "center" | "right";
-}> = ({ children, className = "", align = "left" }) => {
+}
+
+export const CanvasTableCell: React.FC<CanvasTableCellProps> = ({
+  children,
+  className = "",
+  align = "left",
+  colSpan,
+  ...props
+}) => {
   const alignClass = align === "center" ? "text-center" : align === "right" ? "text-right" : "text-left";
   return (
-    <td className={`p-3 text-[#2D3B45] ${alignClass} ${className}`}>
+    <td
+      colSpan={colSpan}
+      className={`p-3 text-[#2D3B45] ${alignClass} ${className}`}
+      {...props}
+    >
       {children}
     </td>
   );
