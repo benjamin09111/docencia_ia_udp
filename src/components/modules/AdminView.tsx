@@ -18,7 +18,7 @@ import {
   TechnicalAgentItem,
 } from "@/components/modules/admin/AgentHistoryModal";
 import { AgentEditModal } from "@/components/modules/admin/AgentEditModal";
-import { getSavedSections, getSectionByCourseCode } from "@/services/attendanceStore";
+import { getSavedSections, getSectionByCourseCode, saveSections } from "@/services/attendanceStore";
 import { CourseSection } from "@/types/attendance";
 import {
   Bot,

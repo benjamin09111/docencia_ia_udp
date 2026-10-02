@@ -40,6 +40,7 @@ export interface ClassSession {
   tema?: string;
   horaInicio: string;
   horaFin: string;
+  sala?: string;
 }
 
 export type AttendanceValue = 1 | 0; // 1=Presente, 0=Ausente

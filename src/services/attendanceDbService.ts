@@ -156,7 +156,7 @@ export async function saveAttendanceMarkToSupabase(
   sessionCode: string,
   studentCanvasId: number,
   value: AttendanceValue,
-  markedBy: "profesor" | "ayudante" | "alumno_pin" | "sistema" = "profesor"
+  markedBy: "profesor" | "ayudante" | "alumno_pin" | "sistema" | "alumno_link" = "profesor"
 ): Promise<AttendanceDbSyncResult> {
   const supabase = getSupabaseClient();
   if (!supabase) return { success: false };

@@ -6,7 +6,7 @@ const supabaseAnonKey =
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
   process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 
-let clientInstance: SupabaseClient<Database> | null = null;
+let clientInstance: SupabaseClient<any> | null = null;
 
 export function isSupabaseConfigured(): boolean {
   return Boolean(
@@ -17,13 +17,13 @@ export function isSupabaseConfigured(): boolean {
   );
 }
 
-export function getSupabaseClient(): SupabaseClient<Database> | null {
+export function getSupabaseClient(): SupabaseClient<any> | null {
   if (!isSupabaseConfigured()) {
     return null;
   }
 
   if (!clientInstance) {
-    clientInstance = createClient<Database>(supabaseUrl!, supabaseAnonKey!, {
+    clientInstance = createClient(supabaseUrl!, supabaseAnonKey!, {
       auth: {
         persistSession: true,
         autoRefreshToken: true,
