@@ -25,7 +25,6 @@ import {
   saveTotalTrabajos,
   getTodayDateStr,
   saveSessionOverride,
-  regenerateSectionPin,
 } from "@/services/attendanceStore";
 import { exportAttendanceToExcel, AttendanceExportScope } from "@/services/excelExportService";
 import {
@@ -39,13 +38,19 @@ import {
   updateSessionStatusInSupabase,
   isSupabaseConfigured,
 } from "@/services/attendanceDbService";
-import { AttendanceFilterBar } from "./attendance/AttendanceFilterBar";
-import { AttendanceSummaryCards } from "./attendance/AttendanceSummaryCards";
 import { AttendanceMatrixTable } from "./attendance/AttendanceMatrixTable";
-import { AttendanceScheduleModal } from "./attendance/AttendanceScheduleModal";
 import { AttendanceCancelClassModal } from "./attendance/AttendanceCancelClassModal";
-import { AttendanceCancellationHistory } from "./attendance/AttendanceCancellationHistory";
-import { Table, CalendarX } from "lucide-react";
+import {
+  GraduationCap,
+  KeyRound,
+  Link as LinkIcon,
+  Share2,
+  Download,
+  Check,
+  Copy,
+  Search,
+} from "lucide-react";
+import { getPublicCheckinUrl, getPublicVisualUrl } from "@/utils/urlHelper";
 import { StudentExcelRow } from "@/types";
 
 interface TeacherAttendanceWorkspaceProps {
@@ -103,12 +108,11 @@ export const TeacherAttendanceWorkspace: React.FC<TeacherAttendanceWorkspaceProp
     setSelectedSectionId(matchedSectionId);
   }, [matchedSectionId]);
 
-  // Modales
-  const [isConfigOpen, setIsConfigOpen] = useState(false);
+  // Modales y estados de copiado
   const [cancelModalSession, setCancelModalSession] = useState<ClassSession | null>(null);
-
-  // Sub-tab dentro de Asistencia: Planilla vs Historial de Cancelaciones
-  const [workspaceTab, setWorkspaceTab] = useState<"matrix" | "cancellations">("matrix");
+  const [copiedCheckin, setCopiedCheckin] = useState(false);
+  const [copiedVisual, setCopiedVisual] = useState(false);
+  const [copiedPin, setCopiedPin] = useState(false);
 
   // Secciones relevantes para este curso
   const relevantSections = useMemo(() => {
@@ -743,18 +747,61 @@ export const TeacherAttendanceWorkspace: React.FC<TeacherAttendanceWorkspaceProp
     setCancelModalSession(null);
   };
 
-  const handleSaveSectionConfig = (updated: CourseSection) => {
-    const updatedSections = sections.map((s) => (s.id === updated.id ? updated : s));
-    setSections(updatedSections);
-    saveSections(updatedSections);
-    // Regenerar sesiones con los nuevos días/horarios
-    setSessionsBySection((prev) => ({
-      ...prev,
-      [updated.id]: generateSemesterSessions(updated),
-    }));
+  const copyText = async (text: string): Promise<boolean> => {
+    try {
+      if (typeof navigator !== "undefined" && navigator?.clipboard?.writeText) {
+        await navigator.clipboard.writeText(text);
+        return true;
+      }
+    } catch (e) {
+      console.warn("Clipboard API no disponible, usando fallback:", e);
+    }
+    try {
+      const textArea = document.createElement("textarea");
+      textArea.value = text;
+      textArea.style.position = "fixed";
+      textArea.style.opacity = "0";
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+      const success = document.execCommand("copy");
+      document.body.removeChild(textArea);
+      return success;
+    } catch (e) {
+      console.error("Fallo al copiar texto:", e);
+      return false;
+    }
   };
 
-  const handleExportExcel = (scope: AttendanceExportScope = "ambas") => {
+  const handleCopyCheckinLink = async () => {
+    const url = getPublicCheckinUrl(selectedSection.codigo || courseCode);
+    const ok = await copyText(url);
+    if (ok) {
+      setCopiedCheckin(true);
+      setTimeout(() => setCopiedCheckin(false), 2500);
+    }
+  };
+
+  const handleCopyVisualLink = async () => {
+    const url = getPublicVisualUrl(selectedSection.codigo || courseCode);
+    const ok = await copyText(url);
+    if (ok) {
+      setCopiedVisual(true);
+      setTimeout(() => setCopiedVisual(false), 2500);
+    }
+  };
+
+  const effectivePin = selectedSection?.pinActivo || "4821";
+
+  const handleCopyPin = async () => {
+    const ok = await copyText(effectivePin);
+    if (ok) {
+      setCopiedPin(true);
+      setTimeout(() => setCopiedPin(false), 2000);
+    }
+  };
+
+  const handleExportExcel = (scope: AttendanceExportScope = "ayudantias") => {
     exportAttendanceToExcel({
       cursoNombre: courseName,
       seccionNombre: `${courseCode} - ${selectedSection.nombre}`,
@@ -769,78 +816,109 @@ export const TeacherAttendanceWorkspace: React.FC<TeacherAttendanceWorkspaceProp
     });
   };
 
-  const handleOpenPublicLink = () => {
-    // Abre el enlace público específico del curso/sección
-    window.open(`/asistencia/${selectedSection.codigo || courseCode}`, "_blank");
-  };
-
-  const todayStr = getTodayDateStr();
-  const totalRealizadas = activeSessions.filter(
-    (s) => s.tipo === "ayudantia" && s.estado !== "cancelada" && s.fecha <= todayStr
-  ).length;
-
   return (
-    <div className="space-y-4 animate-fadeIn">
-      {/* Banner de Estado de Sincronización Oficial Canvas */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between bg-white border border-[#E0E3E6] rounded-[4px] px-3 sm:px-4 py-2 text-xs gap-2">
-        <div className="flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
-          <span className="font-semibold text-[#2D3B45]">
-            Nómina Oficial Canvas UDP:
-          </span>
-          <span className="text-[#6B7780]">
-            {isLoadingStudents ? (
-              "Sincronizando estudiantes desde Canvas..."
-            ) : (
-              `${sectionStudents.length} estudiantes matriculados (excluye profesores y ayudantes)`
-            )}
-          </span>
+    <div className="space-y-3 animate-fadeIn">
+      {/* Barra Principal Limpia: Identificación + 3 Acciones Clave solicitadas */}
+      <div className="bg-white border border-[#E0E3E6] rounded-[4px] p-3 shadow-xs flex flex-col xl:flex-row xl:items-center justify-between gap-3">
+        {/* Izquierda: Sección + PIN */}
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-[4px] bg-[#2D3B45] text-white flex items-center justify-center font-bold shrink-0">
+            <GraduationCap size={16} className="text-purple-300" />
+          </div>
+          <div>
+            <div className="flex flex-wrap items-center gap-2">
+              <h2 className="text-sm font-bold text-[#2D3B45]">Asistencia a Ayudantías</h2>
+              <span className="px-2 py-0.5 bg-gray-100 text-[#55636E] text-[11px] font-medium rounded border border-gray-200">
+                {sectionStudents.length} estudiantes • {selectedSection.nombre}
+              </span>
+              <button
+                type="button"
+                onClick={handleCopyPin}
+                className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 rounded text-[11px] font-mono font-bold transition-colors cursor-pointer"
+                title="PIN de sala. Clic para copiar"
+              >
+                <KeyRound size={12} className="text-amber-700" />
+                <span>PIN: {effectivePin}</span>
+                {copiedPin ? (
+                  <Check size={11} className="text-emerald-600 stroke-[3]" />
+                ) : (
+                  <Copy size={11} className="text-amber-600 opacity-70" />
+                )}
+              </button>
+            </div>
+          </div>
         </div>
-        <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
-          {isCloudSynced && (
-            <span className="inline-flex items-center gap-1.5 font-mono text-[11px] text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              Supabase Activo
-            </span>
-          )}
-          <span className="font-mono text-[11px] text-[#008EE2] bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
-            Canvas ID: {effectiveCanvasCourseId} • {selectedSection.nombre}
-          </span>
+
+        {/* Derecha: Buscador compacto + Las 3 Acciones Solicitadas */}
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Buscador de alumnos compacto */}
+          <div className="relative w-36 sm:w-44">
+            <Search size={13} className="absolute left-2.5 top-2 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Buscar alumno..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-7 pr-6 py-1 text-xs bg-gray-50 border border-gray-300 rounded-[4px] focus:bg-white focus:outline-hidden focus:border-[#008EE2] transition-colors"
+            />
+            {searchTerm && (
+              <button
+                type="button"
+                onClick={() => setSearchTerm("")}
+                className="absolute right-2 top-1.5 text-gray-400 hover:text-gray-600 text-xs"
+              >
+                ✕
+              </button>
+            )}
+          </div>
+
+          {/* 1. Copiar link para llenar asistencia del día */}
+          <button
+            type="button"
+            onClick={handleCopyCheckinLink}
+            className={`px-3 py-1.5 rounded-[4px] text-xs font-semibold flex items-center gap-1.5 transition-all shadow-2xs cursor-pointer ${
+              copiedCheckin
+                ? "bg-emerald-600 text-white"
+                : "bg-[#008EE2] hover:bg-[#0077BE] text-white"
+            }`}
+            title="Copia el enlace para que los estudiantes registren su asistencia de hoy en su teléfono o notebook"
+          >
+            {copiedCheckin ? <Check size={14} className="stroke-[2.5]" /> : <LinkIcon size={14} />}
+            <span>{copiedCheckin ? "¡Link Asistencia Copiado!" : "Copiar Link Asistencia Hoy"}</span>
+          </button>
+
+          {/* 2. Copiar link para compartir el Excel hasta la fecha */}
+          <button
+            type="button"
+            onClick={handleCopyVisualLink}
+            className={`px-3 py-1.5 rounded-[4px] text-xs font-semibold flex items-center gap-1.5 transition-all shadow-2xs border cursor-pointer ${
+              copiedVisual
+                ? "bg-emerald-50 border-emerald-300 text-emerald-800"
+                : "bg-white hover:bg-gray-50 border-[#C7CDD1] text-[#2D3B45]"
+            }`}
+            title="Copia el enlace público para que los alumnos revisen su asistencia y décimas a la fecha"
+          >
+            {copiedVisual ? <Check size={14} className="text-emerald-600 stroke-[2.5]" /> : <Share2 size={14} />}
+            <span>{copiedVisual ? "¡Link Planilla Copiado!" : "Copiar Link Planilla a la Fecha"}</span>
+          </button>
+
+          {/* 3. Descargar Excel Final */}
+          <button
+            type="button"
+            onClick={() => handleExportExcel("ayudantias")}
+            className="px-3.5 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-[4px] text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-2xs cursor-pointer"
+            title="Descargar archivo Excel oficial (.xlsx) con notas y asistencias"
+          >
+            <Download size={14} />
+            <span>Descargar Excel Final</span>
+          </button>
         </div>
       </div>
 
-      {/* 1. Barra de Filtros, Tabs y Acciones con Buscador y Marcación Rápida */}
-      <AttendanceFilterBar
-        filterType={filterType}
-        onFilterTypeChange={setFilterType}
-        sectionCode={selectedSection.codigo || courseCode}
-        currentSection={selectedSection}
-        activePin={selectedSection.pinActivo}
-        onRegeneratePin={handleRegeneratePin}
-        livePresentesCount={livePresentesCount}
-        totalEstudiantesCount={sectionStudents.length}
-        searchTerm={searchTerm}
-        onSearchChange={setSearchTerm}
-        onOpenConfig={() => setIsConfigOpen(true)}
-        onOpenPublicLink={handleOpenPublicLink}
-        onExportExcel={handleExportExcel}
-        onResetToZero={handleResetAllToZero}
-        incluirAyudantiasEnFinal={incluirAyudantiasEnFinal}
-        onToggleIncluirAyudantias={() => setIncluirAyudantiasEnFinal((prev) => !prev)}
-        todaySessionInfo={todaySessionInfo}
-        matchingSummaries={summaries}
-        attendanceMap={attendanceMap}
-        onMarkTodayAttendance={handleMarkTodayAttendance}
-        studentWorkRecords={studentWorkRecords}
-        totalTrabajosRealizados={totalTrabajosRealizados}
-        onUpdateTotalTrabajos={handleUpdateTotalTrabajos}
-        onUpdateWorkRecord={handleUpdateStudentWork}
-      />
-
-      {/* Notificación rápida de marcación */}
+      {/* Notificación rápida de acciones */}
       {quickNotification && (
         <div
-          className={`p-3 rounded-[4px] text-xs font-medium border flex items-center justify-between shadow-xs animate-fadeIn ${
+          className={`p-2.5 rounded-[4px] text-xs font-medium border flex items-center justify-between shadow-2xs animate-fadeIn ${
             quickNotification.type === "success"
               ? "bg-emerald-50 border-emerald-300 text-emerald-900"
               : quickNotification.type === "warning"
@@ -849,13 +927,6 @@ export const TeacherAttendanceWorkspace: React.FC<TeacherAttendanceWorkspaceProp
           }`}
         >
           <div className="flex items-center gap-2">
-            <span className="font-bold">
-              {quickNotification.type === "success"
-                ? "✓"
-                : quickNotification.type === "warning"
-                ? "⚠"
-                : "ℹ"}
-            </span>
             <span>{quickNotification.message}</span>
           </div>
           <button
@@ -867,89 +938,28 @@ export const TeacherAttendanceWorkspace: React.FC<TeacherAttendanceWorkspaceProp
         </div>
       )}
 
-      {/* Selector de Pestañas: Planilla vs Historial de Cancelaciones */}
-      <div className="flex flex-wrap items-center justify-between border-b border-[#E0E3E6] pt-1 gap-2">
-        <div className="flex flex-wrap items-center gap-1">
-          <button
-            type="button"
-            onClick={() => setWorkspaceTab("matrix")}
-            className={`px-3.5 py-2 text-xs font-bold border-b-2 flex items-center gap-2 transition-all ${
-              workspaceTab === "matrix"
-                ? "border-[#008EE2] text-[#008EE2] bg-white rounded-t-[4px] shadow-2xs"
-                : "border-transparent text-[#6B7780] hover:text-[#2D3B45] hover:bg-gray-100/70"
-            }`}
-          >
-            <Table size={14} />
-            <span>Planilla de Asistencia</span>
-          </button>
+      {/* Ver Detalles: Planilla y Matriz Interactiva de Asistencia */}
+      <AttendanceMatrixTable
+        sessions={filteredSessions}
+        summaries={summaries}
+        attendanceMap={attendanceMap}
+        filterType={filterType}
+        incluirAyudantiasEnFinal={incluirAyudantiasEnFinal}
+        todaySessionInfo={todaySessionInfo}
+        showOnlyUpToToday={showOnlyUpToToday}
+        onToggleShowOnlyUpToToday={() => setShowOnlyUpToToday((prev) => !prev)}
+        onToggleAttendance={handleToggleAttendance}
+        onMarkAllPresent={handleMarkAllPresent}
+        onMarkAllAbsent={handleMarkAllAbsent}
+        onOpenCancelModal={(sess) => setCancelModalSession(sess)}
+        onToggleModality={handleToggleSessionModality}
+        studentWorkRecords={studentWorkRecords}
+        totalTrabajosRealizados={totalTrabajosRealizados}
+        onUpdateTotalTrabajos={handleUpdateTotalTrabajos}
+        onUpdateWorkRecord={handleUpdateStudentWork}
+      />
 
-          <button
-            type="button"
-            onClick={() => setWorkspaceTab("cancellations")}
-            className={`px-3.5 py-2 text-xs font-bold border-b-2 flex items-center gap-2 transition-all ${
-              workspaceTab === "cancellations"
-                ? "border-[#C8102E] text-[#C8102E] bg-white rounded-t-[4px] shadow-2xs"
-                : "border-transparent text-[#6B7780] hover:text-[#2D3B45] hover:bg-gray-100/70"
-            }`}
-          >
-            <CalendarX size={14} />
-            <span>Historial de Cancelaciones</span>
-            {activeSessions.filter((s) => s.estado === "cancelada").length > 0 && (
-              <span className="ml-1 text-[10px] font-mono px-1.5 py-0.2 bg-red-100 text-red-800 font-bold rounded-full border border-red-200">
-                {activeSessions.filter((s) => s.estado === "cancelada").length}
-              </span>
-            )}
-          </button>
-        </div>
-      </div>
-
-      {workspaceTab === "matrix" ? (
-        <>
-          {/* 2. Tarjetas Resumen KPI */}
-          <AttendanceSummaryCards summaries={summaries} totalRealizadas={totalRealizadas} />
-
-          {/* 3. Matriz Interactiva de Asistencia con Columna Hoy */}
-          <AttendanceMatrixTable
-            sessions={filteredSessions}
-            summaries={summaries}
-            attendanceMap={attendanceMap}
-            filterType={filterType}
-            incluirAyudantiasEnFinal={incluirAyudantiasEnFinal}
-            todaySessionInfo={todaySessionInfo}
-            showOnlyUpToToday={showOnlyUpToToday}
-            onToggleShowOnlyUpToToday={() => setShowOnlyUpToToday((prev) => !prev)}
-            onToggleAttendance={handleToggleAttendance}
-            onMarkAllPresent={handleMarkAllPresent}
-            onMarkAllAbsent={handleMarkAllAbsent}
-            onOpenCancelModal={(sess) => setCancelModalSession(sess)}
-            onToggleModality={handleToggleSessionModality}
-            studentWorkRecords={studentWorkRecords}
-            totalTrabajosRealizados={totalTrabajosRealizados}
-            onUpdateTotalTrabajos={handleUpdateTotalTrabajos}
-            onUpdateWorkRecord={handleUpdateStudentWork}
-          />
-        </>
-      ) : (
-        <AttendanceCancellationHistory
-          sessions={activeSessions}
-          section={selectedSection}
-          onReactivateSession={handleReactivateSession}
-          onOpenCancelModal={(sess) => setCancelModalSession(sess)}
-          onBackToMatrix={() => setWorkspaceTab("matrix")}
-        />
-      )}
-
-      {/* Modal de Configuración de Sección */}
-      {isConfigOpen && (
-        <AttendanceScheduleModal
-          section={selectedSection}
-          isOpen={isConfigOpen}
-          onClose={() => setIsConfigOpen(false)}
-          onSave={handleSaveSectionConfig}
-        />
-      )}
-
-      {/* Modal de Cancelar Sesión */}
+      {/* Modal de Cancelar / Reactivar Sesión */}
       {cancelModalSession && (
         <AttendanceCancelClassModal
           session={cancelModalSession}

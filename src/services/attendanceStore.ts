@@ -226,7 +226,7 @@ export interface StudentRosterItem {
 }
 
 export const INITIAL_STUDENTS_ROSTER: StudentRosterItem[] = [
-  // Alumnos Sección 1 - TICs II
+  // Alumnos Sección 1 - TICs II (28 alumnos matriculados)
   { canvas_id: 29248, rut: "20.481.932-8", nombres: "Benjamín", apellidos: "Morales Pizarro", email: "benjamin.morales3@mail.udp.cl", seccionId: "sec_1" },
   { canvas_id: 31021, rut: "21.109.845-K", nombres: "Víctor Vicente", apellidos: "Barrera Jorquera", email: "victor.barrera@mail.udp.cl", seccionId: "sec_1" },
   { canvas_id: 32415, rut: "20.912.433-4", nombres: "Laura Francisca", apellidos: "Salinas Herrera", email: "laura.salinas1@mail.udp.cl", seccionId: "sec_1" },
@@ -235,6 +235,26 @@ export const INITIAL_STUDENTS_ROSTER: StudentRosterItem[] = [
   { canvas_id: 35190, rut: "20.887.112-5", nombres: "Matías Ignacio", apellidos: "Fuenzalida Castro", email: "matias.fuenzalida@mail.udp.cl", seccionId: "sec_1" },
   { canvas_id: 36201, rut: "21.002.443-1", nombres: "Valentina Paz", apellidos: "Rojas Vergara", email: "valentina.rojas4@mail.udp.cl", seccionId: "sec_1" },
   { canvas_id: 37402, rut: "20.654.890-3", nombres: "Joaquín Andrés", apellidos: "Navarro Soto", email: "joaquin.navarro@mail.udp.cl", seccionId: "sec_1" },
+  { canvas_id: 37403, rut: "20.781.234-5", nombres: "Ignacio Alonso", apellidos: "Cordero Méndez", email: "ignacio.cordero@mail.udp.cl", seccionId: "sec_1" },
+  { canvas_id: 37404, rut: "21.234.567-8", nombres: "Sofía Belén", apellidos: "Espinoza Valenzuela", email: "sofia.espinoza@mail.udp.cl", seccionId: "sec_1" },
+  { canvas_id: 37405, rut: "20.912.876-1", nombres: "Tomás Alejandro", apellidos: "Fuentes Silva", email: "tomas.fuentes@mail.udp.cl", seccionId: "sec_1" },
+  { canvas_id: 37406, rut: "21.098.765-4", nombres: "Antonia Isidora", apellidos: "Castillo Lagos", email: "antonia.castillo@mail.udp.cl", seccionId: "sec_1" },
+  { canvas_id: 37407, rut: "20.654.321-9", nombres: "Lucas Gabriel", apellidos: "Paredes Urzúa", email: "lucas.paredes@mail.udp.cl", seccionId: "sec_1" },
+  { canvas_id: 37408, rut: "21.432.987-0", nombres: "Javiera Francisca", apellidos: "Núñez Araya", email: "javiera.nunez@mail.udp.cl", seccionId: "sec_1" },
+  { canvas_id: 37409, rut: "20.876.543-2", nombres: "Martín Eduardo", apellidos: "Reyes Contreras", email: "martin.reyes@mail.udp.cl", seccionId: "sec_1" },
+  { canvas_id: 37410, rut: "21.123.456-7", nombres: "Florencia Paz", apellidos: "Henríquez Carrasco", email: "florencia.henriquez@mail.udp.cl", seccionId: "sec_1" },
+  { canvas_id: 37411, rut: "20.543.210-8", nombres: "Cristóbal Emilio", apellidos: "Vera Bustamante", email: "cristobal.vera@mail.udp.cl", seccionId: "sec_1" },
+  { canvas_id: 37412, rut: "21.321.654-3", nombres: "Isidora Ignacia", apellidos: "Pizarro Bravo", email: "isidora.pizarro@mail.udp.cl", seccionId: "sec_1" },
+  { canvas_id: 37413, rut: "20.987.654-K", nombres: "Maximiliano José", apellidos: "Sepúlveda Díaz", email: "maximiliano.sepulveda@mail.udp.cl", seccionId: "sec_1" },
+  { canvas_id: 37414, rut: "21.210.987-6", nombres: "Catalina Andrea", apellidos: "Olivares Flores", email: "catalina.olivares@mail.udp.cl", seccionId: "sec_1" },
+  { canvas_id: 37415, rut: "20.765.432-1", nombres: "Nicolás Andrés", apellidos: "Garrido Mena", email: "nicolas.garrido@mail.udp.cl", seccionId: "sec_1" },
+  { canvas_id: 37416, rut: "21.012.345-9", nombres: "Fernanda Daniela", apellidos: "Pinto Godoy", email: "fernanda.pinto@mail.udp.cl", seccionId: "sec_1" },
+  { canvas_id: 37417, rut: "20.890.123-4", nombres: "Felipe Esteban", apellidos: "Zamorano Ruiz", email: "felipe.zamorano@mail.udp.cl", seccionId: "sec_1" },
+  { canvas_id: 37418, rut: "21.345.098-7", nombres: "Constanza Nicole", apellidos: "Cárdenas Leiva", email: "constanza.cardenas@mail.udp.cl", seccionId: "sec_1" },
+  { canvas_id: 37419, rut: "20.678.901-2", nombres: "Vicente Javier", apellidos: "Orellana Figueroa", email: "vicente.orellana@mail.udp.cl", seccionId: "sec_1" },
+  { canvas_id: 37420, rut: "21.198.765-3", nombres: "Emilia Javiera", apellidos: "Miranda Toro", email: "emilia.miranda@mail.udp.cl", seccionId: "sec_1" },
+  { canvas_id: 37421, rut: "20.934.567-8", nombres: "Sebastián Ignacio", apellidos: "Riveros Poblete", email: "sebastian.riveros@mail.udp.cl", seccionId: "sec_1" },
+  { canvas_id: 37422, rut: "21.287.654-0", nombres: "Daniela Paz", apellidos: "Saavedra Guzmán", email: "daniela.saavedra@mail.udp.cl", seccionId: "sec_1" },
   // Alumnos Sección 2 - TICs II
   { canvas_id: 38101, rut: "20.991.222-6", nombres: "Diego Esteban", apellidos: "Cáceres Muñoz", email: "diego.caceres@mail.udp.cl", seccionId: "sec_2" },
   { canvas_id: 38102, rut: "21.223.456-7", nombres: "Constanza Belén", apellidos: "Pino Leiva", email: "constanza.pino@mail.udp.cl", seccionId: "sec_2" },
