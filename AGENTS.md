@@ -65,3 +65,37 @@ Para evitar que con el avance del desarrollo las páginas diverjan visualmente, 
 
 ## ⚡ 3. Flujo de Trabajo y Eficiencia de Comandos
 1. **Validaciones pesadas (`npm run build`, etc.)**: Comandos pesados como `npm run build` o verificaciones globales de compilación se ejecutan **SOLO antes de hacer el push final** o cuando el usuario lo solicite de forma explícita. No deben ejecutarse durante el desarrollo iterativo para mantener la máxima velocidad y eficiencia.
+
+---
+
+## 🛡️ 4. Estándar de Seguridad y Buenas Prácticas (Auditoría Continua)
+
+### Regla 8: Auditoría y Salud de Dependencias
+- Realizar escaneo preventivo de vulnerabilidades (`npm audit`).
+- Prohibido incorporar dependencias abandonadas o con alertas críticas conocidas en npm (ej. `xlsx`/SheetJS clásico v0.18 posee alertas altas de Prototype Pollution y ReDoS; se debe migrar a librerías seguras como `exceljs`).
+- Mantener las dependencias del runtime limpias de paquetes huérfanos o no utilizados.
+
+### Regla 9: Transporte Seguro, HTTPS y Cabeceras de Seguridad (HSTS)
+- Toda comunicación sensible debe viajar estrictamente sobre HTTPS.
+- El servidor y Next.js deben configurar cabeceras defensivas estándar:
+  - `Strict-Transport-Security: max-age=63072000; includeSubDomains; preload` (HSTS).
+  - `X-Content-Type-Options: nosniff`.
+  - `X-Frame-Options: SAMEORIGIN` (o CSP `frame-ancestors` si se incrusta en iframe de Canvas).
+  - `Referrer-Policy: strict-origin-when-cross-origin`.
+- Prevenir contenido mixto (mixed content) en assets o llamadas a servicios externos.
+
+### Regla 10: Gestión Segura de Sesiones y Cookies (Al implementar Auth)
+- Al construir o conectar el módulo real de autenticación (Supabase Auth / SSO UDP / Canvas OAuth):
+  - Todas las cookies de sesión deben tener los flags: `HttpOnly`, `Secure` (en prod) y `SameSite=Lax` o `Strict`.
+  - Expiración estricta por inactividad tras **30 minutos**.
+  - Destrucción total de sesión en servidor y revocación de tokens al cerrar sesión (`logout`).
+  - Regeneración obligatoria del identificador de sesión inmediatamente tras el login (prevención de Session Fixation).
+
+### Regla 11: Control de Acceso y Minimización de Datos en API Endpoints (`src/app/api/`)
+- Ningún endpoint que realice mutaciones o exponga datos institucionales (Canvas/Supabase/IA) debe quedar abierto sin autenticación y autorización basada en roles (RBAC: Admin, Docente, Alumno).
+- **Minimización de datos**: Filtrar y sanitizar las respuestas hacia el frontend; no reenviar objetos crudos de APIs de terceros que contengan datos no solicitados o sensibles.
+
+### Regla 12: Sanitización de Errores y Prevención de Fuga de Información (Information Leakage)
+- **Cero fugas de información interna**: Prohibido retornar al frontend `error.message`, stack traces, rutas internas de archivos o errores crudos de bases de datos/Canvas en ambientes de producción.
+- En bloques `catch`, registrar el detalle técnico en consola/telemetría del servidor (`console.error`) y responder al cliente con un mensaje genérico, claro y amigable (ej. `{ error: "No se pudo procesar la solicitud en este momento." }`).
+
