@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
     if (!res.ok) {
       console.error("Error Canvas API:", data);
       return NextResponse.json(
-        { error: data.errors || "Error al crear tarea en Canvas" },
+        { error: "No fue posible crear la tarea en Canvas UDP." },
         { status: res.status }
       );
     }
@@ -57,10 +57,10 @@ export async function POST(req: NextRequest) {
       published: data.published,
       workflowState: data.workflow_state,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error("Excepción en creación de tarea:", error);
     return NextResponse.json(
-      { error: error.message || "Error interno del servidor" },
+      { error: "Error interno al procesar la solicitud." },
       { status: 500 }
     );
   }

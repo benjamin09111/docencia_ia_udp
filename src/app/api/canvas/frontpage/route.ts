@@ -36,8 +36,9 @@ export async function GET(req: NextRequest) {
 
     if (!res.ok) {
       const errorData = await res.json().catch(() => ({}));
+      console.error("Error Canvas Frontpage GET:", errorData);
       return NextResponse.json(
-        { error: errorData.message || "Error al consultar la página de inicio en Canvas" },
+        { error: "Error al consultar la página de inicio en Canvas UDP." },
         { status: res.status }
       );
     }
@@ -48,10 +49,10 @@ export async function GET(req: NextRequest) {
       exists: true,
       frontPage: data,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error("Error en GET /api/canvas/frontpage:", error);
     return NextResponse.json(
-      { error: error.message || "Error interno del servidor" },
+      { error: "Error interno del servidor al obtener la portada." },
       { status: 500 }
     );
   }
@@ -153,10 +154,10 @@ export async function POST(req: NextRequest) {
       htmlUrl: pageData?.html_url || `${CANVAS_BASE_URL}/courses/${courseId}`,
       updatedAt: new Date().toISOString(),
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error("Excepción al guardar Front Page en Canvas:", error);
     return NextResponse.json(
-      { error: error.message || "Error interno al sincronizar con Canvas UDP" },
+      { error: "Error interno al sincronizar con Canvas UDP." },
       { status: 500 }
     );
   }

@@ -26,8 +26,9 @@ export async function GET(
     );
 
     if (!res.ok) {
+      console.error("Error Canvas API students fetch:", res.status, res.statusText);
       return NextResponse.json(
-        { error: `Error Canvas API: ${res.statusText}` },
+        { error: "Error al consultar la lista de estudiantes en Canvas UDP." },
         { status: res.status }
       );
     }
@@ -81,9 +82,10 @@ export async function GET(
     });
 
     return NextResponse.json(students);
-  } catch (error: any) {
+  } catch (error) {
+    console.error("Excepción en consulta de estudiantes:", error);
     return NextResponse.json(
-      { error: error?.message || "Error al consultar alumnos de Canvas" },
+      { error: "No fue posible procesar la nómina de estudiantes en este momento." },
       { status: 500 }
     );
   }
