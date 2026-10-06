@@ -168,7 +168,7 @@ export const ActivityEditModal: React.FC<ActivityEditModalProps> = ({
             </CanvasButton>
             <CanvasButton
               type="submit"
-              variant="primary"
+              variant="primary-udp"
               size="sm"
             >
               Guardar Cambios

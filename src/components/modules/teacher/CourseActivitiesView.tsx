@@ -280,7 +280,7 @@ export const CourseActivitiesView: React.FC<CourseActivitiesViewProps> = ({
                         {
                           label: "Eliminar",
                           icon: <Trash2 size={14} className="text-red-600" />,
-                          danger: true,
+                          variant: "danger",
                           onClick: () => setDeletingActivity(act),
                         },
                       ]}

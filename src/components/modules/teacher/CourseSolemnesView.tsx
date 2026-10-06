@@ -178,7 +178,7 @@ export const CourseSolemnesView: React.FC<CourseSolemnesViewProps> = ({
                     Anuncio publicado ({s.fechaUltimoAnuncio})
                   </CanvasBadge>
                 ) : (
-                  <CanvasBadge variant="pending">Anuncio no emitido</CanvasBadge>
+                  <CanvasBadge variant="warning">Anuncio no emitido</CanvasBadge>
                 )}
               </div>
 

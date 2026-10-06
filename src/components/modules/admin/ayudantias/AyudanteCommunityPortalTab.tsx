@@ -266,7 +266,7 @@ export const AyudanteCommunityPortalTab: React.FC = () => {
                     <div>
                       <div className="flex items-center gap-1.5">
                         <span className="font-bold text-[#2D3B45]">{post.autor}</span>
-                        <CanvasBadge variant={post.rol === "Docente" ? "danger" : post.rol === "Ayudante" ? "info" : "default"}>
+                        <CanvasBadge variant={post.rol === "Docente" ? "danger" : post.rol === "Ayudante" ? "info" : "neutral"}>
                           {post.rol}
                         </CanvasBadge>
                       </div>

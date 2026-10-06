@@ -25,6 +25,7 @@ import {
   saveTotalTrabajos,
   getTodayDateStr,
   saveSessionOverride,
+  regenerateSectionPin,
 } from "@/services/attendanceStore";
 import { exportAttendanceToExcel, AttendanceExportScope } from "@/services/excelExportService";
 import {

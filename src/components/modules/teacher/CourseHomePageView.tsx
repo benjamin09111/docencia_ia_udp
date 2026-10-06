@@ -238,7 +238,7 @@ export const CourseHomePageView: React.FC<CourseHomePageViewProps> = ({
             </CanvasButton>
 
             <CanvasButton
-              variant="primary"
+              variant="primary-udp"
               size="sm"
               onClick={handleSyncToCanvas}
               disabled={isSyncing}

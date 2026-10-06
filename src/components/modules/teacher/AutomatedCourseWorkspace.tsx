@@ -38,12 +38,14 @@ import {
   AlertTriangle,
   Edit3,
   Lock,
+  Bot,
 } from "lucide-react";
 import { CourseHomePageView } from "./CourseHomePageView";
 import { CourseEvaluacionesView } from "./evaluaciones/CourseEvaluacionesView";
 import { CourseSolemnesView } from "./CourseSolemnesView";
 import { CourseCronogramaView } from "./CourseCronogramaView";
 import { CourseAnnouncementsView } from "./CourseAnnouncementsView";
+import { CourseAgentMiniYoView } from "./CourseAgentMiniYoView";
 import { exportAnonymousGradesToExcel } from "@/services/excelExportService";
 
 interface AutomatedCourseWorkspaceProps {
@@ -78,6 +80,7 @@ export const AutomatedCourseWorkspace: React.FC<AutomatedCourseWorkspaceProps> =
     | "metricas"
     | "entregables"
     | "solemnes"
+    | "mini_yo"
   >("inicio");
   const [excelSuccess, setExcelSuccess] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
@@ -326,8 +329,28 @@ export const AutomatedCourseWorkspace: React.FC<AutomatedCourseWorkspaceProps> =
             <BarChart3 size={14} />
             <span>Métricas e Informe</span>
           </button>
+
+          <button
+            onClick={() => setActiveTab("mini_yo")}
+            className={`pb-2.5 px-1 border-b-2 transition-all flex items-center gap-1.5 shrink-0 whitespace-nowrap cursor-pointer ${
+              activeTab === "mini_yo"
+                ? "border-[#008EE2] text-[#008EE2] font-bold"
+                : "border-transparent text-[#6B7780] hover:text-[#2D3B45]"
+            }`}
+          >
+            <Bot size={14} className="text-[#C8102E]" />
+            <span>Materiales & Mini-Yo</span>
+          </button>
         </div>
       </div>
+
+      {/* TAB MINI-YO: Materiales de Cátedra & Calibración del Agente */}
+      {activeTab === "mini_yo" && (
+        <CourseAgentMiniYoView
+          courseCode={course.code}
+          courseName={course.name}
+        />
+      )}
 
       {/* TAB 0: Página de Inicio (Portada + Entregables Oficiales con Índice Interno) */}
       {(activeTab === "inicio" || activeTab === "entregables") && (

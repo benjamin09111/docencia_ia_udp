@@ -25,17 +25,43 @@ Para evitar que con el avance del desarrollo las páginas diverjan visualmente, 
 
 ---
 
-## 🧱 2. Principios de Código Limpio y Arquitectura
-1. **Límite de tamaño**: Archivos modulares, máximo ~150-200 líneas. Si una vista tiene tabs o modales, se extraen en componentes separados.
-2. **Cero código espagueti**:
-   - `src/types/`: Interfaces y modelos de dominio TypeScript bien tipados.
-   - `src/services/`: Toda comunicación externa (Canvas API, LLMs, Storage, Excel).
-   - `src/components/canvas/`: Componentes del sistema de diseño (Sidebar, Navbar, Card, Table, Badge, Button, Modal).
-   - `src/components/modules/`: Componentes de cada rol/módulo (Admin, Docente, Alumno).
-3. **No romper la consistencia visual**: Cualquier nueva pantalla DEBE reusar los mismos componentes base de `src/components/canvas/`.
+## 🏛️ 2. Principios Inquebrantables de Ingeniería y Arquitectura Limpia
+
+### Regla 1: Límite Estricto de 200 Líneas por Archivo
+- Ningún archivo `.tsx` de componente o vista superará las **200 líneas**.
+- Si un componente excede o se acerca al límite:
+  1. Extraer subcomponentes a carpetas dedicadas (ej. `src/components/modules/teacher/activities/`).
+  2. Extraer lógica de estado compleja a Custom Hooks (`src/hooks/`).
+  3. Extraer catálogos y datos mock a `src/constants/`.
+
+### Regla 2: Separación Estricta de 3 Capas
+1. **Presentación (`src/components/`)**: Únicamente renderizado JSX, estilos y despachar eventos. **Prohibido colocar cálculos matemáticos pesados o llamadas de persistencia en componentes de vista**.
+2. **Dominio (`src/types/` & `src/utils/`)**: Modelos de datos TypeScript, fórmulas de cálculo de notas, ponderaciones, reglas de eximición y validadores puros (fáciles de testear).
+3. **Infraestructura (`src/services/` & `src/app/api/`)**: Conexión a Canvas API, Supabase, generación de Excel y orquestación de LLMs.
+
+### Regla 3: Design System Canvas Obligatorio (`src/components/canvas/`)
+- Todo elemento recurrente de UI debe ser un componente reutilizable del design system:
+  - `CanvasModal`: Modales accesibles con backdrop, escape y títulos estandarizados.
+  - `CanvasInput`, `CanvasSelect`, `CanvasTextarea`: Inputs con estilos institucionales unificados.
+  - `CanvasTabs`: Pestañas oficiales con indicador activo Canvas.
+  - `CanvasTable`, `CanvasButton`, `CanvasBadge`, `CanvasActionMenu`.
+- **Prohibido** crear modales ad-hoc en línea o reescribir manualmente clases Tailwind idénticas en 30 archivos.
+
+### Regla 4: Single Source of Truth (SSOT) para el Estado
+- La información de cursos, notas y asistencia debe estar orquestada por stores/contextos reactivos unificados.
+- **Prohibido** crear eventos globales desarticulados con `window.dispatchEvent(new Event(...))` que fragmenten la sincronización entre componentes.
+
+### Regla 5: Capa Backend Real para Agentes e Inteligencia Artificial
+- La lógica de los agentes, prompts y comunicación con modelos de lenguaje corre en rutas de backend (`src/app/api/ai/`), nunca en `setTimeout` improvisados en componentes de interfaz.
+
+### Regla 6: Cero Datos Hardcodeados en Componentes de Vista
+- Catálogos de metodologías, rúbricas de 300 líneas y listas maestras se definen en `src/constants/` o se consultan desde base de datos/API, nunca embebidos en el archivo del componente.
+
+### Regla 7: Rendimiento y Memoización Preventiva
+- Tablas grandes y matrices de asistencia deben usar `useMemo` y `useCallback` para evitar re-renderizados innecesarios al tipear en filtros de búsqueda.
+- Evitar operaciones bloqueantes en el hilo principal del navegador.
 
 ---
 
 ## ⚡ 3. Flujo de Trabajo y Eficiencia de Comandos
 1. **Validaciones pesadas (`npm run build`, etc.)**: Comandos pesados como `npm run build` o verificaciones globales de compilación se ejecutan **SOLO antes de hacer el push final** o cuando el usuario lo solicite de forma explícita. No deben ejecutarse durante el desarrollo iterativo para mantener la máxima velocidad y eficiencia.
-

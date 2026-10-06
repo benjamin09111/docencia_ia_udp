@@ -16,7 +16,8 @@ import { AutomatedCourseWorkspace } from "./teacher/AutomatedCourseWorkspace";
 import { TeacherAttendanceWorkspace } from "./teacher/TeacherAttendanceWorkspace";
 import { getSectionByCourseCode, formatSectionSchedule, getSavedSections, saveSections } from "@/services/attendanceStore";
 import { fetchSectionsFromSupabase, isSupabaseConfigured } from "@/services/attendanceDbService";
-import { BookOpen, Sparkles, CheckCircle2, ArrowRight, CalendarCheck, Calendar, Clock, Building2, TrendingUp } from "lucide-react";
+import { BookOpen, Sparkles, CheckCircle2, ArrowRight, CalendarCheck, Calendar, Clock, Building2, TrendingUp, FileSpreadsheet } from "lucide-react";
+import { ImportCourseExcelModal } from "./common/ImportCourseExcelModal";
 
 import { StudentSubmission } from "@/types";
 
@@ -63,6 +64,8 @@ export const TeacherView: React.FC<TeacherViewProps> = ({
   const [automatedCourseIds, setAutomatedCourseIds] = useState<number[]>([44999, 45002, 47552, 47047, 44988]);
   const [openedCourseId, setOpenedCourseId] = useState<number | null>(null);
   const [notification, setNotification] = useState<string | null>(null);
+  const [showImportModal, setShowImportModal] = useState<boolean>(false);
+  const [customCourses, setCustomCourses] = useState<CanvasCourse[]>([]);
 
   // Estado sincronizado de secciones y horarios (modificados por Admin)
   const [sections, setSections] = useState<CourseSection[]>(() => getSavedSections());
@@ -132,8 +135,14 @@ export const TeacherView: React.FC<TeacherViewProps> = ({
       }
     });
 
+    customCourses.forEach((cc) => {
+      if (!list.some((c) => c.id === cc.id)) {
+        list.unshift(cc);
+      }
+    });
+
     return list;
-  }, [canvasCourses]);
+  }, [canvasCourses, customCourses]);
 
   const openedCourse = useMemo(() => {
     if (!openedCourseId) return null;
@@ -186,6 +195,17 @@ export const TeacherView: React.FC<TeacherViewProps> = ({
           <p className="text-xs text-[#6B7780] mt-0.5">
             Asignaturas del Tablero oficial de Canvas vinculables con agentes de cátedra.
           </p>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <CanvasButton
+            variant="outline"
+            size="sm"
+            icon={<FileSpreadsheet size={15} className="text-emerald-700" />}
+            onClick={() => setShowImportModal(true)}
+          >
+            Importar Curso desde Excel UDP
+          </CanvasButton>
         </div>
       </div>
 
@@ -432,6 +452,17 @@ export const TeacherView: React.FC<TeacherViewProps> = ({
           </tbody>
         </CanvasTable>
       </div>
+
+      <ImportCourseExcelModal
+        isOpen={showImportModal}
+        onClose={() => setShowImportModal(false)}
+        onCourseCreated={(newCourse) => {
+          setCustomCourses((prev) => [newCourse, ...prev]);
+          setAutomatedCourseIds((prev) => [...prev, newCourse.id]);
+          setNotification(`Curso ${newCourse.name} (${newCourse.code}) importado exitosamente con su agente asignado.`);
+          setTimeout(() => setNotification(null), 4000);
+        }}
+      />
     </div>
   );
 };

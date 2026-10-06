@@ -203,7 +203,7 @@ export const AyudantesManagementTab: React.FC = () => {
                             ? "success"
                             : ayudante.estado === "postulante"
                             ? "info"
-                            : "default"
+                            : "neutral"
                         }
                       >
                         {ayudante.estado === "activo" ? "Activo 2026-1" : ayudante.estado === "postulante" ? "Postulante" : "Histórico"}

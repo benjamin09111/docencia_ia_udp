@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { CanvasBadge } from "@/components/canvas/CanvasBadge";
 import { Brain, Send, Bookmark, Sparkles, BookOpen, HelpCircle } from "lucide-react";
+import { sendAgentQuery } from "@/services/aiAgentService";
 
 interface StudentLearnChatTabProps {
   onQuestionAsked?: () => void;
@@ -25,7 +26,7 @@ export const StudentLearnChatTab: React.FC<StudentLearnChatTabProps> = ({
   const [chatInput, setChatInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
 
-  const handleSendMessage = (e: React.FormEvent) => {
+  const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!chatInput.trim()) return;
 
@@ -38,37 +39,31 @@ export const StudentLearnChatTab: React.FC<StudentLearnChatTabProps> = ({
       onQuestionAsked();
     }
 
-    setTimeout(() => {
+    try {
+      const res = await sendAgentQuery({
+        agentRole: "theoretical_tutor",
+        message: query,
+      });
       setIsTyping(false);
-      const lower = query.toLowerCase();
-      let reply =
-        "Según la cátedra de la Escuela de Informática UDP, los atributos de calidad guían la toma de decisiones arquitectónicas. Deben evaluarse mediante escenarios cuantificables que permitan verificar si la arquitectura cumple los requerimientos no funcionales (Cap. 4 Bass et al.).";
-      let source = "Software Architecture in Practice (Bass, Clements, Kazman) • Cátedra UDP";
-
-      if (lower.includes("pmbok") || lower.includes("principio")) {
-        reply =
-          "La Guía PMBOK 7ma Edición define 12 principios rectores centrados en valor continuo. Los más evaluados en las pruebas son:\n1. Demostrar liderazgo adaptativo ante la incertidumbre.\n2. Diseñar la calidad en los procesos y entregables técnicos.\n3. Navegar en la complejidad y responder activamente a los riesgos.";
-        source = "PMBOK 7ma Edición • Dominios de Desempeño y Principios";
-      } else if (lower.includes("rto") || lower.includes("rpo") || lower.includes("disponibilidad")) {
-        reply =
-          "📌 Métricas Clave de Recuperación:\n• RTO (Recovery Time Objective): Tiempo máximo aceptable para que el servicio vuelva a operar tras un fallo (ej. < 5 segundos en failover automático).\n• RPO (Recovery Point Objective): Volumen máximo admisible de pérdida transaccional de datos medido en tiempo (ej. 0 segundos si hay replicación sincrónica WAL).\nAmbos deben especificarse en la medida de respuesta del escenario de disponibilidad.";
-        source = "Unidad 1: Atributos de Calidad y Escenarios Formales";
-      } else if (lower.includes("microservicio") || lower.includes("monolito") || lower.includes("patron")) {
-        reply =
-          "El trade-off entre Monolito Modular y Microservicios radica en acoplamiento vs complejidad operacional. Los microservicios ofrecen escalabilidad independiente y despliegues aislados, pero demandan observabilidad avanzada (Distributed Tracing), consistencia eventual (Sagas) y tolerancia a fallos en red (Circuit Breaker).";
-        source = "Unidad 2: Patrones y Estilos Arquitectónicos • Martin Fowler";
-      } else if (lower.includes("fibonacci") || lower.includes("poker") || lower.includes("story") || lower.includes("estimac")) {
-        reply =
-          "Planning Poker emplea la escala Fibonacci modificada (1, 2, 3, 5, 8, 13...) porque la incertidumbre crece no linealmente al aumentar el tamaño del ítem. En la Solemne se evalúa que consideres tres factores: volumen de código, complejidad de integración externa e incertidumbre de requisitos.";
-        source = "Unidad 3: Planificación y Estimación Ágil de Proyectos TIC";
-      } else if (lower.includes("circuit") || lower.includes("breaker") || lower.includes("resiliencia")) {
-        reply =
-          "El patrón Circuit Breaker previene fallos en cascada operando en tres estados:\n1. Cerrado: El tráfico fluye normalmente al servicio externo.\n2. Abierto: Ante una tasa de fallas superior al umbral (ej. 50%), corta el tráfico y retorna un fallback inmediato sin saturar la red.\n3. Semi-abierto: Tras un tiempo de reposo, envía solicitudes de prueba para verificar si el servicio externo se recuperó.";
-        source = "Unidad 4: Resiliencia Cloud y Microservicios Resilientes";
-      }
-
-      setChatMessages((prev) => [...prev, { sender: "agent", text: reply, source }]);
-    }, 750);
+      setChatMessages((prev) => [
+        ...prev,
+        {
+          sender: "agent",
+          text: res.reply,
+          source: res.sources?.[0] || "Bibliografía Oficial UDP",
+        },
+      ]);
+    } catch {
+      setIsTyping(false);
+      setChatMessages((prev) => [
+        ...prev,
+        {
+          sender: "agent",
+          text: "No se pudo conectar con el Agente Tutor Teórico. Por favor reintenta en breve.",
+          source: "Error de Conexión",
+        },
+      ]);
+    }
   };
 
   return (

@@ -24,6 +24,7 @@ import {
   ShieldAlert,
   ArrowRight,
 } from "lucide-react";
+import { sendAgentQuery } from "@/services/aiAgentService";
 
 interface StudentActivitiesTabProps {
   entregables: CourseDeliverable[];
@@ -60,7 +61,7 @@ export const StudentActivitiesTab: React.FC<StudentActivitiesTabProps> = ({
   const selectedActivity = actividades.find((a) => a.id === selectedActivityId) || actividades[0];
   const userSubmission = entregasAlumnos.find((s) => s.deliverable_id === selectedActivity?.id);
 
-  const handleSendMessage = (e: React.FormEvent) => {
+  const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!chatInput.trim()) return;
 
@@ -68,18 +69,21 @@ export const StudentActivitiesTab: React.FC<StudentActivitiesTabProps> = ({
     setChatMessages((prev) => [...prev, { sender: "user", text: query }]);
     setChatInput("");
 
-    setTimeout(() => {
-      let reply =
-        "Para obtener el puntaje completo según la rúbrica, asegúrate de justificar tu propuesta con métricas cuantificables y mencionar al menos un plan de contingencia formal.";
-      const lower = query.toLowerCase();
-      if (lower.includes("puntos") || lower.includes("rubrica") || lower.includes("criterio")) {
-        reply =
-          "La rúbrica asigna 50 pts a la justificación técnica de trade-offs de arquitectura y 50 pts a la aplicación de la matriz de riesgos PMBOK. No olvides redactar la mitigación de fallos.";
-      } else if (lower.includes("plazo") || lower.includes("fecha")) {
-        reply = `El plazo vence el ${selectedActivity?.fecha_limite || "18 de octubre"} a las 23:59 hrs.`;
-      }
-      setChatMessages((prev) => [...prev, { sender: "agent", text: reply }]);
-    }, 700);
+    try {
+      const res = await sendAgentQuery({
+        agentRole: "activity_assistant",
+        message: query,
+      });
+      setChatMessages((prev) => [...prev, { sender: "agent", text: res.reply }]);
+    } catch {
+      setChatMessages((prev) => [
+        ...prev,
+        {
+          sender: "agent",
+          text: "No fue posible conectar con el asistente de la actividad. Reintenta en breve.",
+        },
+      ]);
+    }
   };
 
   // Entrega rápida de mock con auto-corrección inmediata

@@ -5,12 +5,15 @@ import { CourseDeliverable, StudentExcelRow, StudentStudyMetrics, StudentSubmiss
 import { StudentLearnChatTab } from "./student/StudentLearnChatTab";
 import { StudentPracticeLabTab } from "./student/StudentPracticeLabTab";
 import { StudentAttendanceGradesTab } from "./student/StudentAttendanceGradesTab";
+import { StudentActivitiesTab } from "./student/StudentActivitiesTab";
+import { CanvasTabs, CanvasTabItem } from "@/components/canvas/CanvasTabs";
 import {
   GraduationCap,
   Brain,
   ListChecks,
   CalendarCheck,
   Sparkles,
+  Award,
 } from "lucide-react";
 
 interface StudentViewProps {
@@ -22,12 +25,15 @@ interface StudentViewProps {
 }
 
 export const StudentView: React.FC<StudentViewProps> = ({
+  entregables = [],
+  entregasAlumnos = [],
   estudiantesExcel = [],
+  onSubmitActivity = () => {},
+  onSendAppeal = () => {},
 }) => {
-  // Las 3 tabs solicitadas: Aprendizaje (Chat), Evaluaciones para aprender, Mi Asistencia (y notas)
-  const [activeTab, setActiveTab] = useState<"aprendizaje" | "evaluaciones" | "asistencia">("aprendizaje");
+  const [activeTab, setActiveTab] = useState<string>("actividades");
 
-  // Métricas ligeras de estudio registradas (contador de preguntas realizadas)
+  // Métricas de estudio registradas
   const [studyMetrics, setStudyMetrics] = useState<StudentStudyMetrics>({
     preguntasRealizadas: 14,
     actividadesCompletadas: 3,
@@ -51,8 +57,38 @@ export const StudentView: React.FC<StudentViewProps> = ({
     }));
   };
 
+  const actividadesAyudantia = entregables.filter((e) => e.tipo === "actividad_ayudantia");
+
+  const studentTabs: CanvasTabItem[] = [
+    {
+      id: "actividades",
+      label: "Actividades & Entregas (+Décimas)",
+      icon: <Award size={14} />,
+      badge: (
+        <span className="bg-purple-100 text-purple-800 text-[10px] px-1.5 py-0.2 rounded-full font-bold font-mono">
+          {actividadesAyudantia.length} activas
+        </span>
+      ),
+    },
+    {
+      id: "aprendizaje",
+      label: "Aprendizaje (Chat Tutor IA)",
+      icon: <Brain size={14} />,
+    },
+    {
+      id: "evaluaciones",
+      label: "Evaluaciones para Aprender",
+      icon: <ListChecks size={14} />,
+    },
+    {
+      id: "asistencia",
+      label: "Mi Asistencia y Notas",
+      icon: <CalendarCheck size={14} />,
+    },
+  ];
+
   return (
-    <div className="space-y-5 animate-fadeIn">
+    <div className="space-y-4 animate-fadeIn">
       {/* Banner Principal del Estudiante UDP */}
       <div className="bg-white border border-[#E0E3E6] rounded-[4px] p-5 shadow-canvas-card">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
@@ -79,48 +115,25 @@ export const StudentView: React.FC<StudentViewProps> = ({
             </div>
           </div>
         </div>
-
-        {/* Las 3 Tabs Requeridas */}
-        <div className="flex gap-4 border-b border-gray-200 mt-5 pt-1 text-xs font-medium overflow-x-auto no-scrollbar flex-nowrap">
-          <button
-            onClick={() => setActiveTab("aprendizaje")}
-            className={`pb-2.5 px-1 border-b-2 transition-all flex items-center gap-1.5 ${
-              activeTab === "aprendizaje"
-                ? "border-[#008EE2] text-[#008EE2] font-bold"
-                : "border-transparent text-[#6B7780] hover:text-[#2D3B45]"
-            }`}
-          >
-            <Brain size={14} />
-            <span>Aprendizaje (Chat Tutor IA)</span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab("evaluaciones")}
-            className={`pb-2.5 px-1 border-b-2 transition-all flex items-center gap-1.5 ${
-              activeTab === "evaluaciones"
-                ? "border-[#008EE2] text-[#008EE2] font-bold"
-                : "border-transparent text-[#6B7780] hover:text-[#2D3B45]"
-            }`}
-          >
-            <ListChecks size={14} />
-            <span>Evaluaciones para Aprender</span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab("asistencia")}
-            className={`pb-2.5 px-1 border-b-2 transition-all flex items-center gap-1.5 ${
-              activeTab === "asistencia"
-                ? "border-[#008EE2] text-[#008EE2] font-bold"
-                : "border-transparent text-[#6B7780] hover:text-[#2D3B45]"
-            }`}
-          >
-            <CalendarCheck size={14} />
-            <span>Mi Asistencia y Notas</span>
-          </button>
-        </div>
       </div>
 
-      {/* Contenido de las 3 Tabs */}
+      {/* Tabs Reutilizables Canvas */}
+      <CanvasTabs
+        tabs={studentTabs}
+        activeTab={activeTab}
+        onChange={setActiveTab}
+      />
+
+      {/* Contenido de las Tabs */}
+      {activeTab === "actividades" && (
+        <StudentActivitiesTab
+          entregables={entregables}
+          entregasAlumnos={entregasAlumnos}
+          onSubmitActivity={onSubmitActivity}
+          onSendAppeal={onSendAppeal}
+        />
+      )}
+
       {activeTab === "aprendizaje" && (
         <StudentLearnChatTab
           onQuestionAsked={handleQuestionInChat}
