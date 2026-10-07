@@ -20,8 +20,6 @@ interface AttendanceMatrixTableProps {
   onUpdateDecimasPorTrabajo?: (val: number) => void;
   onUpdateWorkRecord?: (studentId: number, decimas: number, trabajosRealizados: number) => void;
   onToggleAttendance: (sessionId: string, studentId: number) => void;
-  onMarkAllPresent: (sessionId: string) => void;
-  onMarkAllAbsent?: (sessionId: string) => void;
   onOpenCancelModal: (session: ClassSession) => void;
   onReactivateSession?: (sessionId: string) => void;
   onToggleModality?: (sessionId: string) => void;
@@ -60,8 +58,6 @@ export const AttendanceMatrixTable: React.FC<AttendanceMatrixTableProps> = ({
   onUpdateDecimasPorTrabajo,
   onUpdateWorkRecord,
   onToggleAttendance,
-  onMarkAllPresent,
-  onMarkAllAbsent,
   onOpenCancelModal,
   onReactivateSession,
   onToggleModality,

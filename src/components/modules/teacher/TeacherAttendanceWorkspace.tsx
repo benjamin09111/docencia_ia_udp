@@ -714,45 +714,6 @@ export const TeacherAttendanceWorkspace: React.FC<TeacherAttendanceWorkspaceProp
     );
   };
 
-  const handleMarkAllPresent = (sessionId: string) => {
-    lastLocalEditTimeRef.current = Date.now();
-    const batch: Array<{ session_code: string; student_canvas_id: number; value: number }> = [];
-    setAttendanceMap((prev) => {
-      const next = { ...prev };
-      sectionStudents.forEach((st) => {
-        next[`${sessionId}_${st.canvas_id}`] = 1;
-        batch.push({ session_code: sessionId, student_canvas_id: st.canvas_id, value: 1 });
-      });
-      saveAttendanceMap(next);
-      return next;
-    });
-
-    if (batch.length > 0) {
-      saveAttendanceBatchToSupabase(batch).catch((err) =>
-        console.warn("Error batch Supabase:", err)
-      );
-    }
-  };
-
-  const handleMarkAllAbsent = (sessionId: string) => {
-    const batch: Array<{ session_code: string; student_canvas_id: number; value: number }> = [];
-    setAttendanceMap((prev) => {
-      const next = { ...prev };
-      sectionStudents.forEach((st) => {
-        next[`${sessionId}_${st.canvas_id}`] = 0;
-        batch.push({ session_code: sessionId, student_canvas_id: st.canvas_id, value: 0 });
-      });
-      saveAttendanceMap(next);
-      return next;
-    });
-
-    if (batch.length > 0) {
-      saveAttendanceBatchToSupabase(batch).catch((err) =>
-        console.warn("Error batch Supabase:", err)
-      );
-    }
-  };
-
   // Reiniciar todas las asistencias de la sección a 0
   const handleResetAllToZero = () => {
     const batch: Array<{ session_code: string; student_canvas_id: number; value: number }> = [];
@@ -1209,8 +1170,6 @@ export const TeacherAttendanceWorkspace: React.FC<TeacherAttendanceWorkspaceProp
         showOnlyUpToToday={showOnlyUpToToday}
         onToggleShowOnlyUpToToday={() => setShowOnlyUpToToday((prev) => !prev)}
         onToggleAttendance={handleToggleAttendance}
-        onMarkAllPresent={handleMarkAllPresent}
-        onMarkAllAbsent={handleMarkAllAbsent}
         onOpenCancelModal={(sess) => setCancelModalSession(sess)}
         onReactivateSession={handleReactivateSession}
         onToggleModality={handleToggleSessionModality}
