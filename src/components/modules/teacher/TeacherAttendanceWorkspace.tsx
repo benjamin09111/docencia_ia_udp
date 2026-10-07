@@ -23,11 +23,14 @@ import {
   saveStudentWorkRecords,
   getSavedTotalTrabajos,
   saveTotalTrabajos,
+  getSavedDecimasPorTrabajo,
+  saveDecimasPorTrabajo,
   getTodayDateStr,
   getSectionByCourseCode,
   saveSessionOverride,
   regenerateSectionPin,
   getSectionDailyPin,
+  getSectionVisualPin,
 } from "@/services/attendanceStore";
 import { exportAttendanceToExcel, AttendanceExportScope } from "@/services/excelExportService";
 import {
@@ -285,14 +288,25 @@ export const TeacherAttendanceWorkspace: React.FC<TeacherAttendanceWorkspaceProp
     getSavedTotalTrabajos(selectedSectionId)
   );
 
-  // Sincronizar trabajos de la sección cuando cambia el selector de sección
+  // Décimas por cada trabajo entregado (por defecto 0.2)
+  const [decimasPorTrabajo, setDecimasPorTrabajo] = useState<number>(() =>
+    getSavedDecimasPorTrabajo(selectedSectionId)
+  );
+
+  // Sincronizar trabajos y décimas de la sección cuando cambia el selector de sección
   useEffect(() => {
     setTotalTrabajosRealizados(getSavedTotalTrabajos(selectedSectionId));
+    setDecimasPorTrabajo(getSavedDecimasPorTrabajo(selectedSectionId));
   }, [selectedSectionId]);
 
   const handleUpdateTotalTrabajos = (total: number) => {
     setTotalTrabajosRealizados(total);
     saveTotalTrabajos(total, selectedSectionId);
+  };
+
+  const handleUpdateDecimasPorTrabajo = (val: number) => {
+    setDecimasPorTrabajo(val);
+    saveDecimasPorTrabajo(val, selectedSectionId);
   };
 
   // Escuchar actualizaciones de asistencia, décimas y trabajos en tiempo real
@@ -307,6 +321,7 @@ export const TeacherAttendanceWorkspace: React.FC<TeacherAttendanceWorkspaceProp
         setStudentWorkRecords(savedWork);
       }
       setTotalTrabajosRealizados(getSavedTotalTrabajos(selectedSectionId));
+      setDecimasPorTrabajo(getSavedDecimasPorTrabajo(selectedSectionId));
     };
 
     const handleOverridesUpdate = () => {
@@ -866,12 +881,28 @@ export const TeacherAttendanceWorkspace: React.FC<TeacherAttendanceWorkspaceProp
     }
   };
 
+  const [copiedVisualPin, setCopiedVisualPin] = useState(false);
+  const visualPin = getSectionVisualPin(selectedSection);
+
+  const handleCopyVisualPin = async () => {
+    const ok = await copyText(visualPin);
+    if (ok) {
+      setCopiedVisualPin(true);
+      setTimeout(() => setCopiedVisualPin(false), 2500);
+    }
+  };
+
   const handleCopyVisualLink = async () => {
     const url = getPublicVisualUrl(selectedSection.codigo || courseCode);
     const ok = await copyText(url);
     if (ok) {
       setCopiedVisual(true);
+      setQuickNotification({
+        type: "info",
+        message: `🔗 Link copiado al portapapeles. Recuerda compartir también el PIN semestral (${visualPin}) con los alumnos para que desbloqueen su sección.`,
+      });
       setTimeout(() => setCopiedVisual(false), 2500);
+      setTimeout(() => setQuickNotification(null), 6000);
     }
   };
 
@@ -935,6 +966,7 @@ export const TeacherAttendanceWorkspace: React.FC<TeacherAttendanceWorkspaceProp
       incluirAyudantiasEnFinal,
       studentWorkRecords,
       totalTrabajosRealizados,
+      decimasPorTrabajo,
     });
   };
 
@@ -1048,20 +1080,38 @@ export const TeacherAttendanceWorkspace: React.FC<TeacherAttendanceWorkspaceProp
             <span>{copiedCheckin ? "¡Link Asistencia Copiado!" : "Copiar Link Asistencia Hoy"}</span>
           </button>
 
-          {/* 2. Copiar link para compartir el Excel hasta la fecha */}
-          <button
-            type="button"
-            onClick={handleCopyVisualLink}
-            className={`px-3 py-1.5 rounded-[4px] text-xs font-semibold flex items-center gap-1.5 transition-all shadow-2xs border cursor-pointer ${
-              copiedVisual
-                ? "bg-emerald-50 border-emerald-300 text-emerald-800"
-                : "bg-white hover:bg-gray-50 border-[#C7CDD1] text-[#2D3B45]"
-            }`}
-            title="Copia el enlace público para que los alumnos revisen su asistencia y décimas a la fecha"
-          >
-            {copiedVisual ? <Check size={14} className="text-emerald-600 stroke-[2.5]" /> : <Share2 size={14} />}
-            <span>{copiedVisual ? "¡Link Planilla Copiado!" : "Copiar Link Planilla a la Fecha"}</span>
-          </button>
+          {/* 2. Copiar link para compartir el Excel hasta la fecha + PIN Semestral */}
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <button
+              type="button"
+              onClick={handleCopyVisualLink}
+              className={`px-3 py-1.5 rounded-[4px] text-xs font-semibold flex items-center gap-1.5 transition-all shadow-2xs border cursor-pointer ${
+                copiedVisual
+                  ? "bg-emerald-50 border-emerald-300 text-emerald-800"
+                  : "bg-white hover:bg-gray-50 border-[#C7CDD1] text-[#2D3B45]"
+              }`}
+              title="Copia el enlace privado para que los alumnos revisen su asistencia y décimas a la fecha"
+            >
+              {copiedVisual ? <Check size={14} className="text-emerald-600 stroke-[2.5]" /> : <Share2 size={14} />}
+              <span>{copiedVisual ? "¡Link Planilla Copiado!" : "Copiar Link Planilla a la Fecha"}</span>
+            </button>
+
+            {/* PIN Semestral de Sección para desbloquear la planilla */}
+            <button
+              type="button"
+              onClick={handleCopyVisualPin}
+              className="px-2.5 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 rounded-[4px] text-xs font-mono font-bold flex items-center gap-1.5 transition-colors shadow-2xs cursor-pointer"
+              title="PIN semestral permanente que los estudiantes deben ingresar para desbloquear la planilla de esta sección. Clic para copiar"
+            >
+              <KeyRound size={12} className="text-amber-700" />
+              <span>PIN Planilla: {visualPin}</span>
+              {copiedVisualPin ? (
+                <Check size={12} className="text-emerald-600 stroke-[3]" />
+              ) : (
+                <Copy size={12} className="text-amber-600 opacity-70" />
+              )}
+            </button>
+          </div>
 
           {/* 3. Descargar Excel Final */}
           <button
@@ -1137,6 +1187,8 @@ export const TeacherAttendanceWorkspace: React.FC<TeacherAttendanceWorkspaceProp
         studentWorkRecords={studentWorkRecords}
         totalTrabajosRealizados={totalTrabajosRealizados}
         onUpdateTotalTrabajos={handleUpdateTotalTrabajos}
+        decimasPorTrabajo={decimasPorTrabajo}
+        onUpdateDecimasPorTrabajo={handleUpdateDecimasPorTrabajo}
         onUpdateWorkRecord={handleUpdateStudentWork}
       />
 

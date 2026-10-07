@@ -16,6 +16,8 @@ interface AttendanceMatrixTableProps {
   studentWorkRecords?: Record<number, StudentWorkRecord>;
   totalTrabajosRealizados?: number;
   onUpdateTotalTrabajos?: (total: number) => void;
+  decimasPorTrabajo?: number;
+  onUpdateDecimasPorTrabajo?: (val: number) => void;
   onUpdateWorkRecord?: (studentId: number, decimas: number, trabajosRealizados: number) => void;
   onToggleAttendance: (sessionId: string, studentId: number) => void;
   onMarkAllPresent: (sessionId: string) => void;
@@ -53,6 +55,8 @@ export const AttendanceMatrixTable: React.FC<AttendanceMatrixTableProps> = ({
   studentWorkRecords = {},
   totalTrabajosRealizados = 3,
   onUpdateTotalTrabajos,
+  decimasPorTrabajo = 0.2,
+  onUpdateDecimasPorTrabajo,
   onUpdateWorkRecord,
   onToggleAttendance,
   onMarkAllPresent,
@@ -279,30 +283,56 @@ export const AttendanceMatrixTable: React.FC<AttendanceMatrixTableProps> = ({
 
               {/* Resúmenes Contextuales según Tab */}
               {isAyud && (
-                <th
-                  rowSpan={2}
-                  className="p-1 px-1.5 text-center bg-[#1E272E] text-white border-l border-white/20 w-[110px] min-w-[105px] text-[10px] font-bold uppercase"
-                  title="Décimas acumuladas / Trabajos realizados en ayudantía a la fecha"
-                >
-                  <div className="flex flex-col items-center justify-center leading-tight gap-0.5">
-                    <span className="text-amber-300 font-extrabold flex items-center gap-1">
-                      <Award size={11} />
-                      <span>Déc. / Trab.</span>
-                    </span>
-                    <div className="flex items-center gap-1 text-[9px] text-gray-300 font-normal">
-                      <span>Total:</span>
-                      <input
-                        type="number"
-                        min={0}
-                        max={50}
-                        value={totalTrabajosRealizados}
-                        onChange={(e) => onUpdateTotalTrabajos && onUpdateTotalTrabajos(Math.max(0, parseInt(e.target.value, 10) || 0))}
-                        className="w-7 h-4 text-center font-bold text-[10px] bg-black/40 border border-amber-300/50 rounded text-amber-200 focus:outline-none focus:border-amber-400"
-                        title="Haz clic para cambiar la cantidad total de trabajos en ayudantía a la fecha para todos"
-                      />
+                <>
+                  <th
+                    rowSpan={2}
+                    className="p-1 px-1.5 text-center bg-[#1E272E] text-white border-l border-white/20 w-[96px] min-w-[90px] text-[10px] font-bold uppercase"
+                    title="Trabajos en ayudantía realizados por el alumno / Total de trabajos a la fecha"
+                  >
+                    <div className="flex flex-col items-center justify-center leading-tight gap-0.5">
+                      <span className="text-amber-300 font-extrabold flex items-center gap-1">
+                        <Award size={11} />
+                        <span>Trabajos</span>
+                      </span>
+                      <div className="flex items-center gap-1 text-[9px] text-gray-300 font-normal">
+                        <span>Total:</span>
+                        <input
+                          type="number"
+                          min={0}
+                          max={50}
+                          value={totalTrabajosRealizados}
+                          onChange={(e) => onUpdateTotalTrabajos && onUpdateTotalTrabajos(Math.max(0, parseInt(e.target.value, 10) || 0))}
+                          className="w-7 h-4 text-center font-bold text-[10px] bg-black/40 border border-amber-300/50 rounded text-amber-200 focus:outline-none focus:border-amber-400"
+                          title="Total de trabajos realizados a la fecha para toda la sección"
+                        />
+                      </div>
                     </div>
-                  </div>
-                </th>
+                  </th>
+                  <th
+                    rowSpan={2}
+                    className="p-1 px-1.5 text-center bg-[#1E272E] text-white border-l border-white/10 w-[88px] min-w-[80px] text-[10px] font-bold uppercase"
+                    title="Décimas asignadas por trabajo y décimas totales acumuladas a la fecha"
+                  >
+                    <div className="flex flex-col items-center justify-center leading-tight gap-0.5">
+                      <span className="text-emerald-300 font-extrabold flex items-center gap-0.5">
+                        <span>Décimas</span>
+                      </span>
+                      <div className="flex items-center gap-0.5 text-[9px] text-gray-300 font-normal">
+                        <span>c/u:</span>
+                        <input
+                          type="number"
+                          step="0.1"
+                          min={0}
+                          max={5}
+                          value={decimasPorTrabajo}
+                          onChange={(e) => onUpdateDecimasPorTrabajo && onUpdateDecimasPorTrabajo(Math.max(0, parseFloat(e.target.value) || 0))}
+                          className="w-8 h-4 text-center font-bold text-[10px] bg-black/40 border border-emerald-300/50 rounded text-emerald-200 focus:outline-none focus:border-emerald-400"
+                          title="Décimas otorgadas por cada trabajo entregado (ej. 0.2)"
+                        />
+                      </div>
+                    </div>
+                  </th>
+                </>
               )}
               <th
                 rowSpan={2}
@@ -528,35 +558,55 @@ export const AttendanceMatrixTable: React.FC<AttendanceMatrixTableProps> = ({
                     });
                   })}
 
-                  {/* Décimas / Trabajos Realizados en Ayudantía */}
+                  {/* Trabajos Realizados y Décimas Calculadas */}
                   {isAyud && (
-                    <td className="p-1 text-center bg-amber-50/25 border-l border-gray-200 w-[105px] min-w-[100px]">
-                      <div className="flex items-center justify-center gap-1 font-mono text-xs">
-                        <input
-                          type="number"
-                          min={0}
-                          max={99}
-                          value={studentWorkRecords[sum.canvas_id]?.decimas ?? 0}
-                          onChange={(e) =>
-                            onUpdateWorkRecord &&
-                            onUpdateWorkRecord(
-                              sum.canvas_id,
-                              Math.max(0, parseInt(e.target.value, 10) || 0),
-                              totalTrabajosRealizados
-                            )
-                          }
-                          className="w-10 h-6 text-center font-bold text-amber-950 bg-amber-100/70 border border-amber-300 rounded focus:bg-white focus:border-[#008EE2] focus:outline-hidden"
-                          title="Décimas acumuladas del estudiante"
-                        />
-                        <span className="text-gray-400 font-bold">/</span>
-                        <span
-                          className="w-7 h-6 flex items-center justify-center text-xs font-bold text-indigo-900 bg-indigo-50 border border-indigo-200 rounded"
-                          title={`Trabajos en ayudantía a la fecha: ${totalTrabajosRealizados} (configurado para toda la sección)`}
-                        >
-                          {totalTrabajosRealizados}
-                        </span>
-                      </div>
-                    </td>
+                    <>
+                      {/* Columna 1: Trabajos Realizados / Total */}
+                      <td className="p-1 text-center bg-amber-50/20 border-l border-gray-200 w-[96px]">
+                        <div className="flex items-center justify-center gap-1 font-mono text-xs">
+                          <input
+                            type="number"
+                            min={0}
+                            max={totalTrabajosRealizados || 50}
+                            value={studentWorkRecords[sum.canvas_id]?.trabajosRealizados ?? 0}
+                            onChange={(e) => {
+                              const trab = Math.max(0, parseInt(e.target.value, 10) || 0);
+                              const dec = Math.round(trab * decimasPorTrabajo * 10) / 10;
+                              onUpdateWorkRecord && onUpdateWorkRecord(sum.canvas_id, dec, trab);
+                            }}
+                            className="w-8 h-6 text-center font-bold text-amber-950 bg-amber-100/70 border border-amber-300 rounded focus:bg-white focus:border-[#008EE2] focus:outline-hidden"
+                            title="Trabajos entregados por este estudiante"
+                          />
+                          <span className="text-gray-400 font-bold">/</span>
+                          <span
+                            className="w-6 h-6 flex items-center justify-center text-xs font-bold text-indigo-900 bg-indigo-50 border border-indigo-200 rounded"
+                            title={`Total de trabajos a la fecha: ${totalTrabajosRealizados}`}
+                          >
+                            {totalTrabajosRealizados}
+                          </span>
+                        </div>
+                      </td>
+
+                      {/* Columna 2: Décimas Totales Calculadas */}
+                      <td className="p-1 text-center bg-emerald-50/25 border-l border-gray-200 w-[88px]">
+                        {(() => {
+                          const trab = studentWorkRecords[sum.canvas_id]?.trabajosRealizados ?? 0;
+                          const dec = Math.round(trab * decimasPorTrabajo * 10) / 10;
+                          return (
+                            <span
+                              className={`inline-flex items-center justify-center px-1.5 py-0.5 rounded text-[11px] font-mono font-bold ${
+                                dec > 0
+                                  ? "bg-emerald-100 text-emerald-800 border border-emerald-300"
+                                  : "text-gray-400 bg-gray-50 border border-gray-200"
+                              }`}
+                              title={`${trab} trabajo(s) × ${decimasPorTrabajo} déc. = +${dec.toFixed(1)} décimas`}
+                            >
+                              {dec > 0 ? `+${dec.toFixed(1)}d` : "0.0d"}
+                            </span>
+                          );
+                        })()}
+                      </td>
+                    </>
                   )}
 
                   {/* Resúmenes Globales y Condición RI */}
@@ -638,10 +688,14 @@ export const AttendanceMatrixTable: React.FC<AttendanceMatrixTableProps> = ({
               })}
 
               {isAyud && (
-                <td className="p-1 text-center font-mono text-[10px] border-l border-gray-300 bg-amber-50 text-amber-950 font-bold">
-                  {summaries.reduce((acc, s) => acc + (studentWorkRecords[s.canvas_id]?.decimas || 0), 0)}d /{" "}
-                  {totalTrabajosRealizados}t
-                </td>
+                <>
+                  <td className="p-1 text-center font-mono text-[10px] border-l border-gray-300 bg-amber-50 text-amber-950 font-bold">
+                    {summaries.reduce((acc, s) => acc + (studentWorkRecords[s.canvas_id]?.trabajosRealizados || 0), 0)} trab.
+                  </td>
+                  <td className="p-1 text-center font-mono text-[10px] border-l border-gray-300 bg-emerald-50 text-emerald-950 font-bold">
+                    +{summaries.reduce((acc, s) => acc + ((studentWorkRecords[s.canvas_id]?.trabajosRealizados || 0) * decimasPorTrabajo), 0).toFixed(1)}d
+                  </td>
+                </>
               )}
 
               <td colSpan={3} className="p-1 text-center text-[10px] text-[#6B7780] font-medium border-l border-gray-300">

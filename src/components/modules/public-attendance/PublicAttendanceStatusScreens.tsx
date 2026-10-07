@@ -1,6 +1,5 @@
 import React from "react";
-import Link from "next/link";
-import { Clock, Calendar, Building2, MapPin, Lock, ShieldCheck, ArrowLeft } from "lucide-react";
+import { Clock, Calendar, Building2, MapPin, Lock, ShieldCheck } from "lucide-react";
 import { CourseSection } from "@/types/attendance";
 import { SessionActiveStatus } from "@/services/udpRoomsService";
 
@@ -49,16 +48,6 @@ export const PublicAttendanceClosedScreen: React.FC<ClosedScreenProps> = ({
           </div>
         </div>
       )}
-
-      <div className="pt-2 border-t border-gray-100">
-        <Link
-          href="/asistencia"
-          className="w-full py-2 bg-gray-100 hover:bg-gray-200 text-[#2D3B45] rounded-[4px] text-xs font-semibold flex items-center justify-center gap-2 transition-colors shadow-2xs"
-        >
-          <ArrowLeft size={13} />
-          <span>Volver al Portal de Asistencia</span>
-        </Link>
-      </div>
     </div>
   );
 };
@@ -97,15 +86,6 @@ export const PublicAttendanceDeviceLockedScreen: React.FC<DeviceLockedScreenProp
         <p>
           Por normativas de la Universidad Diego Portales, no se permite registrar a otro estudiante desde el mismo dispositivo.
         </p>
-      </div>
-      <div className="pt-2 border-t border-gray-100">
-        <Link
-          href="/asistencia"
-          className="text-xs font-semibold text-[#008EE2] hover:underline inline-flex items-center gap-1"
-        >
-          <ArrowLeft size={13} />
-          <span>Volver al Portal de Asistencia</span>
-        </Link>
       </div>
     </div>
   );

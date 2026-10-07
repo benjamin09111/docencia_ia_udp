@@ -14,6 +14,7 @@ export function exportAttendanceToExcel(params: {
   estudiantesNotas?: StudentExcelRow[];
   studentWorkRecords?: Record<number, StudentWorkRecord>;
   totalTrabajosRealizados?: number;
+  decimasPorTrabajo?: number;
   scope?: AttendanceExportScope;
   incluirAyudantiasEnFinal?: boolean;
 }) {
@@ -26,6 +27,7 @@ export function exportAttendanceToExcel(params: {
     estudiantesNotas,
     studentWorkRecords = {},
     totalTrabajosRealizados = 3,
+    decimasPorTrabajo = 0.2,
     scope = "ambas",
     incluirAyudantiasEnFinal = false,
   } = params;
@@ -69,7 +71,7 @@ export function exportAttendanceToExcel(params: {
       headers.push(diaMes);
     });
     if (subtipo === "ayudantia") {
-      headers.push("Décimas", "Trabajos Realizados");
+      headers.push("Trabajos Entregados", "Total Trabajos", "Décimas Totales");
     }
     headers.push("Asistidas", "Total Clases", "% Asistencia", "Estado");
     data.push(headers);
@@ -90,9 +92,10 @@ export function exportAttendanceToExcel(params: {
       const ok = pct >= 75;
 
       if (subtipo === "ayudantia") {
-        const work = studentWorkRecords[sum.canvas_id] || { decimas: 0, trabajosRealizados: totalTrabajosRealizados };
-        const trabCount = work.trabajosRealizados && work.trabajosRealizados > 0 ? work.trabajosRealizados : totalTrabajosRealizados;
-        row.push(work.decimas, trabCount);
+        const work = studentWorkRecords[sum.canvas_id];
+        const trabCount = work ? (work.trabajosRealizados ?? 0) : 0;
+        const totalDec = Math.round(trabCount * decimasPorTrabajo * 10) / 10;
+        row.push(trabCount, totalTrabajosRealizados, totalDec);
       }
 
       row.push(asistidasCount, totalVal, `${pct}%`, ok ? "OK" : "RI");
@@ -111,8 +114,9 @@ export function exportAttendanceToExcel(params: {
     });
 
     if (subtipo === "ayudantia") {
-      const sumDec = summaries.reduce((acc, s) => acc + (studentWorkRecords[s.canvas_id]?.decimas || 0), 0);
-      footer.push(`Total: ${sumDec}`, `${totalTrabajosRealizados} trabajos`);
+      const sumTrab = summaries.reduce((acc, s) => acc + (studentWorkRecords[s.canvas_id]?.trabajosRealizados || 0), 0);
+      const sumDec = Math.round(sumTrab * decimasPorTrabajo * 10) / 10;
+      footer.push(`${sumTrab} entregados`, `${totalTrabajosRealizados} total`, `+${sumDec.toFixed(1)}d`);
     }
 
     for (let i = 0; i < 4; i++) footer.push("");
@@ -125,7 +129,7 @@ export function exportAttendanceToExcel(params: {
       { wch: 16 }, // Nombres
       { wch: 25 }, // Email
       ...targetSessions.map(() => ({ wch: 7 })), // Fechas DD/MM
-      ...(subtipo === "ayudantia" ? [{ wch: 10 }, { wch: 18 }] : []),
+      ...(subtipo === "ayudantia" ? [{ wch: 18 }, { wch: 14 }, { wch: 15 }] : []),
       { wch: 10 },
       { wch: 12 },
       { wch: 13 },

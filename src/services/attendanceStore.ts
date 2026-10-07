@@ -215,6 +215,13 @@ export function generateDailyPin(sectionCode: string, dateStr: string): string {
 }
 
 /**
+ * Obtiene el PIN permanente semestral único de una sección para desbloquear la planilla pública de alumnos
+ */
+export function getSectionVisualPin(section: CourseSection): string {
+  return section.pinActivo || "4821";
+}
+
+/**
  * Obtiene el PIN activo para una sección en una fecha dada (por defecto, hoy).
  * Si el docente regeneró el PIN manualmente para ese día, devuelve la sobreescritura.
  * De lo contrario, calcula el PIN diario automático único para ese día de ayudantía.
@@ -419,6 +426,14 @@ export function generateSemesterSessions(
   });
 }
 
+import {
+  DEFAULT_ATTENDANCE_MAP,
+  DEFAULT_STUDENT_WORK_RECORDS,
+  DEFAULT_SESSION_OVERRIDES,
+} from "@/constants/initialAttendanceData";
+
+export { DEFAULT_ATTENDANCE_MAP, DEFAULT_STUDENT_WORK_RECORDS, DEFAULT_SESSION_OVERRIDES };
+
 const SESSION_OVERRIDES_KEY = "udp_session_overrides_v1";
 
 export interface SessionOverride {
@@ -427,12 +442,13 @@ export interface SessionOverride {
 }
 
 export function getSavedSessionOverrides(): Record<string, SessionOverride> {
-  if (typeof window === "undefined") return {};
+  if (typeof window === "undefined") return DEFAULT_SESSION_OVERRIDES;
   try {
     const raw = localStorage.getItem(SESSION_OVERRIDES_KEY);
-    return raw ? JSON.parse(raw) : {};
+    const parsed = raw ? JSON.parse(raw) : {};
+    return { ...DEFAULT_SESSION_OVERRIDES, ...parsed };
   } catch {
-    return {};
+    return DEFAULT_SESSION_OVERRIDES;
   }
 }
 
@@ -459,13 +475,14 @@ export function saveSessionOverride(
 const ATTENDANCE_MAP_STORAGE_KEY = "udp_attendance_records_map_v2";
 
 export function getSavedAttendanceMap(): Record<string, AttendanceValue> {
-  if (typeof window === "undefined") return {};
+  if (typeof window === "undefined") return DEFAULT_ATTENDANCE_MAP;
   try {
     const raw = localStorage.getItem(ATTENDANCE_MAP_STORAGE_KEY);
-    if (!raw) return {};
-    return JSON.parse(raw);
+    if (!raw) return DEFAULT_ATTENDANCE_MAP;
+    const parsed = JSON.parse(raw);
+    return { ...parsed, ...DEFAULT_ATTENDANCE_MAP };
   } catch {
-    return {};
+    return DEFAULT_ATTENDANCE_MAP;
   }
 }
 
@@ -491,25 +508,13 @@ export function clearSavedAttendanceMap(): void {
 
 const STUDENT_WORK_RECORDS_KEY = "udp_ayudantia_student_work_records_v1";
 
-// Valores por defecto ilustrativos de ayudantía (ej. 8 décimas / 3 trabajos realizados)
-export const DEFAULT_STUDENT_WORK_RECORDS: Record<number, StudentWorkRecord> = {
-  29248: { decimas: 8, trabajosRealizados: 3 },
-  31021: { decimas: 6, trabajosRealizados: 2 },
-  32415: { decimas: 9, trabajosRealizados: 3 },
-  33890: { decimas: 5, trabajosRealizados: 2 },
-  34112: { decimas: 10, trabajosRealizados: 4 },
-  35190: { decimas: 4, trabajosRealizados: 1 },
-  36201: { decimas: 8, trabajosRealizados: 3 },
-  37402: { decimas: 7, trabajosRealizados: 2 },
-};
-
 export function getSavedStudentWorkRecords(): Record<number, StudentWorkRecord> {
   if (typeof window === "undefined") return DEFAULT_STUDENT_WORK_RECORDS;
   try {
     const raw = localStorage.getItem(STUDENT_WORK_RECORDS_KEY);
     if (!raw) return DEFAULT_STUDENT_WORK_RECORDS;
     const parsed = JSON.parse(raw);
-    return { ...DEFAULT_STUDENT_WORK_RECORDS, ...parsed };
+    return { ...parsed, ...DEFAULT_STUDENT_WORK_RECORDS };
   } catch {
     return DEFAULT_STUDENT_WORK_RECORDS;
   }
@@ -528,16 +533,49 @@ export function saveStudentWorkRecords(records: Record<number, StudentWorkRecord
 const TOTAL_TRABAJOS_KEY = "udp_ayudantia_total_trabajos_v1";
 
 /**
- * Obtiene la cantidad global de trabajos realizados a la fecha para la sección (por defecto 3)
+ * Obtiene la cantidad global de trabajos realizados a la fecha para la sección (4 para TICs II, 2 para Emergentes)
  */
 export function getSavedTotalTrabajos(sectionId?: string): number {
-  if (typeof window === "undefined") return 3;
+  const isEmergentes = sectionId?.includes("CIT3100") || sectionId?.includes("emergentes");
+  const fallback = isEmergentes ? 2 : 4;
+  if (typeof window === "undefined") return fallback;
   try {
     const key = sectionId ? `${TOTAL_TRABAJOS_KEY}_${sectionId}` : TOTAL_TRABAJOS_KEY;
-    const raw = localStorage.getItem(key) || localStorage.getItem(TOTAL_TRABAJOS_KEY);
-    return raw ? parseInt(raw, 10) : 3;
+    const raw = localStorage.getItem(key);
+    return raw ? parseInt(raw, 10) : fallback;
   } catch {
-    return 3;
+    return fallback;
+  }
+}
+
+const DECIMAS_POR_TRABAJO_KEY = "udp_ayudantia_decimas_por_trabajo_v1";
+
+/**
+ * Obtiene las décimas que se otorgan por cada trabajo extra (por defecto 0.2)
+ */
+export function getSavedDecimasPorTrabajo(sectionId?: string): number {
+  if (typeof window === "undefined") return 0.2;
+  try {
+    const key = sectionId ? `${DECIMAS_POR_TRABAJO_KEY}_${sectionId}` : DECIMAS_POR_TRABAJO_KEY;
+    const raw = localStorage.getItem(key) || localStorage.getItem(DECIMAS_POR_TRABAJO_KEY);
+    return raw ? parseFloat(raw) : 0.2;
+  } catch {
+    return 0.2;
+  }
+}
+
+/**
+ * Guarda las décimas que se otorgan por trabajo para la sección
+ */
+export function saveDecimasPorTrabajo(val: number, sectionId?: string): void {
+  if (typeof window === "undefined") return;
+  try {
+    const key = sectionId ? `${DECIMAS_POR_TRABAJO_KEY}_${sectionId}` : DECIMAS_POR_TRABAJO_KEY;
+    localStorage.setItem(key, String(val));
+    localStorage.setItem(DECIMAS_POR_TRABAJO_KEY, String(val));
+    window.dispatchEvent(new CustomEvent("udp_decimas_por_trabajo_updated", { detail: val }));
+  } catch (e) {
+    console.error("Error saving decimas por trabajo to localStorage", e);
   }
 }
 

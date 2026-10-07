@@ -24,3 +24,6 @@ venv/
 agent-services/.venv/
 agent-services/__pycache__/
 
+# Scratch scripts and temp data
+scratch/
+
