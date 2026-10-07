@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { X, Send, Clock, CheckCircle2, AlertCircle, History, FileText } from "lucide-react";
 import { CourseSection, ClassSession, AttendanceAppeal } from "@/types/attendance";
 import { StudentRosterItem, getTodayDateStr } from "@/services/attendanceStore";
@@ -24,7 +24,11 @@ export const PublicStudentAppealModal: React.FC<PublicStudentAppealModalProps> =
   const [selectedDate, setSelectedDate] = useState<string>(todayStr);
   const [comentario, setComentario] = useState<string>("Sí asistí hoy");
   const [statusMessage, setStatusMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
-  const [appealsHistory, setAppealsHistory] = useState<AttendanceAppeal[]>(() => getSavedAppeals(section.codigo));
+  const [appealsHistory, setAppealsHistory] = useState<AttendanceAppeal[]>([]);
+
+  useEffect(() => {
+    setAppealsHistory(getSavedAppeals(section.codigo));
+  }, [section.codigo]);
 
   const studentOptions = useMemo<CanvasSearchOption[]>(() => {
     return students.map((st) => ({

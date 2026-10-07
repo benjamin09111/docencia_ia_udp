@@ -16,7 +16,7 @@ export const TeacherAppealsWorkspace: React.FC<TeacherAppealsWorkspaceProps> = (
   onResolveAllAttendance,
   onResolveSingleAttendance,
 }) => {
-  const [appeals, setAppeals] = useState<AttendanceAppeal[]>(() => getSavedAppeals(section.codigo));
+  const [appeals, setAppeals] = useState<AttendanceAppeal[]>([]);
   const [activeTab, setActiveTab] = useState<"pendientes" | "resueltas">("pendientes");
   const [notification, setNotification] = useState<string | null>(null);
 

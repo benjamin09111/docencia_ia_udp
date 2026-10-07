@@ -45,9 +45,10 @@ export function usePublicAttendanceCheckin({
   initialSectionId,
   onSuccess,
 }: UsePublicAttendanceCheckinParams) {
-  const [sections, setSections] = useState<CourseSection[]>(() => getSavedSections());
+  const [sections, setSections] = useState<CourseSection[]>([]);
 
   useEffect(() => {
+    setSections(getSavedSections());
     const handleSync = () => setSections(getSavedSections());
     window.addEventListener("udp_sections_updated", handleSync);
     return () => window.removeEventListener("udp_sections_updated", handleSync);

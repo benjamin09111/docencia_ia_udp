@@ -79,7 +79,7 @@ export const PublicAttendanceVisualView: React.FC<PublicAttendanceVisualViewProp
   const [students, setStudents] = useState<StudentRosterItem[]>([]);
   const [attendanceMap, setAttendanceMap] = useState<Record<string, AttendanceValue>>({});
   const [studentWorkRecords, setStudentWorkRecords] = useState<Record<number, StudentWorkRecord>>({});
-  const [totalTrabajos, setTotalTrabajos] = useState(() => getSavedTotalTrabajos(selectedSection.id));
+  const [totalTrabajos, setTotalTrabajos] = useState<number>(1);
 
   useEffect(() => {
     setAttendanceMap(getSavedAttendanceMap());

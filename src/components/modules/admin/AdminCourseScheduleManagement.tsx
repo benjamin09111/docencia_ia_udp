@@ -36,7 +36,7 @@ interface GroupedCourse {
 }
 
 export const AdminCourseScheduleManagement: React.FC = () => {
-  const [sections, setSections] = useState<CourseSection[]>(() => getSavedSections());
+  const [sections, setSections] = useState<CourseSection[]>([]);
   const [selectedCourseSection, setSelectedCourseSection] = useState<CourseSection | null>(null);
   const [saveSuccess, setSaveSuccess] = useState<string | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -48,6 +48,7 @@ export const AdminCourseScheduleManagement: React.FC = () => {
 
   // Sincronización reactiva ante cambios en cualquier vista
   useEffect(() => {
+    setSections(getSavedSections());
     const handleSync = () => {
       setSections(getSavedSections());
     };

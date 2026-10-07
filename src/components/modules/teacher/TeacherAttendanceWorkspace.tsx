@@ -90,10 +90,11 @@ export const TeacherAttendanceWorkspace: React.FC<TeacherAttendanceWorkspaceProp
   estudiantesExcel,
   onUpdateGrade,
 }) => {
-  const [sections, setSections] = useState<CourseSection[]>(() => getSavedSections());
+  const [sections, setSections] = useState<CourseSection[]>([]);
   
   // Escuchar cambios de horarios y secciones desde la pestaña de Admin
   useEffect(() => {
+    setSections(getSavedSections());
     const handleSync = () => {
       setSections(getSavedSections());
     };

@@ -23,7 +23,7 @@ export const CourseAutomationsWorkspace: React.FC<CourseAutomationsWorkspaceProp
   courseName,
   sessions,
 }) => {
-  const [rules, setRules] = useState<AutomationRule[]>(() => getSavedRules(courseCode));
+  const [rules, setRules] = useState<AutomationRule[]>([]);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [executionResult, setExecutionResult] = useState<{ count: number; details: RuleExecutionAffectedStudent[] } | null>(null);
 
