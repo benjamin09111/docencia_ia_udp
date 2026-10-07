@@ -26,6 +26,8 @@ import { PublicStudentPortalNav, PublicMainModule, PublicAttendanceSubmodule } f
 import { PublicLockedModuleCard } from "./PublicLockedModuleCard";
 import { PublicStudentAppealModal } from "./PublicStudentAppealModal";
 
+import { PublicMobileStudentView } from "./PublicMobileStudentView";
+
 interface PublicAttendanceVisualViewProps {
   courseCode?: string;
   initialSectionId?: string;
@@ -163,25 +165,40 @@ export const PublicAttendanceVisualView: React.FC<PublicAttendanceVisualViewProp
 
       {activeMainModule === "asistencia" && activeAttendanceSub === "ayudantias" && (
         <>
-          <PublicAttendanceVisualHeader
-            section={selectedSection}
-            totalStudents={students.length}
-            filteredCount={studentSummaries.length}
-            searchTerm={searchTerm}
-            onSearchChange={setSearchTerm}
-            conditionFilter={conditionFilter}
-            onConditionChange={setConditionFilter}
-            highlightedStudent={highlightedStudent}
-            totalTrabajos={totalTrabajos}
-            onOpenAppealModal={() => setIsAppealModalOpen(true)}
-          />
-          <PublicAttendanceRosterMatrix
-            sessions={sessions}
-            studentSummaries={studentSummaries}
-            attendanceMap={attendanceMap}
-            totalTrabajos={totalTrabajos}
-            highlightedStudentId={highlightedStudent?.canvas_id}
-          />
+          {/* Vista para Computador / Desktop (Tabla Completa + Filtros) */}
+          <div className="hidden md:block space-y-4">
+            <PublicAttendanceVisualHeader
+              section={selectedSection}
+              totalStudents={students.length}
+              filteredCount={studentSummaries.length}
+              searchTerm={searchTerm}
+              onSearchChange={setSearchTerm}
+              conditionFilter={conditionFilter}
+              onConditionChange={setConditionFilter}
+              highlightedStudent={highlightedStudent}
+              totalTrabajos={totalTrabajos}
+              onOpenAppealModal={() => setIsAppealModalOpen(true)}
+            />
+            <PublicAttendanceRosterMatrix
+              sessions={sessions}
+              studentSummaries={studentSummaries}
+              attendanceMap={attendanceMap}
+              totalTrabajos={totalTrabajos}
+              highlightedStudentId={highlightedStudent?.canvas_id}
+            />
+          </div>
+
+          {/* Vista Exclusiva para Dispositivos Móviles (Buscador + Ficha Individual) */}
+          <div className="block md:hidden">
+            <PublicMobileStudentView
+              students={studentSummaries}
+              sessions={sessions}
+              attendanceMap={attendanceMap}
+              totalTrabajos={totalTrabajos}
+              onOpenAppealModal={() => setIsAppealModalOpen(true)}
+            />
+          </div>
+
           <PublicStudentAppealModal
             isOpen={isAppealModalOpen}
             onClose={() => setIsAppealModalOpen(false)}
