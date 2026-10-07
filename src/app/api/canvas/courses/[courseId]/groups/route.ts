@@ -14,12 +14,12 @@ export async function GET(
       return NextResponse.json({ error: "No CANVAS_API_TOKEN configured" }, { status: 401 });
     }
 
-    // 1. Obtener grupos del curso en Canvas
-    const res = await fetch(`${CANVAS_BASE_URL}/api/v1/courses/${courseId}/groups?per_page=50`, {
+    // 1. Obtener grupos del curso en Canvas (per_page=100 y sin cache estático)
+    const res = await fetch(`${CANVAS_BASE_URL}/api/v1/courses/${courseId}/groups?per_page=100`, {
       headers: {
         Authorization: `Bearer ${CANVAS_TOKEN}`,
       },
-      next: { revalidate: 300 },
+      cache: "no-store",
     });
 
     if (!res.ok) {
@@ -40,11 +40,11 @@ export async function GET(
     const detailedGroups = await Promise.all(
       canvasGroups.map(async (g: any) => {
         try {
-          const membersRes = await fetch(`${CANVAS_BASE_URL}/api/v1/groups/${g.id}/users?per_page=50`, {
+          const membersRes = await fetch(`${CANVAS_BASE_URL}/api/v1/groups/${g.id}/users?per_page=100`, {
             headers: {
               Authorization: `Bearer ${CANVAS_TOKEN}`,
             },
-            next: { revalidate: 300 },
+            cache: "no-store",
           });
 
           const membersData = membersRes.ok ? await membersRes.json() : [];

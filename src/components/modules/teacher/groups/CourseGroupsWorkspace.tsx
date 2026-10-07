@@ -49,40 +49,45 @@ export const CourseGroupsWorkspace: React.FC<CourseGroupsWorkspaceProps> = ({
     return students.filter((s) => !assignedCanvasIds.has(s.canvas_id));
   }, [students, assignedCanvasIds]);
 
-  const handleSyncCanvas = async () => {
-    if (!canvasCourseId) {
-      setNotification({ type: "error", text: "No se identificó el ID numérico de Canvas para este curso." });
-      return;
-    }
-    setIsSyncingCanvas(true);
+  const GROUP_COLORS = ["#008EE2", "#2E7D32", "#C8102E", "#7B1FA2", "#D97706", "#0D9488", "#EA580C", "#4338CA"];
+
+  const handleSyncCanvas = async (isSilent = false) => {
+    if (!canvasCourseId) return;
+    if (!isSilent) setIsSyncingCanvas(true);
     try {
       const res = await fetch(`/api/canvas/courses/${canvasCourseId}/groups`);
       if (res.ok) {
         const cloudGroups = await res.json();
         if (Array.isArray(cloudGroups) && cloudGroups.length > 0) {
-          const formatted: CourseGroup[] = cloudGroups.map((cg: any) => ({
-            id: cg.id || `grp_${Date.now()}`,
+          const formatted: CourseGroup[] = cloudGroups.map((cg: any, idx: number) => ({
+            id: cg.id || `grp_${Date.now()}_${idx}`,
             courseCode,
             sectionId,
             name: cg.name,
-            categoryName: cg.categoryName || "Canvas LMS",
+            categoryName: cg.categoryName || "Equipos Canvas",
+            color: GROUP_COLORS[idx % GROUP_COLORS.length],
             members: cg.members || [],
             createdAt: cg.createdAt || new Date().toISOString(),
           }));
-          const merged = [...formatted, ...groups.filter((g) => !formatted.some((fg) => fg.name === g.name))];
-          saveGroups(merged);
-          setNotification({ type: "success", text: `✓ Sincronizados ${formatted.length} grupos desde Canvas.` });
-        } else {
-          setNotification({ type: "success", text: "No se encontraron grupos nuevos creados en Canvas para este curso." });
+          saveGroups(formatted);
+          if (!isSilent) setNotification({ type: "success", text: `✓ Sincronizados ${formatted.length} grupos oficiales desde Canvas.` });
         }
       }
     } catch {
-      setNotification({ type: "error", text: "Error de conexión al sincronizar con Canvas." });
+      if (!isSilent) setNotification({ type: "error", text: "Error de conexión al sincronizar con Canvas." });
     } finally {
-      setIsSyncingCanvas(false);
-      setTimeout(() => setNotification(null), 4000);
+      if (!isSilent) {
+        setIsSyncingCanvas(false);
+        setTimeout(() => setNotification(null), 3500);
+      }
     }
   };
+
+  useEffect(() => {
+    if (canvasCourseId) {
+      handleSyncCanvas(true);
+    }
+  }, [canvasCourseId]);
 
   const handleCreateGroup = (name: string, categoryName: string, selectedIds: number[]) => {
     const initialMembers: StudentGroupMember[] = students
@@ -112,7 +117,7 @@ export const CourseGroupsWorkspace: React.FC<CourseGroupsWorkspaceProps> = ({
         <div className="flex items-center gap-2 flex-wrap">
           <button
             type="button"
-            onClick={handleSyncCanvas}
+            onClick={() => handleSyncCanvas(false)}
             disabled={isSyncingCanvas}
             className="px-3 py-1.5 bg-gray-50 hover:bg-gray-100 text-[#2D3B45] border border-gray-300 rounded-[4px] text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs"
           >
