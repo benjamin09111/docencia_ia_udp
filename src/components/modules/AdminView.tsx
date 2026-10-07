@@ -47,6 +47,7 @@ import {
 } from "lucide-react";
 import { AdminEndSemesterModal } from "@/components/modules/admin/AdminEndSemesterModal";
 import { AdminAyudantiasView } from "@/components/modules/admin/ayudantias/AdminAyudantiasView";
+import { AdminGradeScaleTab } from "@/components/modules/admin/AdminGradeScaleTab";
 
 const INITIAL_TECHNICAL_AGENTS: TechnicalAgentItem[] = [
   {
@@ -114,7 +115,9 @@ const INITIAL_TECHNICAL_AGENTS: TechnicalAgentItem[] = [
 ];
 
 export const AdminView: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<"course_agents" | "technical_agents" | "course_schedules" | "ayudantias">("course_agents");
+  const [activeTab, setActiveTab] = useState<
+    "course_agents" | "technical_agents" | "course_schedules" | "ayudantias" | "grade_scale"
+  >("course_agents");
   const [selectedAgentId, setSelectedAgentId] = useState<string | null>(null);
   const [selectedDetailSection, setSelectedDetailSection] = useState<CourseSection | null>(null);
   const [selectedHistoryAgent, setSelectedHistoryAgent] = useState<TechnicalAgentItem | null>(null);
@@ -267,6 +270,24 @@ export const AdminView: React.FC = () => {
               Demo
             </span>
           </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab("grade_scale")}
+            className={`px-3.5 py-2.5 font-bold border-b-2 flex items-center gap-1.5 transition-all whitespace-nowrap ${
+              activeTab === "grade_scale"
+                ? "border-[#008EE2] text-[#008EE2] bg-blue-50/50 rounded-t-[3px]"
+                : "border-transparent text-[#6B7780] hover:text-[#2D3B45] hover:bg-gray-50"
+            }`}
+          >
+            <Scale size={14} />
+            <span>Punto base y escala</span>
+            <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono font-bold ${
+              activeTab === "grade_scale" ? "bg-blue-100 text-[#008EE2]" : "bg-gray-100 text-gray-600"
+            }`}>
+              UDP 1.0
+            </span>
+          </button>
         </div>
       </div>
 
@@ -412,6 +433,11 @@ export const AdminView: React.FC = () => {
       {/* TAB 4: Ayudantías, Pedagogía y Portal Comunitario */}
       {activeTab === "ayudantias" && (
         <AdminAyudantiasView />
+      )}
+
+      {/* TAB 5: Parámetros de Escala y Punto Base Oficial */}
+      {activeTab === "grade_scale" && (
+        <AdminGradeScaleTab />
       )}
 
       {/* Modal Historial de Agente */}
