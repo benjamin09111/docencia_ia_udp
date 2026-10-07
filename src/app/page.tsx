@@ -30,6 +30,7 @@ export default function DashboardPage() {
   const [cronograma, setCronograma] = useState(initialCourseData.cronograma);
   const [entregables, setEntregables] = useState<CourseDeliverable[]>(initialCourseData.entregables);
   const [estudiantesExcel, setEstudiantesExcel] = useState<StudentExcelRow[]>([]);
+  const [entregasAlumnos, setEntregasAlumnos] = useState(initialCourseData.entregas_alumnos);
 
   useEffect(() => {
     setEstudiantesExcel(getStoredCourseGrades("CIT3000_CA02"));
