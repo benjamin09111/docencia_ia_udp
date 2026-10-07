@@ -115,23 +115,33 @@ El objetivo central es consolidar una **Suite Integral de Docencia Automatizada 
 1. **Monolito Modular con Feature Flags**:
    - Todo se construye en un único repositorio con arquitectura limpia y desacoplada.
    - Cada institución o docente puede habilitar los módulos que requiera mediante flags (`institution_settings` / `feature_flags`):
-     - Módulo de Asistencia & Apelaciones.
+     - Módulo de Asistencia & Apelaciones (GPS + QR + Rules).
      - Módulo de Grupos & Automatizaciones / Rules Engine.
-     - Módulo de Evaluaciones, Rúbricas & Calificaciones Oficiales.
+     - Módulo de Evaluaciones Formativas & Sumativas, Rúbricas IA y Gradebook Orchestrator.
+     - Módulo de Bolsa de Décimas & Bonificaciones contextuales.
+     - Módulo de Trazabilidad del Aprendizaje & Métricas de Rendimiento (Learning Analytics).
      - Módulo de Agente IA Docente (*Mini-Yo*) y Materiales de Cátedra.
      - Módulo de Cronograma & Anuncios Automatizados.
-2. **Desacoplamiento Progresivo de Datos Institucionales**:
+2. **Orquestador de Evaluaciones & Canvas Gradebook (LTI 1.3 + Standalone SaaS)**:
+   - **Canvas como Sistema de Registro**: Canvas Gradebook actúa como repositorio oficial final de notas.
+   - **Capa Cognitiva de Automatización**: Nuestra suite genera las tareas y rúbricas matriciales vía API, pre-califica con IA entregas (SpeedGrader Copilot), gestiona la bolsa de décimas extraformativas y calcula eximiciones antes de publicar en Gradebook.
+   - **Evaluación Formativa vs. Sumativa**:
+     - *Formativa (Trazabilidad y Aprendizaje continuo)*: Talleres cortos, checkpoints de proyecto, quizes de ayudantía y borradores evaluados por IA con feedback inmediato (sin ponderación destructiva o con bolsa de décimas).
+     - *Sumativa (Certificación oficial)*: Solemnes, exámenes e hitos finales con ponderación curricular.
+   - **Trazabilidad & Alertas Tempranas**: Detección de conceptos erróneos recurrentes antes de las evaluaciones sumativas críticas.
+3. **Desacoplamiento Progresivo de Datos Institucionales**:
    - Evitar hardcodear coordenadas GPS, salas, calendarios y nombres de universidades en componentes y servicios.
    - Parametrizar estos datos por institución (`institutions`, `institution_settings`).
-3. **Capa de Adaptadores de Fuente de Datos (Data Adapters)**:
+4. **Capa de Adaptadores de Fuente de Datos (Data Adapters)**:
    - Aislar la ingesta de estudiantes, notas y cursos mediante interfaces (`IDataSourceAdapter`):
      - Adaptador Canvas API / OAuth.
      - Adaptador LTI 1.3 (estándar para Canvas, Moodle, Blackboard).
      - Adaptador CSV / SIS escolar (Schoolnet, Syscol, Napsis).
-4. **Seguridad y Aislamiento Multi-Tenant**:
+5. **Seguridad y Aislamiento Multi-Tenant**:
    - Migración gradual hacia Supabase Auth con RBAC (Admin, Docente, Ayudante, Alumno).
    - Inclusión obligatoria de `institution_id` en esquemas y políticas RLS de Supabase.
    - Protección estricta de rutas API con tokens de sesión firmados.
+
 
 
 
