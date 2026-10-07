@@ -7,6 +7,7 @@ import {
 } from "@/services/gradeScaleSettingsStore";
 import {
   GradeScaleConfig,
+  DEFAULT_GRADE_SCALE_CONFIG,
   calculateGradeFromScore,
 } from "@/utils/gradeScaleCalculator";
 import { CanvasButton } from "@/components/canvas/CanvasButton";

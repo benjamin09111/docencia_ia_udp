@@ -15,7 +15,7 @@ interface TeacherGradebookTableViewProps {
   courseCode: string;
   filteredExcelStudents: StudentExcelRow[];
   isEditingExcel: boolean;
-  onUpdateGrade: (canvasId: number, field: string, value: number) => void;
+  onUpdateGrade: (canvasId: number, field: keyof StudentExcelRow, value: number) => void;
   onNotify?: (msg: string) => void;
 }
 
@@ -187,7 +187,7 @@ export const TeacherGradebookTableView: React.FC<TeacherGradebookTableViewProps>
                     ) : (
                       <div className="flex items-center justify-center gap-1">
                         <span className="font-semibold text-gray-800">{row.solemne_1.toFixed(1)}</span>
-                        {hiddenCols["solemne_1"] && <EyeOff size={11} className="text-amber-600" title="Oculta para el alumno" />}
+                        {hiddenCols["solemne_1"] && <span title="Oculta para el alumno"><EyeOff size={11} className="text-amber-600" /></span>}
                       </div>
                     )}
                   </td>
@@ -197,31 +197,31 @@ export const TeacherGradebookTableView: React.FC<TeacherGradebookTableViewProps>
                     <span className="font-bold text-purple-800 px-2 py-0.5 bg-purple-100 rounded text-[11px]">
                       +{row.decimas_act1.toFixed(1)}
                     </span>
-                    {hiddenCols["decimas"] && <EyeOff size={11} className="text-amber-600 inline ml-1" title="Oculta para el alumno" />}
+                    {hiddenCols["decimas"] && <span title="Oculta para el alumno"><EyeOff size={11} className="text-amber-600 inline ml-1" /></span>}
                   </td>
 
                   {/* Solemne 2 */}
                   <td className={`p-2.5 text-center border-r border-gray-200 ${hiddenCols["solemne_2"] ? "bg-amber-50/40" : ""}`}>
                     <span className="font-medium text-gray-800">{row.solemne_2.toFixed(1)}</span>
-                    {hiddenCols["solemne_2"] && <EyeOff size={11} className="text-amber-600 inline ml-1" title="Oculta para el alumno" />}
+                    {hiddenCols["solemne_2"] && <span title="Oculta para el alumno"><EyeOff size={11} className="text-amber-600 inline ml-1" /></span>}
                   </td>
 
                   {/* Avance 1 */}
                   <td className={`p-2.5 text-center border-r border-gray-200 ${hiddenCols["avance_1"] ? "bg-amber-50/40" : ""}`}>
                     <span className="text-gray-700">6.0</span>
-                    {hiddenCols["avance_1"] && <EyeOff size={11} className="text-amber-600 inline ml-1" title="Oculta para el alumno" />}
+                    {hiddenCols["avance_1"] && <span title="Oculta para el alumno"><EyeOff size={11} className="text-amber-600 inline ml-1" /></span>}
                   </td>
 
                   {/* Avance 2 */}
                   <td className={`p-2.5 text-center border-r border-gray-200 ${hiddenCols["avance_2"] ? "bg-amber-50/40" : ""}`}>
                     <span className="text-gray-700">5.8</span>
-                    {hiddenCols["avance_2"] && <EyeOff size={11} className="text-amber-600 inline ml-1" title="Oculta para el alumno" />}
+                    {hiddenCols["avance_2"] && <span title="Oculta para el alumno"><EyeOff size={11} className="text-amber-600 inline ml-1" /></span>}
                   </td>
 
                   {/* Final */}
                   <td className={`p-2.5 text-center border-r border-gray-200 ${hiddenCols["final"] ? "bg-amber-50/40" : ""}`}>
                     <span className="font-medium text-gray-800">{row.taller_proyecto.toFixed(1)}</span>
-                    {hiddenCols["final"] && <EyeOff size={11} className="text-amber-600 inline ml-1" title="Oculta para el alumno" />}
+                    {hiddenCols["final"] && <span title="Oculta para el alumno"><EyeOff size={11} className="text-amber-600 inline ml-1" /></span>}
                   </td>
 
                   <td className="p-2.5 text-center border-r border-gray-200 font-semibold">{row.asistencia_pct}%</td>
