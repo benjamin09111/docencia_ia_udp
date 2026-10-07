@@ -167,4 +167,33 @@ flowchart TD
 2. **Asesor Pedagógico y Didáctico**: Si el docente no sabe cómo evaluar una competencia, el agente le sugiere metodologías activas (estudio de casos, debates, proyectos por hitos).
 3. **Ejecutor Silencioso**: Realiza las llamadas a la API de Canvas, actualiza el cronograma, calcula décimas y prepara borradores de anuncios.
 
+---
+
+## 🎯 9. La Brecha Crítica de SpeedGrader y la Conversión Automática a Escala 1.0 - 7.0
+
+SpeedGrader en Canvas es un visor pasivo de documentos, **no una herramienta inteligente**. El problema real que resolvemos:
+
+```mermaid
+flowchart LR
+    A[Entregable del Estudiante] --> B[SpeedGrader Copilot IA]
+    B -->|1. Evalúa Criterios| C[Puntaje Rúbrica: ej. 48 / 70 pts]
+    C -->|2. Aplica Fórmula UDP| D[Conversión Automática: Nota 4.8 con Base 1.0]
+    D -->|3. Redacta Feedback| E[Justificación Pedagógica por Criterio]
+    E -->|4. Inyección 1-Clic| F[Canvas Gradebook Oficial]
+```
+
+### 🔴 Los 3 Grandes Fallos de SpeedGrader Nativo:
+1. **Suma Puntos Brutos, No Calcula Notas Chilenas**:
+   - SpeedGrader suma puntos (ej. *42 de 70 pts*), pero Canvas **no sabe convertir automáticamente esos 42 puntos a Nota 4.0** con la fórmula chilena de 60% de exigencia y punto base 1.0. El profesor tiene que hacer el cálculo afuera en una tabla de conversión o en Excel y tipear la nota a mano.
+2. **Creación Manual Agotadora de Rúbricas**:
+   - Fabricar una rúbrica en Canvas requiere decenas de clics, tipear manualmente cada nivel (Excelente, Bueno, Insuficiente) y cuadrar los puntos. Los docentes prefieren no usar rúbricas por la sobrecarga que implica.
+3. **Cero Inteligencia de Lectura**:
+   - SpeedGrader no lee código, no lee PDFs, no analiza coherencia argumentativa ni detecta plagio conceptual.
+
+### 🟢 Nuestra Solución Automatizada:
+* **Fabricación Asistida**: La IA genera la rúbrica completa con descriptores objetivos y la publica en Canvas en segundos.
+* **SpeedGrader Copilot**: La IA lee el entregable, califica cada criterio, **aplica automáticamente la fórmula matemática de escala 1.0 a 7.0 con punto base 1.0** y redacta el feedback constructivo.
+* **Aprobación en 1 Clic**: El docente valida en un panel ejecutivo y las notas oficiales quedan inyectadas en Canvas sin error humano.
+
+
 
