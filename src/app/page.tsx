@@ -35,6 +35,18 @@ export default function DashboardPage() {
   const [entregasAlumnos, setEntregasAlumnos] = useState(initialCourseData.entregas_alumnos);
 
   useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const roleParam = params.get("role") || params.get("rol");
+      if (roleParam === "student" || roleParam === "estudiante" || roleParam === "alumno") {
+        setCurrentRole("student");
+      } else if (roleParam === "teacher" || roleParam === "profesor" || roleParam === "docente" || roleParam === "ayudante") {
+        setCurrentRole("teacher");
+      }
+    }
+  }, []);
+
+  useEffect(() => {
     saveStoredCourseGrades("CIT3000_CA02", estudiantesExcel);
   }, [estudiantesExcel]);
 
