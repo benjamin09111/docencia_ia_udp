@@ -211,8 +211,8 @@ export function usePublicAttendanceCheckin({
     return sectionStudents.map((st) => ({
       value: st.canvas_id,
       label: `${st.apellidos}, ${st.nombres}`,
-      subLabel: `RUT: ${st.rut}`,
-      keywords: [st.rut, st.nombres, st.apellidos, st.email],
+      subLabel: st.email || "Estudiante UDP",
+      keywords: [st.nombres, st.apellidos, st.email || ""],
     }));
   }, [sectionStudents]);
 

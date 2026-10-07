@@ -63,8 +63,8 @@ export const AttendanceConfirmationTicket: React.FC<AttendanceConfirmationTicket
         </div>
 
         <div className="flex justify-between items-center border-b border-gray-200 pb-2">
-          <span className="text-[#6B7780] font-medium">RUT / ID Canvas:</span>
-          <span className="font-mono text-gray-700">{student.rut} • {student.canvas_id}</span>
+          <span className="text-[#6B7780] font-medium">ID Canvas:</span>
+          <span className="font-mono text-gray-700">{student.canvas_id}</span>
         </div>
 
         <div className="flex justify-between items-center border-b border-gray-200 pb-2">

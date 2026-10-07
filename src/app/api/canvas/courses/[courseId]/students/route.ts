@@ -60,13 +60,9 @@ export async function GET(
         }
       }
 
-      // RUT generado de forma consistente a partir del ID de Canvas para la vista oficial
-      const seedRut = 20000000 + (u.id % 2000000);
-      const rutStr = `${Math.floor(seedRut / 1000000)}.${Math.floor((seedRut % 1000000) / 1000)}.${seedRut % 1000}-${(u.id % 9) + 1}`;
-
       return {
         canvas_id: u.id,
-        rut: rutStr,
+        rut: "",
         nombres,
         apellidos,
         email: u.login_id || u.email || `${nombres.toLowerCase().replace(/\s+/g, ".")}.${apellidos.toLowerCase().split(" ")[0]}@mail.udp.cl`,

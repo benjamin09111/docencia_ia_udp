@@ -77,7 +77,7 @@ export const StudentAttendanceGradesTab: React.FC<StudentAttendanceGradesTabProp
                 Estudiante Seleccionado (Azar)
               </span>
               <span className="text-xs text-[#6B7780] font-mono">
-                RUT: {selectedStudent.rut} • Canvas ID: {selectedStudent.canvas_id}
+                Canvas ID: {selectedStudent.canvas_id}
               </span>
             </div>
             <h2 className="text-base font-bold text-[#2D3B45] mt-0.5">

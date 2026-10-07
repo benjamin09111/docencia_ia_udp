@@ -445,9 +445,6 @@ export const AttendanceMatrixTable: React.FC<AttendanceMatrixTableProps> = ({
                     >
                       {sum.nombres.split(" ")[0]} {sum.apellidos.split(" ")[0]}
                     </div>
-                    <span className="text-[10px] text-gray-500 font-mono block leading-tight">
-                      {sum.rut}
-                    </span>
                   </td>
 
                   {/* Celda Asistencia Hoy */}

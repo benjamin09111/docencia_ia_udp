@@ -165,10 +165,11 @@ export const AutomatedCourseWorkspace: React.FC<AutomatedCourseWorkspaceProps> =
 
   const filteredExcelStudents = useMemo(() => {
     if (!excelRutFilter.trim()) return estudiantesExcel;
-    const cleanSearch = excelRutFilter.replace(/[\.\-\s]/g, "").toLowerCase();
-    return estudiantesExcel.filter((s) =>
-      s.rut.replace(/[\.\-\s]/g, "").toLowerCase().includes(cleanSearch)
-    );
+    const cleanSearch = excelRutFilter.trim().toLowerCase();
+    return estudiantesExcel.filter((s) => {
+      const name = `${s.nombres} ${s.apellidos}`.toLowerCase();
+      return name.includes(cleanSearch) || (s.rut && s.rut.replace(/[\.\-\s]/g, "").toLowerCase().includes(cleanSearch));
+    });
   }, [estudiantesExcel, excelRutFilter]);
 
   return (
@@ -551,8 +552,8 @@ export const AutomatedCourseWorkspace: React.FC<AutomatedCourseWorkspaceProps> =
                 type="text"
                 value={excelRutFilter}
                 onChange={(e) => setExcelRutFilter(e.target.value)}
-                placeholder="Filtrar por RUT..."
-                className="w-full pl-8 pr-7 py-1.5 border border-gray-300 rounded-[4px] text-xs font-mono focus:outline-none focus:ring-1 focus:ring-[#008EE2]"
+                placeholder="Filtrar por estudiante..."
+                className="w-full pl-8 pr-7 py-1.5 border border-gray-300 rounded-[4px] text-xs focus:outline-none focus:ring-1 focus:ring-[#008EE2]"
               />
               {excelRutFilter && (
                 <button
@@ -577,7 +578,7 @@ export const AutomatedCourseWorkspace: React.FC<AutomatedCourseWorkspaceProps> =
             <table className="w-full text-left text-xs border-collapse min-w-[800px]">
               <thead>
                 <tr className="bg-gray-100 text-gray-700 font-bold border-b border-gray-300 text-[11px] uppercase">
-                  <th className="p-2.5 border-r border-gray-300 w-36">RUT</th>
+                  <th className="p-2.5 border-r border-gray-300 w-48">Estudiante</th>
                   <th className="p-2.5 border-r border-gray-300 text-center bg-blue-50/70">Informe Ini (20%)</th>
                   <th className="p-2.5 border-r border-gray-300 text-center bg-purple-50/70">+Décimas Ayud.</th>
                   <th className="p-2.5 border-r border-gray-300 text-center">Solemne (20%)</th>
@@ -593,15 +594,15 @@ export const AutomatedCourseWorkspace: React.FC<AutomatedCourseWorkspaceProps> =
                 {filteredExcelStudents.length === 0 ? (
                   <tr>
                     <td colSpan={10} className="p-6 text-center text-gray-500 text-xs">
-                      No se encontraron alumnos con el RUT especificado.
+                      No se encontraron estudiantes con el criterio de búsqueda.
                     </td>
                   </tr>
                 ) : (
                   filteredExcelStudents.map((row) => (
                     <tr key={row.canvas_id} className="border-b border-gray-200 hover:bg-gray-50/80">
-                      {/* Solo RUT, sin nombres */}
-                      <td className="p-2.5 font-mono font-bold text-[#2D3B45] border-r border-gray-200">
-                        {row.rut}
+                      {/* Nombre completo */}
+                      <td className="p-2.5 font-semibold text-[#2D3B45] border-r border-gray-200">
+                        {row.nombres} {row.apellidos}
                       </td>
                       <td className="p-1.5 text-center border-r border-gray-200 bg-blue-50/30">
                         {isEditingExcel ? (

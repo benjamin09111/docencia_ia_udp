@@ -367,7 +367,7 @@ export const AttendanceFilterBar: React.FC<AttendanceFilterBarProps> = ({
                           {st.nombres} {st.apellidos}
                         </span>
                         <span className="text-[10px] text-gray-500 font-mono block">
-                          {st.rut} • {st.ayudantiasPct}% asist.
+                          {st.ayudantiasPct}% asist.
                         </span>
                       </div>
 
