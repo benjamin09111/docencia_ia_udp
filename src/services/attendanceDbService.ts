@@ -1,6 +1,6 @@
 import { getSupabaseClient, isSupabaseConfigured } from "./supabaseClient";
 import { ClassSession, CourseSection, AttendanceValue } from "@/types/attendance";
-import { StudentRosterItem } from "./attendanceStore";
+import { StudentRosterItem, generateSemesterSessions } from "./attendanceStore";
 
 export interface AttendanceDbSyncResult {
   success: boolean;
@@ -70,9 +70,10 @@ export async function syncCourseAndSectionToSupabase(
     if (sErr || !sec) throw sErr || new Error("Fallo al registrar sección");
 
     return { success: true, courseId: course.id, sectionId: sec.id };
-  } catch (error) {
-    console.error("Error syncCourseAndSectionToSupabase:", error);
-    return { success: false, error };
+  } catch (error: any) {
+    const errMsg = error?.message || (typeof error === "object" ? JSON.stringify(error) : String(error));
+    console.warn("Aviso syncCourseAndSectionToSupabase:", errMsg);
+    return { success: false, error: errMsg };
   }
 }
 
@@ -143,9 +144,10 @@ export async function syncStudentsAndSessionsToSupabase(
     }
 
     return { success: true };
-  } catch (error) {
-    console.error("Error syncStudentsAndSessionsToSupabase:", error);
-    return { success: false, error };
+  } catch (error: any) {
+    const errMsg = error?.message || (typeof error === "object" ? JSON.stringify(error) : String(error));
+    console.warn("Aviso syncStudentsAndSessionsToSupabase:", errMsg);
+    return { success: false, error: errMsg };
   }
 }
 
@@ -156,24 +158,32 @@ export async function saveAttendanceMarkToSupabase(
   sessionCode: string,
   studentCanvasId: number,
   value: AttendanceValue,
-  markedBy: "profesor" | "ayudante" | "alumno_pin" | "sistema" | "alumno_link" = "profesor"
+  markedBy: "profesor" | "ayudante" | "alumno_pin" | "sistema" | "alumno_link" | "alumno_qr" = "profesor"
 ): Promise<AttendanceDbSyncResult> {
   const supabase = getSupabaseClient();
-  if (!supabase) return { success: false };
+  if (!supabase) return { success: false, message: "Supabase no configurado" };
+
+  if (!sessionCode || !studentCanvasId || isNaN(Number(studentCanvasId))) {
+    return { success: false, message: "Parámetros incompletos para registrar asistencia" };
+  }
+
+  const allowedMarkedBy = ["profesor", "ayudante", "alumno_pin", "sistema", "alumno_link", "alumno_qr"];
+  const safeMarkedBy = allowedMarkedBy.includes(markedBy) ? markedBy : "profesor";
 
   try {
     const { error } = await supabase.rpc("upsert_attendance_by_code", {
       p_session_code: sessionCode,
-      p_student_canvas_id: studentCanvasId,
+      p_student_canvas_id: Number(studentCanvasId),
       p_value: (value === 1 ? 1 : 0) as 0 | 1,
-      p_marked_by: markedBy,
+      p_marked_by: safeMarkedBy,
     });
 
     if (error) throw error;
     return { success: true };
-  } catch (error) {
-    console.error("Error guardando asistencia en Supabase:", error);
-    return { success: false, error };
+  } catch (error: any) {
+    const errMsg = error?.message || (typeof error === "object" ? JSON.stringify(error) : String(error));
+    console.warn("Aviso guardando asistencia en Supabase:", errMsg);
+    return { success: false, error: errMsg };
   }
 }
 
@@ -184,18 +194,33 @@ export async function saveAttendanceBatchToSupabase(
   records: Array<{ session_code: string; student_canvas_id: number; value: number; marked_by?: string }>
 ): Promise<AttendanceDbSyncResult> {
   const supabase = getSupabaseClient();
-  if (!supabase) return { success: false };
+  if (!supabase) return { success: false, message: "Supabase no configurado" };
+
+  if (!records || records.length === 0) return { success: true };
+
+  const allowedMarkedBy = ["profesor", "ayudante", "alumno_pin", "sistema", "alumno_link", "alumno_qr"];
+  const safeRecords = records
+    .filter((r) => r.session_code && r.student_canvas_id && !isNaN(Number(r.student_canvas_id)))
+    .map((r) => ({
+      session_code: r.session_code,
+      student_canvas_id: Number(r.student_canvas_id),
+      value: r.value === 1 ? 1 : 0,
+      marked_by: r.marked_by && allowedMarkedBy.includes(r.marked_by) ? r.marked_by : "profesor",
+    }));
+
+  if (safeRecords.length === 0) return { success: true };
 
   try {
     const { error } = await supabase.rpc("upsert_attendance_batch_by_codes", {
-      records_json: records,
+      records_json: safeRecords,
     });
 
     if (error) throw error;
     return { success: true };
-  } catch (error) {
-    console.error("Error en batch de asistencia a Supabase:", error);
-    return { success: false, error };
+  } catch (error: any) {
+    const errMsg = error?.message || (typeof error === "object" ? JSON.stringify(error) : String(error));
+    console.warn("Aviso en batch de asistencia a Supabase:", errMsg);
+    return { success: false, error: errMsg };
   }
 }
 
@@ -240,7 +265,7 @@ export async function updateSectionScheduleInSupabase(
   if (!supabase) return { success: false, message: "Supabase no configurado" };
 
   try {
-    const { error } = await supabase
+    const { data: updatedSection, error } = await supabase
       .from("sections")
       .update({
         name: section.nombre,
@@ -259,9 +284,36 @@ export async function updateSectionScheduleInSupabase(
         requiere_geo: section.requiereGeolocalizacion,
         updated_at: new Date().toISOString(),
       })
-      .eq("code", section.codigo);
+      .eq("code", section.codigo)
+      .select("id");
 
     if (error) throw error;
+
+    // Sincronizar sesiones semestrales en la tabla class_sessions
+    const sectionUuid = updatedSection?.[0]?.id;
+    if (sectionUuid) {
+      const generatedSessions = generateSemesterSessions(section);
+      if (generatedSessions.length > 0) {
+        const sessionsPayload = generatedSessions.map((sess) => ({
+          section_id: sectionUuid,
+          session_code: sess.id,
+          date: sess.fecha,
+          dia_semana: sess.diaSemana,
+          type: sess.tipo,
+          modality: sess.modalidad,
+          status: sess.estado,
+          motivo_cancelacion: sess.motivoCancelacion || null,
+          start_time: sess.horaInicio ? `${sess.horaInicio}:00` : null,
+          end_time: sess.horaFin ? `${sess.horaFin}:00` : null,
+          room: sess.sala || null,
+        }));
+
+        await supabase
+          .from("class_sessions")
+          .upsert(sessionsPayload, { onConflict: "section_id,date,type" });
+      }
+    }
+
     return { success: true };
   } catch (error) {
     console.error("Error actualizando horario en Supabase:", error);
@@ -416,4 +468,50 @@ export async function updateSessionStatusInSupabase(
   }
 }
 
+/**
+ * Obtiene sesiones de clase de una sección que ya tienen asistencia registrada en Supabase
+ */
+export async function fetchHistoricalRecordedSessionsFromSupabase(
+  sectionCode: string
+): Promise<ClassSession[]> {
+  const supabase = getSupabaseClient();
+  if (!supabase) return [];
+
+  try {
+    const { data: recs, error } = await supabase
+      .from("attendance_records")
+      .select("class_sessions!inner(id, session_code, date, type, dia_semana, modality, status, motivo_cancelacion, start_time, end_time, room, pin, sections!inner(code))")
+      .eq("class_sessions.sections.code", sectionCode);
+
+    if (error || !recs) return [];
+
+    const map = new Map<string, ClassSession>();
+    recs.forEach((r: any) => {
+      const s = r.class_sessions;
+      if (s && !map.has(s.session_code)) {
+        map.set(s.session_code, {
+          id: s.session_code,
+          seccionId: sectionCode,
+          fecha: s.date,
+          diaSemana: s.dia_semana,
+          tipo: s.type,
+          modalidad: s.modality || "presencial",
+          estado: s.status || "programada",
+          motivoCancelacion: s.motivo_cancelacion || undefined,
+          horaInicio: s.start_time?.slice(0, 5) || "14:30",
+          horaFin: s.end_time?.slice(0, 5) || "16:00",
+          sala: s.room || "No definida",
+          pin: s.pin || undefined,
+        });
+      }
+    });
+
+    return Array.from(map.values());
+  } catch (e) {
+    console.warn("Aviso fetchHistoricalRecordedSessionsFromSupabase:", e);
+    return [];
+  }
+}
+
 export { isSupabaseConfigured };
+

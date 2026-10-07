@@ -196,7 +196,7 @@ CREATE TABLE IF NOT EXISTS public.attendance_records (
     session_id UUID NOT NULL REFERENCES public.class_sessions(id) ON DELETE CASCADE,
     student_id UUID NOT NULL REFERENCES public.students(id) ON DELETE CASCADE,
     value SMALLINT NOT NULL DEFAULT 0 CHECK (value IN (0, 1)), -- 1 = Presente, 0 = Ausente
-    marked_by VARCHAR(50) DEFAULT 'profesor' CHECK (marked_by IN ('profesor', 'ayudante', 'alumno_pin', 'sistema')),
+    marked_by VARCHAR(50) DEFAULT 'profesor' CHECK (marked_by IN ('profesor', 'ayudante', 'alumno_pin', 'sistema', 'alumno_link', 'alumno_qr')),
     marked_at TIMESTAMPTZ DEFAULT NOW(),
     ip_address INET NULL,
     latitude NUMERIC(10, 7) NULL,

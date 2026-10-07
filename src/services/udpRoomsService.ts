@@ -159,7 +159,7 @@ export function checkCurrentSessionActive(
       tipo: "ayudantia",
       horaInicio: section.horarioAyudantia.horaInicio,
       horaFin: section.horarioAyudantia.horaFin,
-      sala: section.horarioAyudantia.sala || "Laboratorio TIC 2",
+      sala: "No definida",
       edificio: "Edificio Informática UDP (Ejército 441)",
     };
   }
@@ -174,7 +174,7 @@ export function checkCurrentSessionActive(
         tipo: "ayudantia",
         horaInicio: section.horarioAyudantia.horaInicio,
         horaFin: section.horarioAyudantia.horaFin,
-        sala: section.horarioAyudantia.sala || "Laboratorio TIC 2",
+        sala: "No definida",
         edificio: "Edificio Informática UDP",
       };
     }
@@ -190,7 +190,7 @@ export function checkCurrentSessionActive(
         tipo: "catedra",
         horaInicio: section.horarioCatedra.horaInicio,
         horaFin: section.horarioCatedra.horaFin,
-        sala: section.horarioCatedra.sala || "Sala 302",
+        sala: "No definida",
         edificio: "Edificio B (Aulas)",
       };
     }
@@ -208,7 +208,7 @@ export function checkCurrentSessionActive(
       tipo: "ayudantia",
       horaInicio: section.horarioAyudantia.horaInicio || "16:00",
       horaFin: section.horarioAyudantia.horaFin || "17:20",
-      sala: section.horarioAyudantia.sala ? `${section.horarioAyudantia.sala} (${section.ubicacionNombre || "Ejército 441"})` : `Laboratorio TIC (${section.ubicacionNombre || "Ejército 441"})`,
+      sala: "No definida",
     },
   };
 }

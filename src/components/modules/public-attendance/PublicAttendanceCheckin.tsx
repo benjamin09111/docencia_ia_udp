@@ -11,7 +11,10 @@ import {
   saveAttendanceMap,
   generateSemesterSessions,
   getTodayDateStr,
+  saveSections,
+  getSectionDailyPin,
 } from "@/services/attendanceStore";
+import { CanvasSearchableSelect, CanvasSearchOption } from "@/components/canvas/CanvasSearchableSelect";
 import { ClassSession, CourseSection } from "@/types/attendance";
 import {
   UDP_CAMPUS_LOCATION,
@@ -21,7 +24,11 @@ import {
   checkCurrentSessionActive,
   SessionActiveStatus,
 } from "@/services/udpRoomsService";
-import { saveAttendanceMarkToSupabase } from "@/services/attendanceDbService";
+import {
+  saveAttendanceMarkToSupabase,
+  fetchSectionsFromSupabase,
+  isSupabaseConfigured,
+} from "@/services/attendanceDbService";
 import {
   Search,
   KeyRound,
@@ -56,7 +63,28 @@ export const PublicAttendanceCheckin: React.FC<PublicAttendanceCheckinProps> = (
   initialSectionId,
   onSuccess,
 }) => {
-  const [sections] = useState<CourseSection[]>(() => getSavedSections());
+  const [sections, setSections] = useState<CourseSection[]>(() => getSavedSections());
+
+  // Sincronizar reactivamente cuando se actualice cualquier horario
+  useEffect(() => {
+    const handleSync = () => {
+      setSections(getSavedSections());
+    };
+    window.addEventListener("udp_sections_updated", handleSync);
+    return () => window.removeEventListener("udp_sections_updated", handleSync);
+  }, []);
+
+  // Cargar datos actualizados desde Supabase al montar
+  useEffect(() => {
+    if (isSupabaseConfigured()) {
+      fetchSectionsFromSupabase().then((cloudSections) => {
+        if (cloudSections && cloudSections.length > 0) {
+          setSections(cloudSections);
+          saveSections(cloudSections);
+        }
+      });
+    }
+  }, []);
 
   // 1. Resolver sección automáticamente según courseCode o initialSectionId
   const resolvedInitialSec = useMemo(() => {
@@ -65,6 +93,10 @@ export const PublicAttendanceCheckin: React.FC<PublicAttendanceCheckinProps> = (
   }, [courseCode, initialSectionId, sections]);
 
   const [selectedSectionId, setSelectedSectionId] = useState<string>(resolvedInitialSec);
+
+  useEffect(() => {
+    setSelectedSectionId(resolvedInitialSec);
+  }, [resolvedInitialSec]);
 
   // Modo demo para pruebas: por defecto FALSE (solo activo si hay query param ?demo=1 o el docente lo activa)
   const [forceDemoActive, setForceDemoActive] = useState<boolean>(() => {
@@ -159,17 +191,29 @@ export const PublicAttendanceCheckin: React.FC<PublicAttendanceCheckinProps> = (
   useEffect(() => {
     const todayStr = getTodayDateStr();
     const lockKey = `udp_device_attendance_${currentSection.id}_${todayStr}`;
-    const previous = localStorage.getItem(lockKey);
-    if (previous) {
+    let raw: string | null = null;
+    try {
+      raw = localStorage.getItem(lockKey);
+      if (!raw && typeof document !== "undefined") {
+        const match = document.cookie.match(new RegExp(`(?:^|;\\s*)${lockKey}=([^;]*)`));
+        if (match && match[1]) {
+          raw = decodeURIComponent(match[1]);
+        }
+      }
+    } catch {}
+
+    if (raw) {
       try {
-        setDeviceLockedData(JSON.parse(previous));
+        setDeviceLockedData(JSON.parse(raw));
       } catch {
         setDeviceLockedData({
-          studentName: previous,
+          studentName: raw,
           studentRut: "",
           timestamp: "Registrado",
         });
       }
+    } else {
+      setDeviceLockedData(null);
     }
   }, [currentSection.id]);
 
@@ -177,14 +221,14 @@ export const PublicAttendanceCheckin: React.FC<PublicAttendanceCheckinProps> = (
     ? canvasStudents
     : INITIAL_STUDENTS_ROSTER.filter((s) => s.seccionId === selectedSectionId);
 
-  const searchResults = searchTerm.trim().length > 1
-    ? sectionStudents.filter(
-        (s) =>
-          s.nombres.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          s.apellidos.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          s.rut.includes(searchTerm)
-      )
-    : [];
+  const studentOptions: CanvasSearchOption[] = useMemo(() => {
+    return sectionStudents.map((st) => ({
+      value: st.canvas_id,
+      label: `${st.apellidos}, ${st.nombres}`,
+      subLabel: `RUT: ${st.rut}`,
+      keywords: [st.rut, st.nombres, st.apellidos, st.email],
+    }));
+  }, [sectionStudents]);
 
   const handleVerifyLocation = () => {
     if (!navigator.geolocation) {
@@ -222,18 +266,17 @@ export const PublicAttendanceCheckin: React.FC<PublicAttendanceCheckinProps> = (
     e.preventDefault();
     if (!selectedStudent) return;
 
-    // Validación obligatoria de PIN
+    // Validación obligatoria de PIN dinámico para el día de clase
+    const todayStr = getTodayDateStr();
+    const expectedPin = getSectionDailyPin(currentSection, todayStr);
     if (currentSection.requierePin) {
-      if (pinInput.trim() !== currentSection.pinActivo?.trim()) {
+      if (pinInput.trim() !== expectedPin.trim()) {
         setPinError(true);
         return;
       }
     }
 
-    // Validación obligatoria de Geolocalización si la sección lo exige
-    if (currentSection.requiereGeolocalizacion && geoStatus !== "verified") {
-      return;
-    }
+    // Validación de Geolocalización inhabilitada temporalmente
 
     const timestamp = new Date().toLocaleTimeString("es-CL", {
       hour: "2-digit",
@@ -241,7 +284,6 @@ export const PublicAttendanceCheckin: React.FC<PublicAttendanceCheckinProps> = (
       second: "2-digit",
     });
 
-    const todayStr = getTodayDateStr();
     const lockKey = `udp_device_attendance_${currentSection.id}_${todayStr}`;
     const recordPayload = {
       studentName: `${selectedStudent.nombres} ${selectedStudent.apellidos}`,
@@ -249,7 +291,12 @@ export const PublicAttendanceCheckin: React.FC<PublicAttendanceCheckinProps> = (
       timestamp,
       distanciaMetros: distancia,
     };
-    localStorage.setItem(lockKey, JSON.stringify(recordPayload));
+    try {
+      localStorage.setItem(lockKey, JSON.stringify(recordPayload));
+      if (typeof document !== "undefined") {
+        document.cookie = `${lockKey}=${encodeURIComponent(JSON.stringify(recordPayload))}; max-age=86400; path=/; SameSite=Lax`;
+      }
+    } catch {}
 
     // Determinar la sesión real del semestre para hoy
     const semesterSessions = generateSemesterSessions(currentSection);
@@ -328,7 +375,7 @@ export const PublicAttendanceCheckin: React.FC<PublicAttendanceCheckinProps> = (
               <strong>Ayudantía:</strong> {sessionStatus.proximaSesion.diaNombre} de {sessionStatus.proximaSesion.horaInicio} a {sessionStatus.proximaSesion.horaFin} hrs.
             </div>
             <div className="text-gray-600 font-mono text-[11px] flex items-center gap-1 pt-0.5">
-              <Building2 size={12} className="text-[#C8102E]" /> Sala: {sessionStatus.proximaSesion.sala}
+              <Building2 size={12} className="text-[#6B7780]" /> Sala: No definida
             </div>
             <div className="text-gray-500 text-[10px] flex items-center gap-1">
               <MapPin size={11} className="text-gray-400" /> {targetCampusNombre}
@@ -382,7 +429,12 @@ export const PublicAttendanceCheckin: React.FC<PublicAttendanceCheckinProps> = (
           onClick={() => {
             const todayStr = getTodayDateStr();
             const lockKey = `udp_device_attendance_${currentSection.id}_${todayStr}`;
-            localStorage.removeItem(lockKey);
+            try {
+              localStorage.removeItem(lockKey);
+              if (typeof document !== "undefined") {
+                document.cookie = `${lockKey}=; max-age=0; path=/`;
+              }
+            } catch {}
             setDeviceLockedData(null);
           }}
           className="text-[11px] text-gray-500 hover:text-red-700 underline pt-2 block mx-auto"
@@ -424,7 +476,7 @@ export const PublicAttendanceCheckin: React.FC<PublicAttendanceCheckinProps> = (
             ● {isAyudantia ? "Ayudantía Activa" : "Cátedra Activa"} ({sessionStatus.horaInicio} - {sessionStatus.horaFin})
           </span>
           <span className="text-[11px] text-[#2D3B45] bg-gray-100 px-2 py-0.5 rounded border border-gray-200 flex items-center gap-1">
-            <Building2 size={11} className="text-[#C8102E]" /> {currentSection.horarioAyudantia.sala || "Laboratorio TIC"}
+            <Building2 size={11} className="text-[#6B7780]" /> Sala: No definida
           </span>
         </div>
       </div>
@@ -448,64 +500,22 @@ export const PublicAttendanceCheckin: React.FC<PublicAttendanceCheckinProps> = (
           </span>
         </div>
 
-        {/* 2. Buscador de Estudiante */}
-        <div className="space-y-1.5">
-          <label className="font-bold text-[#2D3B45]">2. Busca tu Nombre o RUT en la Nómina:</label>
-          <div className="relative">
-            <Search size={14} className="absolute left-2.5 top-2.5 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Escribe tu apellido, nombre o RUT..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-[4px] bg-white focus:outline-none focus:ring-1 focus:ring-[#008EE2]"
-            />
-          </div>
+        {/* 2. Buscador de Estudiante Reutilizable */}
+        <CanvasSearchableSelect
+          label="2. Busca tu Nombre o RUT en la Nómina:"
+          placeholder="Escribe tu apellido, nombre o RUT (ej: Aliaga o 20.481)..."
+          options={studentOptions}
+          value={selectedStudent?.canvas_id || null}
+          onChange={(val) => {
+            const found = sectionStudents.find((s) => s.canvas_id === val);
+            setSelectedStudent(found || null);
+          }}
+          required
+          selectedCardLabel="Estudiante Confirmado en Nómina"
+          noOptionsText="No se encontró ningún estudiante con ese nombre o RUT en esta sección."
+        />
 
-          {searchResults.length > 0 && !selectedStudent && (
-            <div className="border border-gray-200 rounded-[4px] max-h-40 overflow-y-auto divide-y divide-gray-100 bg-white shadow-xs">
-              {searchResults.map((st) => (
-                <button
-                  key={st.canvas_id}
-                  type="button"
-                  onClick={() => {
-                    setSelectedStudent(st);
-                    setSearchTerm(`${st.apellidos}, ${st.nombres}`);
-                  }}
-                  className="w-full text-left p-2.5 hover:bg-blue-50 transition-colors flex justify-between items-center"
-                >
-                  <div>
-                    <span className="font-semibold text-[#2D3B45] block">{st.apellidos}, {st.nombres}</span>
-                    <span className="text-[10px] text-gray-500 font-mono">RUT: {st.rut}</span>
-                  </div>
-                  <ArrowRight size={13} className="text-[#008EE2]" />
-                </button>
-              ))}
-            </div>
-          )}
-
-          {selectedStudent && (
-            <div className="p-2.5 bg-emerald-50 border border-emerald-200 rounded-[4px] flex justify-between items-center">
-              <div>
-                <span className="text-[10px] text-emerald-800 font-bold uppercase block">Estudiante Confirmado:</span>
-                <strong className="text-emerald-900">{selectedStudent.nombres} {selectedStudent.apellidos}</strong>
-                <span className="text-[10px] text-gray-500 block font-mono">{selectedStudent.rut}</span>
-              </div>
-              <button
-                type="button"
-                onClick={() => {
-                  setSelectedStudent(null);
-                  setSearchTerm("");
-                }}
-                className="text-[11px] text-gray-500 hover:text-red-700 underline"
-              >
-                Cambiar
-              </button>
-            </div>
-          )}
-        </div>
-
-        {/* 3. PIN de Sala (Proyectado en clase) */}
+        {/* 3. PIN de Sala (Proyectado en clase, dinámico por cada día) */}
         {currentSection.requierePin && (
           <div className="space-y-1.5 p-3 bg-gray-50 border border-gray-200 rounded-[4px]">
             <label className="font-bold text-[#2D3B45] flex items-center justify-between">
@@ -513,7 +523,7 @@ export const PublicAttendanceCheckin: React.FC<PublicAttendanceCheckinProps> = (
                 <KeyRound size={13} className="text-[#008EE2]" />
                 3. Ingresa el PIN Proyectado en la Sala:
               </span>
-              <span className="text-[10px] text-gray-400 font-mono">(4 dígitos)</span>
+              <span className="text-[10px] text-gray-500 font-mono">(4 dígitos • único de hoy)</span>
             </label>
             <input
               type="text"
@@ -528,79 +538,8 @@ export const PublicAttendanceCheckin: React.FC<PublicAttendanceCheckinProps> = (
             />
             {pinError && (
               <span className="text-[11px] text-red-600 font-semibold block">
-                PIN incorrecto. Revisa el número proyectado en la pantalla de la sala.
+                PIN incorrecto para la sesión de hoy. Revisa el código proyectado en la pantalla de la sala.
               </span>
-            )}
-          </div>
-        )}
-
-        {/* 4. Geolocalización (Facultad de Ingeniería y Ciencias UDP - Ejército 441) */}
-        {currentSection.requiereGeolocalizacion && (
-          <div className="p-3 bg-blue-50/50 border border-blue-200 rounded-[4px] space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="font-bold text-[#008EE2] flex items-center gap-1.5">
-                <MapPin size={13} />
-                4. Validación de Ubicación Física:
-              </span>
-              <span className="text-[10px] text-gray-500 font-mono">GPS</span>
-            </div>
-
-            <p className="text-[11px] text-gray-600">
-              Ubicación configurada: <strong>{targetCampusNombre}</strong> (margen de cobertura: {targetRadius}m).
-            </p>
-
-            {geoStatus === "idle" && (
-              <button
-                type="button"
-                onClick={handleVerifyLocation}
-                className="w-full py-2 bg-white hover:bg-gray-50 border border-blue-300 text-[#008EE2] rounded font-semibold transition-colors flex items-center justify-center gap-1.5 shadow-2xs"
-              >
-                <Compass size={13} />
-                <span>Verificar que estoy en la sala (GPS)</span>
-              </button>
-            )}
-
-            {geoStatus === "checking" && (
-              <div className="py-2 text-center text-gray-500 italic block animate-pulse">
-                Calculando coordenadas GPS del campus UDP...
-              </div>
-            )}
-
-            {geoStatus === "verified" && (
-              <div className="p-2 bg-emerald-50 border border-emerald-200 rounded text-emerald-900 font-medium text-[11px] flex items-center gap-1.5">
-                <CheckCircle2 size={14} className="text-emerald-600 shrink-0" />
-                <span>
-                  Ubicación validada: En campus UDP (a {distancia}m de Ejército 441, cobertura permitida {targetRadius}m).
-                </span>
-              </div>
-            )}
-
-            {geoStatus === "out_of_range" && (
-              <div className="p-2 bg-amber-50 border border-amber-200 rounded text-amber-900 font-medium text-[11px] space-y-1">
-                <div className="flex items-center gap-1.5">
-                  <AlertTriangle size={14} className="text-amber-600 shrink-0" />
-                  <strong>Fuera del perímetro permitido ({distancia}m)</strong>
-                </div>
-                <p className="text-[10px] text-amber-800">
-                  El radio de cobertura para el cuadrante Toesca - Los Héroes es de {targetRadius}m. Debes estar en la facultad para poder marcar.
-                </p>
-                <button
-                  type="button"
-                  onClick={handleVerifyLocation}
-                  className="text-[10px] text-[#008EE2] underline font-semibold block"
-                >
-                  Volver a calcular ubicación
-                </button>
-              </div>
-            )}
-
-            {geoStatus === "denied" && (
-              <div className="p-2 bg-red-50 border border-red-200 rounded text-red-900 text-[11px] space-y-1">
-                <span className="font-bold block">Permiso de ubicación GPS denegado</span>
-                <p className="text-[10px]">
-                  Activa la ubicación en los ajustes de tu navegador para confirmar que estás presente en la sala.
-                </p>
-              </div>
             )}
           </div>
         )}
@@ -608,18 +547,12 @@ export const PublicAttendanceCheckin: React.FC<PublicAttendanceCheckinProps> = (
         {/* Botón de Envío */}
         <button
           type="submit"
-          disabled={!selectedStudent || (currentSection.requiereGeolocalizacion && geoStatus !== "verified")}
-          className="w-full py-3 bg-[#C8102E] hover:bg-[#A00D24] text-white rounded-[4px] font-bold text-xs uppercase tracking-wider transition-colors disabled:opacity-50 shadow-xs flex items-center justify-center gap-2"
+          disabled={!selectedStudent}
+          className="w-full py-3 bg-[#C8102E] hover:bg-[#A00D24] text-white rounded-[4px] font-bold text-xs uppercase tracking-wider transition-colors disabled:opacity-50 shadow-xs flex items-center justify-center gap-2 cursor-pointer"
         >
           <span>Confirmar y Marcar Asistencia</span>
           <ArrowRight size={14} />
         </button>
-
-        {currentSection.requiereGeolocalizacion && geoStatus !== "verified" && selectedStudent && (
-          <p className="text-[10px] text-center text-gray-500">
-            * Debes presionar &ldquo;Verificar que estoy en la sala (GPS)&rdquo; para habilitar el botón de envío.
-          </p>
-        )}
       </form>
     </div>
   );

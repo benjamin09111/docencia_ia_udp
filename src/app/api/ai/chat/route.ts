@@ -14,7 +14,35 @@ export async function POST(req: NextRequest) {
     let reply = "";
     let sources: string[] = [];
 
-    // Lógica modular según el rol del agente (Preparada para conectar OpenAI/Anthropic/Gemini)
+    // 1. Intentar consultar al microservicio agéntico desacoplado Python (agent-services)
+    const agentServiceUrl = process.env.AGENT_SERVICES_URL || "http://127.0.0.1:8080";
+    try {
+      const pyRes = await fetch(`${agentServiceUrl}/api/v1/agent/chat`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          message,
+          node_id: courseCode ? `course:${courseCode.toLowerCase()}` : "course:cit3203",
+          worker_role: agentRole,
+        }),
+        signal: AbortSignal.timeout(2500),
+      });
+
+      if (pyRes.ok) {
+        const pyData = await pyRes.json();
+        const response: AiChatResponse = {
+          reply: pyData.reply,
+          agentRole,
+          tokensUsed: pyData.tokens_estimated || Math.round(pyData.reply.length / 4),
+          sources: pyData.sources || ["Agente Jerárquico UDP"],
+        };
+        return NextResponse.json(response);
+      }
+    } catch {
+      // Si el microservicio no está activo o supera el timeout, continúa al motor local institucional
+    }
+
+    // 2. Lógica local de contingencia institucional (Fallback seguro sin fuga de errores)
     switch (agentRole) {
       case "activity_assistant":
         sources = ["Catálogo Oficial de Metodologías Activas CREA UDP"];

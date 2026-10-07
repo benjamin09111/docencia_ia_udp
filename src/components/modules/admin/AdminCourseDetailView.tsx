@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { CourseSection } from "@/types/attendance";
 import { CanvasBadge } from "@/components/canvas/CanvasBadge";
 import { CanvasButton } from "@/components/canvas/CanvasButton";
@@ -58,11 +58,21 @@ export const AdminCourseDetailView: React.FC<AdminCourseDetailViewProps> = ({
     section.horarioAyudantia?.horaFin || "17:20"
   );
   const [ayudantiaSala, setAyudantiaSala] = useState(
-    section.horarioAyudantia?.sala || "Laboratorio TIC 2"
+    section.horarioAyudantia?.sala || "SALA X"
   );
   const [profesorTitular, setProfesorTitular] = useState(section.profesor || "Prof. Titular UDP");
   const [ayudanteTitular, setAyudanteTitular] = useState(section.ayudante || "Ayudante UDP");
   const [saveSuccess, setSaveSuccess] = useState(false);
+
+  // Sincronizar campos cuando la prop section cambie
+  useEffect(() => {
+    setAyudantiaDia(section.horarioAyudantia?.dias?.[0] ?? 3);
+    setAyudantiaInicio(section.horarioAyudantia?.horaInicio || "16:00");
+    setAyudantiaFin(section.horarioAyudantia?.horaFin || "17:20");
+    setAyudantiaSala(section.horarioAyudantia?.sala || "SALA X");
+    setProfesorTitular(section.profesor || "Prof. Titular UDP");
+    setAyudanteTitular(section.ayudante || "Ayudante UDP");
+  }, [section]);
 
   // Guardar cambios en el curso
   const handleSaveInfo = (e: React.FormEvent) => {
@@ -183,12 +193,13 @@ export const AdminCourseDetailView: React.FC<AdminCourseDetailViewProps> = ({
     },
   ];
 
+  const currentDayOfWeek = typeof window !== "undefined" ? new Date().getDay() : 2;
   const diasNombres = [
-    { val: 1, label: "Lunes" },
-    { val: 2, label: "Martes" },
-    { val: 3, label: "Miércoles" },
-    { val: 4, label: "Jueves" },
-    { val: 5, label: "Viernes" },
+    { val: 1, label: currentDayOfWeek === 1 ? "Lunes (Hoy)" : "Lunes" },
+    { val: 2, label: currentDayOfWeek === 2 ? "Martes (Hoy, 06 de oct)" : currentDayOfWeek === 1 ? "Martes (Mañana)" : "Martes" },
+    { val: 3, label: currentDayOfWeek === 3 ? "Miércoles (Hoy)" : currentDayOfWeek === 2 ? "Miércoles (Mañana, 07 de oct)" : "Miércoles" },
+    { val: 4, label: currentDayOfWeek === 4 ? "Jueves (Hoy)" : currentDayOfWeek === 3 ? "Jueves (Mañana)" : "Jueves" },
+    { val: 5, label: currentDayOfWeek === 5 ? "Viernes (Hoy)" : currentDayOfWeek === 4 ? "Viernes (Mañana)" : "Viernes" },
   ];
 
   return (

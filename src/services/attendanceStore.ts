@@ -20,7 +20,7 @@ export const INITIAL_SECTIONS: CourseSection[] = [
     horarioAyudantia: { dias: [3], horaInicio: "16:00", horaFin: "17:20", sala: "SALA X" },
     pinActivo: "4821",
     requierePin: true,
-    requiereGeolocalizacion: true,
+    requiereGeolocalizacion: false,
     ubicacionNombre: "Facultad de Ingeniería y Ciencias UDP (Av. Ejército Libertador 441)",
     ubicacionLat: -33.4501,
     ubicacionLng: -70.6622,
@@ -37,7 +37,7 @@ export const INITIAL_SECTIONS: CourseSection[] = [
     horarioAyudantia: { dias: [3], horaInicio: "16:00", horaFin: "17:20", sala: "SALA X" },
     pinActivo: "5914",
     requierePin: true,
-    requiereGeolocalizacion: true,
+    requiereGeolocalizacion: false,
     ubicacionNombre: "Facultad de Ingeniería y Ciencias UDP (Av. Ejército Libertador 441)",
     ubicacionLat: -33.4501,
     ubicacionLng: -70.6622,
@@ -54,7 +54,7 @@ export const INITIAL_SECTIONS: CourseSection[] = [
     horarioAyudantia: { dias: [3], horaInicio: "16:00", horaFin: "17:20", sala: "SALA X" },
     pinActivo: "7239",
     requierePin: true,
-    requiereGeolocalizacion: true,
+    requiereGeolocalizacion: false,
     ubicacionNombre: "Facultad de Ingeniería y Ciencias UDP (Av. Ejército Libertador 441)",
     ubicacionLat: -33.4501,
     ubicacionLng: -70.6622,
@@ -71,7 +71,7 @@ export const INITIAL_SECTIONS: CourseSection[] = [
     horarioAyudantia: { dias: [4], horaInicio: "14:30", horaFin: "16:00", sala: "SALA X" },
     pinActivo: "3312",
     requierePin: true,
-    requiereGeolocalizacion: true,
+    requiereGeolocalizacion: false,
     ubicacionNombre: "Facultad de Ingeniería y Ciencias UDP (Av. Ejército Libertador 441)",
     ubicacionLat: -33.4501,
     ubicacionLng: -70.6622,
@@ -88,7 +88,7 @@ export const INITIAL_SECTIONS: CourseSection[] = [
     horarioAyudantia: { dias: [4], horaInicio: "16:00", horaFin: "17:20", sala: "SALA X" },
     pinActivo: "8891",
     requierePin: true,
-    requiereGeolocalizacion: true,
+    requiereGeolocalizacion: false,
     ubicacionNombre: "Facultad de Ingeniería y Ciencias UDP (Av. Ejército Libertador 441)",
     ubicacionLat: -33.4501,
     ubicacionLng: -70.6622,
@@ -105,7 +105,7 @@ export const INITIAL_SECTIONS: CourseSection[] = [
     horarioAyudantia: { dias: [5], horaInicio: "14:30", horaFin: "16:00", sala: "LAB-COMP 2" },
     pinActivo: "3310",
     requierePin: true,
-    requiereGeolocalizacion: true,
+    requiereGeolocalizacion: false,
     ubicacionNombre: "Facultad de Ingeniería y Ciencias UDP (Av. Ejército Libertador 441)",
     ubicacionLat: -33.4501,
     ubicacionLng: -70.6622,
@@ -141,10 +141,10 @@ export function getSavedSections(): CourseSection[] {
     return allParsed.map((sec: CourseSection) => {
       const matchInit = INITIAL_SECTIONS.find((init) => init.id === sec.id || init.codigo === sec.codigo);
       const catRaw = (sec.horarioCatedra?.dias || []).filter((d) => d >= 1 && d <= 5);
-      const catDias = catRaw.length === 1 ? catRaw : (matchInit?.horarioCatedra?.dias || [3]);
+      const catDias = catRaw.length > 0 ? catRaw : (matchInit?.horarioCatedra?.dias || [3]);
 
       const ayudRaw = (sec.horarioAyudantia?.dias || []).filter((d) => d >= 1 && d <= 5);
-      const ayudDias = ayudRaw.length === 1 ? ayudRaw : (matchInit?.horarioAyudantia?.dias || [3]);
+      const ayudDias = ayudRaw.length > 0 ? ayudRaw : (matchInit?.horarioAyudantia?.dias || [3]);
 
       let prof = sec.profesor || matchInit?.profesor || "Docente UDP";
       // Corrección específica para Sección 3: Prof. Leandro Lanza
@@ -162,7 +162,7 @@ export function getSavedSections(): CourseSection[] {
         ayudante: sec.ayudante || matchInit?.ayudante || "Benjamín Morales Pizarro",
         pinActivo: sec.pinActivo || matchInit?.pinActivo || "4821",
         requierePin: sec.requierePin !== undefined ? sec.requierePin : true,
-        requiereGeolocalizacion: sec.requiereGeolocalizacion !== undefined ? sec.requiereGeolocalizacion : true,
+        requiereGeolocalizacion: false,
         ubicacionNombre: sec.ubicacionNombre || matchInit?.ubicacionNombre || "Facultad de Ingeniería y Ciencias UDP (Av. Ejército Libertador 441)",
         ubicacionLat: sec.ubicacionLat !== undefined ? sec.ubicacionLat : (matchInit?.ubicacionLat ?? -33.4501),
         ubicacionLng: sec.ubicacionLng !== undefined ? sec.ubicacionLng : (matchInit?.ubicacionLng ?? -70.6622),
@@ -199,12 +199,59 @@ export function saveSections(sections: CourseSection[]): void {
 }
 
 /**
- * Regenera y guarda un nuevo PIN aleatorio de 4 dígitos para una sección
+ * Genera un PIN único determinístico de 4 dígitos para cada día de clase
  */
-export function regenerateSectionPin(sectionIdOrCode: string): string {
-  const currentSections = getSavedSections();
-  const newPin = Math.floor(1000 + Math.random() * 9000).toString();
+export function generateDailyPin(sectionCode: string, dateStr: string): string {
+  let hash = 0;
+  const combined = `${sectionCode}_${dateStr}_udp_secure_salt_2026`;
+  for (let i = 0; i < combined.length; i++) {
+    const char = combined.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash |= 0;
+  }
+  const abs = Math.abs(hash);
+  const pinNum = 1000 + (abs % 9000);
+  return String(pinNum);
+}
 
+/**
+ * Obtiene el PIN activo para una sección en una fecha dada (por defecto, hoy).
+ * Si el docente regeneró el PIN manualmente para ese día, devuelve la sobreescritura.
+ * De lo contrario, calcula el PIN diario automático único para ese día de ayudantía.
+ */
+export function getSectionDailyPin(section: CourseSection, dateStr?: string): string {
+  const targetDate = dateStr || getTodayDateStr();
+  if (typeof window !== "undefined") {
+    const override =
+      localStorage.getItem(`udp_pin_override_${section.id}_${targetDate}`) ||
+      localStorage.getItem(`udp_pin_override_${section.codigo}_${targetDate}`);
+    if (override) return override;
+  }
+  return generateDailyPin(section.codigo, targetDate);
+}
+
+/**
+ * Guarda una regeneración de PIN para una fecha específica
+ */
+export function setSectionDailyPin(sectionIdOrCode: string, newPin: string, dateStr?: string): void {
+  const targetDate = dateStr || getTodayDateStr();
+  if (typeof window !== "undefined") {
+    localStorage.setItem(`udp_pin_override_${sectionIdOrCode}_${targetDate}`, newPin);
+    window.dispatchEvent(
+      new CustomEvent("udp_pin_updated", { detail: { sectionIdOrCode, targetDate, newPin } })
+    );
+  }
+}
+
+/**
+ * Regenera y guarda un nuevo PIN aleatorio de 4 dígitos para una sección en una fecha específica
+ */
+export function regenerateSectionPin(sectionIdOrCode: string, dateStr?: string): string {
+  const targetDate = dateStr || getTodayDateStr();
+  const newPin = Math.floor(1000 + Math.random() * 9000).toString();
+  setSectionDailyPin(sectionIdOrCode, newPin, targetDate);
+
+  const currentSections = getSavedSections();
   const updated = currentSections.map((sec) => {
     if (sec.id === sectionIdOrCode || sec.codigo === sectionIdOrCode) {
       return { ...sec, pinActivo: newPin };
@@ -330,7 +377,8 @@ export function generateSemesterSessions(
             estado: "programada",
             horaInicio: seccion.horarioCatedra.horaInicio,
             horaFin: seccion.horarioCatedra.horaFin,
-            sala: seccion.horarioCatedra.sala,
+            sala: "No definida",
+            pin: getSectionDailyPin(seccion, dateStr),
           });
         }
 
@@ -345,7 +393,8 @@ export function generateSemesterSessions(
             estado: "programada",
             horaInicio: seccion.horarioAyudantia?.horaInicio || "14:30",
             horaFin: seccion.horarioAyudantia?.horaFin || "16:00",
-            sala: seccion.horarioAyudantia?.sala || seccion.horarioCatedra.sala,
+            sala: "No definida",
+            pin: getSectionDailyPin(seccion, dateStr),
           });
         }
       }
@@ -533,51 +582,52 @@ export function generateInitialRecords(
 
 export function getSectionByCourseCode(courseCode?: string, customSections?: CourseSection[]): CourseSection {
   const sections = customSections && customSections.length > 0 ? customSections : getSavedSections();
-  if (!courseCode || sections.length === 0) return sections[0] || INITIAL_SECTIONS[0];
+  const fallbackSec1 = sections.find((s) => s.codigo === "CIT3203_CA01" || s.id === "sec_1") || sections[0] || INITIAL_SECTIONS[0];
+  if (!courseCode || sections.length === 0) return fallbackSec1;
 
-  const codeUpper = courseCode.toUpperCase();
+  const codeUpper = courseCode.toUpperCase().trim();
 
-  // 1. Coincidencia directa por código o ID
-  const direct = sections.find((s) => 
-    s.codigo.toUpperCase() === codeUpper ||
-    codeUpper.includes(s.codigo.toUpperCase()) ||
-    s.codigo.toUpperCase().includes(codeUpper) ||
-    s.id.toUpperCase() === codeUpper
+  // 1. Coincidencia EXACTA por código oficial o ID interno
+  const exact = sections.find(
+    (s) => s.codigo.toUpperCase() === codeUpper || s.id.toUpperCase() === codeUpper
   );
-  if (direct) return direct;
+  if (exact) return exact;
 
-  // 2. Coincidencia por asignatura institucional
+  // 2. Coincidencia por asignatura específica (sin cruzar códigos de otras materias)
+  if (codeUpper.includes("CIT3203") || codeUpper.includes("3203") || codeUpper.includes("TICS")) {
+    if (codeUpper.includes("CA03") || codeUpper.includes("_03") || codeUpper.includes("SEC_3") || codeUpper.includes("SECCIÓN 3") || codeUpper.includes("SECCION 3")) {
+      return sections.find((s) => s.codigo.includes("CA03") || s.id === "sec_3") || fallbackSec1;
+    }
+    if (codeUpper.includes("CA02") || codeUpper.includes("_02") || codeUpper.includes("SEC_2") || codeUpper.includes("SECCIÓN 2") || codeUpper.includes("SECCION 2")) {
+      return sections.find((s) => s.codigo.includes("CA02") || s.id === "sec_2") || fallbackSec1;
+    }
+    return fallbackSec1;
+  }
+
   if (codeUpper.includes("CIT2206") || codeUpper.includes("2206") || codeUpper.includes("GESTI")) {
-    const sGest = sections.find((s) => s.id === "sec_gestion_org" || s.codigo.includes("CIT2206"));
-    if (sGest) return sGest;
+    return sections.find((s) => s.codigo.includes("CIT2206") || s.id === "sec_gestion_org") || fallbackSec1;
   }
 
   if (codeUpper.includes("CIT3100") || codeUpper.includes("3100") || codeUpper.includes("ARQ")) {
-    const sArq = sections.find((s) => s.id === "sec_arq_emergentes" || s.codigo.includes("CIT3100"));
-    if (sArq) return sArq;
+    return sections.find((s) => s.codigo.includes("CIT3100") || s.id === "sec_arq_emergentes") || fallbackSec1;
   }
 
   if (codeUpper.includes("CIT1010") || codeUpper.includes("1010") || codeUpper.includes("PROG")) {
-    const sProg = sections.find((s) => s.id === "sec_prog_1" || s.codigo.includes("CIT1010"));
-    if (sProg) return sProg;
+    return sections.find((s) => s.codigo.includes("CIT1010") || s.id === "sec_prog_1") || fallbackSec1;
   }
 
-  if (codeUpper.includes("CA03") || codeUpper.includes("SECCIÓN 3") || codeUpper.includes("SECCION 3") || codeUpper.includes("SEC 3")) {
-    const s3 = sections.find((s) => s.id === "sec_3" || s.codigo.includes("CA03"));
-    if (s3) return s3;
+  // 3. Coincidencia por ID de sección de Proyecto en TICs II por defecto
+  if (codeUpper === "SEC_1" || codeUpper === "CA01") {
+    return fallbackSec1;
+  }
+  if (codeUpper === "SEC_2" || codeUpper === "CA02") {
+    return sections.find((s) => s.codigo.includes("CA02") || s.id === "sec_2") || fallbackSec1;
+  }
+  if (codeUpper === "SEC_3" || codeUpper === "CA03") {
+    return sections.find((s) => s.codigo.includes("CA03") || s.id === "sec_3") || fallbackSec1;
   }
 
-  if (codeUpper.includes("CA02") || codeUpper.includes("SECCIÓN 2") || codeUpper.includes("SECCION 2") || codeUpper.includes("SEC 2")) {
-    const s2 = sections.find((s) => s.id === "sec_2" || s.codigo.includes("CA02"));
-    if (s2) return s2;
-  }
-
-  if (codeUpper.includes("CA01") || codeUpper.includes("SECCIÓN 1") || codeUpper.includes("SECCION 1") || codeUpper.includes("SEC 1") || codeUpper.includes("CIT3203") || codeUpper.includes("3203")) {
-    const s1 = sections.find((s) => s.id === "sec_1" || s.codigo.includes("CA01"));
-    if (s1) return s1;
-  }
-
-  return sections[0];
+  return fallbackSec1;
 }
 
 export function formatSectionSchedule(section: CourseSection) {

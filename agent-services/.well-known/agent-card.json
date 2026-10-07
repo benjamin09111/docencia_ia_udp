@@ -1,0 +1,27 @@
+{
+  "name": "Docencia IA UDP Hierarchical Agent Ecosystem",
+  "version": "1.0.0",
+  "description": "Ecosistema jerárquico de agentes inteligentes docentes para la Universidad Diego Portales (UDP), con soporte para herencia en árbol, perillas pedagógicas y workers de evaluación, diseño y planillas.",
+  "protocol": "A2A/1.0",
+  "provider": {
+    "organization": "Universidad Diego Portales - CREA & Facultad de Ingeniería",
+    "url": "https://www.udp.cl"
+  },
+  "capabilities": [
+    "hierarchical_prompt_inheritance",
+    "pedagogical_calibration",
+    "rubric_grading_assistance",
+    "activity_design",
+    "excel_tenths_audit"
+  ],
+  "endpoints": {
+    "chat": "/api/v1/agent/chat",
+    "evaluate": "/api/v1/agent/evaluate",
+    "tree": "/api/v1/tree/hierarchy",
+    "stream": "/api/v1/agent/stream"
+  },
+  "auth": {
+    "type": "bearer",
+    "scope": "agent:invoke"
+  }
+}

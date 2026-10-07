@@ -12,10 +12,12 @@ import {
   getSavedStudentWorkRecords,
   getSavedTotalTrabajos,
   generateSemesterSessions,
+  saveSections,
 } from "@/services/attendanceStore";
 import {
   fetchAttendanceMapFromSupabase,
   fetchStudentWorkRecordsFromSupabase,
+  fetchSectionsFromSupabase,
   isSupabaseConfigured,
 } from "@/services/attendanceDbService";
 import { CourseSection, ClassSession, StudentWorkRecord, AttendanceValue } from "@/types/attendance";
@@ -46,7 +48,28 @@ export const PublicAttendanceVisualView: React.FC<PublicAttendanceVisualViewProp
   courseCode = "CIT3203_CA01",
   initialSectionId,
 }) => {
-  const [sections, setSections] = useState<CourseSection[]>(INITIAL_SECTIONS);
+  const [sections, setSections] = useState<CourseSection[]>(() => getSavedSections());
+
+  // Sincronizar reactivamente cuando se actualice cualquier horario
+  useEffect(() => {
+    const handleSync = () => {
+      setSections(getSavedSections());
+    };
+    window.addEventListener("udp_sections_updated", handleSync);
+    return () => window.removeEventListener("udp_sections_updated", handleSync);
+  }, []);
+
+  // Cargar datos oficiales de Supabase al montar
+  useEffect(() => {
+    if (isSupabaseConfigured()) {
+      fetchSectionsFromSupabase().then((cloudSections) => {
+        if (cloudSections && cloudSections.length > 0) {
+          setSections(cloudSections);
+          saveSections(cloudSections);
+        }
+      });
+    }
+  }, []);
 
   // 1. Resolver sección exacta utilizando la función oficial y unificada
   const selectedSection = useMemo(() => {
@@ -167,18 +190,41 @@ export const PublicAttendanceVisualView: React.FC<PublicAttendanceVisualViewProp
     };
   }, [effectiveCanvasCourseId, selectedSection.id]);
 
-  // Cargar datos sincronizados desde Supabase si está disponible
+  // Cargar datos sincronizados desde Supabase y escuchar en vivo
   useEffect(() => {
     if (!isSupabaseConfigured()) return;
     const secCode = selectedSection.codigo || courseCode;
 
-    fetchAttendanceMapFromSupabase(secCode).then((map) => {
-      if (Object.keys(map).length > 0) setAttendanceMap((prev) => ({ ...prev, ...map }));
-    });
+    const syncFromCloud = () => {
+      fetchAttendanceMapFromSupabase(secCode).then((map) => {
+        if (Object.keys(map).length > 0) {
+          setAttendanceMap((prev) => {
+            const hasChanges = Object.keys(map).some((k) => prev[k] !== map[k]);
+            if (!hasChanges) return prev;
+            return { ...prev, ...map };
+          });
+        }
+      });
 
-    fetchStudentWorkRecordsFromSupabase(secCode).then((records) => {
-      if (Object.keys(records).length > 0) setStudentWorkRecords((prev) => ({ ...prev, ...records }));
-    });
+      fetchStudentWorkRecordsFromSupabase(secCode).then((records) => {
+        if (Object.keys(records).length > 0) {
+          setStudentWorkRecords((prev) => {
+            const hasChanges = Object.keys(records).some(
+              (k) => JSON.stringify(prev[Number(k)]) !== JSON.stringify(records[Number(k)])
+            );
+            if (!hasChanges) return prev;
+            return { ...prev, ...records };
+          });
+        }
+      });
+    };
+
+    // Sincronización inmediata
+    syncFromCloud();
+
+    // Polling en vivo cada 6 segundos para pantallas proyectadas en sala
+    const interval = setInterval(syncFromCloud, 6000);
+    return () => clearInterval(interval);
   }, [selectedSection, courseCode]);
 
   // Escuchar cambios locales en tiempo real (incluso entre pestañas del navegador)

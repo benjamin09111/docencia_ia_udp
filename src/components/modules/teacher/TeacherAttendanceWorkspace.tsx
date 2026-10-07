@@ -24,8 +24,10 @@ import {
   getSavedTotalTrabajos,
   saveTotalTrabajos,
   getTodayDateStr,
+  getSectionByCourseCode,
   saveSessionOverride,
   regenerateSectionPin,
+  getSectionDailyPin,
 } from "@/services/attendanceStore";
 import { exportAttendanceToExcel, AttendanceExportScope } from "@/services/excelExportService";
 import {
@@ -34,6 +36,7 @@ import {
   saveAttendanceMarkToSupabase,
   saveAttendanceBatchToSupabase,
   fetchAttendanceMapFromSupabase,
+  fetchHistoricalRecordedSessionsFromSupabase,
   saveStudentWorkRecordToSupabase,
   fetchStudentWorkRecordsFromSupabase,
   updateSessionStatusInSupabase,
@@ -82,19 +85,7 @@ export const TeacherAttendanceWorkspace: React.FC<TeacherAttendanceWorkspaceProp
 
   // 1 curso = 1 sección (determinada por el código del curso Canvas)
   const matchedSectionId = useMemo(() => {
-    const found = sections.find((s) => 
-      s.codigo === courseCode || 
-      courseCode.includes(s.codigo) ||
-      (courseCode.includes("CIT2206") && s.codigo.includes("CIT2206")) ||
-      (courseCode.includes("CIT3100") && s.codigo.includes("CIT3100")) ||
-      (courseCode.includes("CA02") && s.codigo.includes("CA02")) ||
-      (courseCode.includes("CA01") && s.codigo.includes("CA01"))
-    );
-    if (found) return found.id;
-    if (courseCode.includes("CIT2206") || courseCode.includes("2206")) return "sec_gestion_org";
-    if (courseCode.includes("CIT3100") || courseCode.includes("3100")) return "sec_arq_emergentes";
-    if (courseCode.includes("CA02") || courseCode.includes("02")) return "sec_2";
-    return "sec_1";
+    return getSectionByCourseCode(courseCode, sections).id;
   }, [courseCode, sections]);
 
   const [selectedSectionId, setSelectedSectionId] = useState<string>(matchedSectionId);
@@ -317,6 +308,7 @@ export const TeacherAttendanceWorkspace: React.FC<TeacherAttendanceWorkspaceProp
     window.addEventListener("udp_student_work_updated", handleStorageUpdate);
     window.addEventListener("udp_total_trabajos_updated", handleStorageUpdate);
     window.addEventListener("udp_sessions_overrides_updated", handleOverridesUpdate);
+    window.addEventListener("udp_pin_updated", handleStorageUpdate);
     window.addEventListener("storage", handleStorageUpdate);
 
     // Canal BroadcastChannel para sincronización instantánea entre pestañas
@@ -337,6 +329,7 @@ export const TeacherAttendanceWorkspace: React.FC<TeacherAttendanceWorkspaceProp
       window.removeEventListener("udp_student_work_updated", handleStorageUpdate);
       window.removeEventListener("udp_total_trabajos_updated", handleStorageUpdate);
       window.removeEventListener("udp_sessions_overrides_updated", handleOverridesUpdate);
+      window.removeEventListener("udp_pin_updated", handleStorageUpdate);
       window.removeEventListener("storage", handleStorageUpdate);
       if (channel) channel.close();
     };
@@ -423,6 +416,73 @@ export const TeacherAttendanceWorkspace: React.FC<TeacherAttendanceWorkspaceProp
       isMounted = false;
     };
   }, [courseCode, courseName, effectiveCanvasCourseId, selectedSection, sectionStudents, activeSessions]);
+
+  // Cargar sesiones históricas que ya tengan marcajes de asistencia en Supabase
+  // para garantizar que nunca desaparezcan al cambiar días u horarios
+  useEffect(() => {
+    if (!isSupabaseConfigured()) return;
+    let isMounted = true;
+    const secCode = selectedSection.codigo || courseCode;
+
+    (async () => {
+      try {
+        const histSessions = await fetchHistoricalRecordedSessionsFromSupabase(secCode);
+        if (isMounted && histSessions.length > 0) {
+          setSessionsBySection((prev) => {
+            const currentList = prev[selectedSectionId] || [];
+            const map = new Map<string, ClassSession>();
+            currentList.forEach((s) => map.set(s.id, s));
+            let added = false;
+            histSessions.forEach((hs) => {
+              if (!map.has(hs.id)) {
+                const dateExists = currentList.some((s) => s.fecha === hs.fecha && s.tipo === hs.tipo);
+                if (!dateExists) {
+                  map.set(hs.id, hs);
+                  added = true;
+                }
+              }
+            });
+            if (!added) return prev;
+            const sorted = Array.from(map.values()).sort((a, b) => a.fecha.localeCompare(b.fecha));
+            return {
+              ...prev,
+              [selectedSectionId]: sorted,
+              [selectedSection.id]: sorted,
+              [selectedSection.codigo]: sorted,
+            };
+          });
+        }
+      } catch (err) {
+        console.warn("Aviso cargando sesiones históricas:", err);
+      }
+    })();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [sections, selectedSection.codigo, selectedSection.id, selectedSectionId, courseCode]);
+
+
+  // Polling automático cada 6 segundos desde Supabase para reflejar marcajes móviles en vivo en la sala
+  useEffect(() => {
+    if (!isSupabaseConfigured()) return;
+    const interval = setInterval(async () => {
+      try {
+        const cloudMap = await fetchAttendanceMapFromSupabase(selectedSection.codigo || courseCode);
+        if (Object.keys(cloudMap).length > 0) {
+          setAttendanceMap((prev) => {
+            const hasChanges = Object.keys(cloudMap).some((k) => prev[k] !== cloudMap[k]);
+            if (!hasChanges) return prev;
+            const merged = { ...prev, ...cloudMap };
+            saveAttendanceMap(merged);
+            return merged;
+          });
+        }
+      } catch {}
+    }, 6000);
+
+    return () => clearInterval(interval);
+  }, [selectedSection.codigo, courseCode]);
 
   // Calcular resúmenes de asistencia por alumno (evaluadas sobre clases realizadas hasta la fecha actual)
   const summaries: StudentAttendanceSummary[] = useMemo(() => {
@@ -532,11 +592,11 @@ export const TeacherAttendanceWorkspace: React.FC<TeacherAttendanceWorkspaceProp
 
   // Manejar regeneración de PIN para la sección activa
   const handleRegeneratePin = () => {
-    const newPin = regenerateSectionPin(selectedSection.id);
+    const newPin = regenerateSectionPin(selectedSection.id, todaySessionInfo.todayDateStr);
     setSections(getSavedSections());
     setQuickNotification({
       type: "success",
-      message: `🔑 Nuevo PIN generado para ${selectedSection.nombre}: ${newPin}. Proyéctalo o compártelo a los alumnos.`,
+      message: `🔑 Nuevo PIN generado para hoy en ${selectedSection.nombre}: ${newPin}. Proyéctalo o compártelo a los alumnos.`,
     });
     setTimeout(() => setQuickNotification(null), 5000);
   };
@@ -792,7 +852,7 @@ export const TeacherAttendanceWorkspace: React.FC<TeacherAttendanceWorkspaceProp
     }
   };
 
-  const effectivePin = selectedSection?.pinActivo || "4821";
+  const effectivePin = getSectionDailyPin(selectedSection, todaySessionInfo.todayDateStr);
 
   const handleCopyPin = async () => {
     const ok = await copyText(effectivePin);
@@ -935,6 +995,26 @@ export const TeacherAttendanceWorkspace: React.FC<TeacherAttendanceWorkspaceProp
             className="text-gray-400 hover:text-gray-700 font-bold text-xs ml-3"
           >
             ✕
+          </button>
+        </div>
+      )}
+
+      {/* Banner informativo si hoy no es el día programado de la clase */}
+      {!todaySessionInfo.isScheduledDay && (
+        <div className="bg-amber-50/80 border border-amber-200 rounded-[4px] px-3 py-2 text-xs text-amber-900 flex flex-col sm:flex-row sm:items-center justify-between gap-2 animate-fadeIn">
+          <div className="flex items-center gap-2">
+            <span className="font-bold">📅 Programación semanal:</span>
+            <span>
+              Hoy es <strong>{todaySessionInfo.diaActualNombre}</strong>, mientras que la ayudantía está configurada los <strong>{todaySessionInfo.diasConfigurados}</strong> (próxima clase: {todaySessionInfo.nextSession ? todaySessionInfo.nextSession.fecha.split("-").reverse().slice(0, 2).join("/") : "próximamente"}). 
+              Por defecto el Excel muestra sesiones pasadas hasta hoy.
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setShowOnlyUpToToday((prev) => !prev)}
+            className="px-2.5 py-1 bg-white hover:bg-gray-50 border border-amber-300 rounded text-[11px] font-semibold text-amber-900 shrink-0 cursor-pointer"
+          >
+            {showOnlyUpToToday ? "Ver calendario completo" : "Ver solo hasta hoy"}
           </button>
         </div>
       )}

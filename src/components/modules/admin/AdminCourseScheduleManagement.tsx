@@ -46,6 +46,15 @@ export const AdminCourseScheduleManagement: React.FC = () => {
     () => new Set(["CIT3203"]) // Expandido por defecto para visualización inmediata
   );
 
+  // Sincronización reactiva ante cambios en cualquier vista
+  useEffect(() => {
+    const handleSync = () => {
+      setSections(getSavedSections());
+    };
+    window.addEventListener("udp_sections_updated", handleSync);
+    return () => window.removeEventListener("udp_sections_updated", handleSync);
+  }, []);
+
   // Cargar secciones actualizadas desde Supabase al montar
   useEffect(() => {
     if (isSupabaseConfigured()) {

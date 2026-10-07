@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { CanvasBadge } from "@/components/canvas/CanvasBadge";
 import { CanvasButton } from "@/components/canvas/CanvasButton";
 import {
@@ -12,6 +12,7 @@ import {
 import { AgentKnowledgeDetail } from "@/components/modules/admin/AgentKnowledgeDetail";
 import { AdminCourseScheduleManagement } from "@/components/modules/admin/AdminCourseScheduleManagement";
 import { AdminCourseDetailView } from "@/components/modules/admin/AdminCourseDetailView";
+import { AdminCourseAgentsTab } from "@/components/modules/admin/AdminCourseAgentsTab";
 import { CanvasActionMenu } from "@/components/canvas/CanvasActionMenu";
 import {
   AgentHistoryModal,
@@ -19,6 +20,11 @@ import {
 } from "@/components/modules/admin/AgentHistoryModal";
 import { AgentEditModal } from "@/components/modules/admin/AgentEditModal";
 import { getSavedSections, getSectionByCourseCode, saveSections } from "@/services/attendanceStore";
+import {
+  updateSectionScheduleInSupabase,
+  fetchSectionsFromSupabase,
+  isSupabaseConfigured,
+} from "@/services/attendanceDbService";
 import { CourseSection } from "@/types/attendance";
 import {
   Bot,
@@ -115,17 +121,41 @@ export const AdminView: React.FC = () => {
   const [selectedEditAgent, setSelectedEditAgent] = useState<TechnicalAgentItem | null>(null);
   const [technicalAgents, setTechnicalAgents] = useState<TechnicalAgentItem[]>(INITIAL_TECHNICAL_AGENTS);
   const [isEndSemesterModalOpen, setIsEndSemesterModalOpen] = useState(false);
+  const [sections, setSections] = useState<CourseSection[]>(() => getSavedSections());
+
+  // Sincronizar reactivamente cuando se actualice cualquier horario
+  useEffect(() => {
+    const handleSync = () => {
+      setSections(getSavedSections());
+    };
+    window.addEventListener("udp_sections_updated", handleSync);
+    return () => window.removeEventListener("udp_sections_updated", handleSync);
+  }, []);
+
+  // Cargar datos oficiales de Supabase al montar
+  useEffect(() => {
+    if (isSupabaseConfigured()) {
+      fetchSectionsFromSupabase().then((cloudSections) => {
+        if (cloudSections && cloudSections.length > 0) {
+          setSections(cloudSections);
+          saveSections(cloudSections);
+        }
+      });
+    }
+  }, []);
 
   if (selectedDetailSection) {
     return (
       <AdminCourseDetailView
         section={selectedDetailSection}
         onBack={() => setSelectedDetailSection(null)}
-        onSaveSection={(updated) => {
+        onSaveSection={async (updated) => {
           const all = getSavedSections();
           const updatedAll = all.map((s) => (s.id === updated.id || s.codigo === updated.codigo ? updated : s));
           saveSections(updatedAll);
+          setSections(updatedAll);
           setSelectedDetailSection(updated);
+          await updateSectionScheduleInSupabase(updated);
         }}
       />
     );
@@ -242,246 +272,10 @@ export const AdminView: React.FC = () => {
 
       {/* TAB 1: Sistemas de Agentes por Cursos */}
       {activeTab === "course_agents" && (
-        <div className="space-y-4">
-          <div className="bg-white border border-[#E0E3E6] rounded-[4px] p-4 shadow-canvas-card flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
-            <div>
-              <h2 className="text-sm font-bold text-[#2D3B45] flex items-center gap-2">
-                <BookOpen size={16} className="text-[#008EE2]" />
-                Jerarquía Multi-Agente: 1 Agente Teórico por Curso + Agentes Técnicos por Sección
-              </h2>
-              <p className="text-xs text-[#6B7780] mt-0.5">
-                El <strong>Agente Teórico</strong> es único por asignatura y no se duplica (unifica PMBOK, RAPs y corpus metodológico). Los <strong>Agentes Técnicos</strong> son contextuales y varían según la sección: profesor titular, horario, sala y condición de eximición.
-              </p>
-            </div>
-            <span className="px-2.5 py-1 bg-emerald-50 text-emerald-800 text-[11px] font-bold rounded border border-emerald-200 shrink-0">
-              3 Cursos • 5 Secciones Activas
-            </span>
-          </div>
-
-          <div className="space-y-4">
-            {[
-              {
-                courseCode: "CIT3203",
-                courseName: "PROYECTO EN TICS II",
-                level: "10° Semestre • Escuela de Informática y Telecomunicaciones UDP",
-                teorico: {
-                  name: "Agente Teórico CIT3203",
-                  corpus: "Guía PMBOK 7ma Edición (PMI), Marcos Ágiles (Scrum, Kanban), 6 RAPs Institucionales y 7 Unidades Temáticas",
-                  scope: "1 Agente Teórico Centralizado (Compartido idénticamente por las Secciones 1, 2 y 3)",
-                },
-                sections: [
-                  {
-                    code: "CIT3203_CA01",
-                    name: "Sección 1",
-                    profesor: "Jorge Esteban Cruz León",
-                    ayudante: "Benjamín Morales Pizarro",
-                    horarioAyudantia: "Miércoles 16:00 - 17:20",
-                    sala: "SALA X",
-                    eximicion: "Promedio ≥ 5.5 + 75% Asistencia",
-                    pin: "4821",
-                  },
-                  {
-                    code: "CIT3203_CA02",
-                    name: "Sección 2",
-                    profesor: "Claudio Meneses Silva",
-                    ayudante: "Benjamín Morales Pizarro",
-                    horarioAyudantia: "Miércoles 16:00 - 17:20",
-                    sala: "SALA X",
-                    eximicion: "Promedio ≥ 5.0 + 75% Asistencia",
-                    pin: "5914",
-                  },
-                  {
-                    code: "CIT3203_CA03",
-                    name: "Sección 3",
-                    profesor: "Leandro Lanza",
-                    ayudante: "Benjamín Morales Pizarro",
-                    horarioAyudantia: "Miércoles 16:00 - 17:20",
-                    sala: "SALA X",
-                    eximicion: "Régimen taller 100% ponderado (Sin examen)",
-                    pin: "7239",
-                  },
-                ],
-              },
-              {
-                courseCode: "CIT2206",
-                courseName: "GESTIÓN ORGANIZACIONAL",
-                level: "6° Semestre • Escuela de Informática y Telecomunicaciones UDP",
-                teorico: {
-                  name: "Agente Teórico CIT2206",
-                  corpus: "Teoría de la Organización, Estructuras, Dinámicas de Personas, Liderazgo Estratégico y Casos Harvard",
-                  scope: "1 Agente Teórico Centralizado",
-                },
-                sections: [
-                  {
-                    code: "CIT2206_CA01",
-                    name: "Sección 1",
-                    profesor: "María José Quintana",
-                    ayudante: "Benjamín Morales Pizarro",
-                    horarioAyudantia: "Jueves 14:30 - 16:00",
-                    sala: "SALA X",
-                    eximicion: "Promedio ≥ 5.0 + 75% Asistencia",
-                    pin: "3312",
-                  },
-                ],
-              },
-              {
-                courseCode: "CIT3100",
-                courseName: "ARQUITECTURAS EMERGENTES DE SOFTWARE",
-                level: "8° Semestre • Escuela de Informática y Telecomunicaciones UDP",
-                teorico: {
-                  name: "Agente Teórico CIT3100",
-                  corpus: "Patrones Cloud Native, Microservicios, Sistemas Distribuidos, Serverless & Kubernetes",
-                  scope: "1 Agente Teórico Centralizado",
-                },
-                sections: [
-                  {
-                    code: "CIT3100_CA02",
-                    name: "Sección 2",
-                    profesor: "Jorge Esteban Cruz León",
-                    ayudante: "Benjamín Morales Pizarro",
-                    horarioAyudantia: "Jueves 16:00 - 17:20",
-                    sala: "SALA X",
-                    eximicion: "Promedio ≥ 5.2 + Proyecto desplegado en nube",
-                    pin: "8891",
-                  },
-                ],
-              },
-            ].map((course) => (
-              <div
-                key={course.courseCode}
-                className="bg-white border border-[#E0E3E6] rounded-[4px] shadow-canvas-card overflow-hidden"
-              >
-                {/* Cabecera del Curso y su Agente Teórico Único */}
-                <div className="p-4 bg-[#FAFBFB] border-b border-[#E0E3E6] flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <span className="font-mono font-bold text-xs text-[#008EE2] bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
-                        {course.courseCode}
-                      </span>
-                      <h3 className="font-bold text-sm text-[#2D3B45]">
-                        {course.courseName}
-                      </h3>
-                      <span className="text-[11px] text-[#6B7780] font-medium">
-                        • {course.level}
-                      </span>
-                    </div>
-
-                    {/* Ficha Agente Teórico (1 solo por curso) */}
-                    <div className="flex flex-wrap items-center gap-2 pt-1">
-                      <span className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-[#1E272E] text-white rounded text-[11px] font-bold">
-                        <Brain size={12} className="text-purple-300" />
-                        <span>{course.teorico.name}</span>
-                        <span className="text-[9px] bg-purple-900/60 text-purple-200 px-1 py-0.2 rounded font-normal uppercase">
-                          Único
-                        </span>
-                      </span>
-                      <span className="text-[11px] text-[#55636E]">
-                        {course.teorico.corpus}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center">
-                    <CanvasActionMenu
-                      ariaLabel={`Acciones para ${course.courseName}`}
-                      items={[
-                        {
-                          label: "Ver y editar curso",
-                          icon: <BookOpen size={14} className="text-[#008EE2]" />,
-                          onClick: () => {
-                            const matched = getSectionByCourseCode(course.courseCode);
-                            setSelectedDetailSection(matched);
-                          },
-                        },
-                      ]}
-                    />
-                  </div>
-                </div>
-
-                {/* Sub-tabla: Agentes Técnicos Contextuales por Sección */}
-                <div className="p-3 bg-white">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 mb-2 px-1">
-                    <span className="text-[11px] font-bold text-[#6B7780] uppercase tracking-wider flex items-center gap-1.5">
-                      <Bot size={13} className="text-[#C8102E]" />
-                      Agentes Técnicos de Sección ({course.sections.length} {course.sections.length === 1 ? "sección" : "secciones"} con parámetros particulares de profesor)
-                    </span>
-                    <span className="text-[11px] text-[#6B7780]">
-                      El agente técnico adapta horarios, nombre del docente y reglas de eximición
-                    </span>
-                  </div>
-
-                  <div className="border border-gray-200 rounded-[3px] overflow-x-auto">
-                    <table className="w-full text-left text-xs min-w-[680px]">
-                      <thead className="bg-[#F5F6F8] text-[#55636E] uppercase font-bold text-[10px] border-b border-gray-200">
-                        <tr>
-                          <th className="p-2.5">Sección & Código</th>
-                          <th className="p-2.5">Profesor Titular</th>
-                          <th className="p-2.5">Horario Ayudantía & Sala</th>
-                          <th className="p-2.5">Condición de Eximición</th>
-                          <th className="p-2.5 text-center">Agente Técnico</th>
-                          <th className="p-2.5 text-right w-14">Acciones</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-gray-100">
-                        {course.sections.map((sec) => (
-                          <tr key={sec.code} className="hover:bg-blue-50/20 transition-colors">
-                            <td className="p-2.5 font-medium text-[#2D3B45]">
-                              <span className="font-bold text-[#008EE2]">{sec.name}</span>
-                              <span className="block font-mono text-[10px] text-gray-500">{sec.code}</span>
-                            </td>
-                            <td className="p-2.5 text-[#2D3B45]">
-                              <span className="font-semibold block">{sec.profesor}</span>
-                              <span className="text-[10px] text-[#6B7780]">Ayudante: {sec.ayudante}</span>
-                            </td>
-                            <td className="p-2.5 text-[#2D3B45]">
-                              <span className="block font-medium">{sec.horarioAyudantia}</span>
-                              <span className="text-[10px] text-gray-500 font-mono">{sec.sala}</span>
-                            </td>
-                            <td className="p-2.5 text-[#2D3B45]">
-                              <span className="px-2 py-0.5 bg-amber-50 text-amber-900 border border-amber-200 rounded text-[11px] font-medium block w-fit">
-                                {sec.eximicion}
-                              </span>
-                            </td>
-                            <td className="p-2.5 text-center">
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-red-50 text-[#C8102E] border border-red-200 rounded text-[11px] font-semibold">
-                                <BookOpen size={11} />
-                                <span>Técnico {sec.name}</span>
-                              </span>
-                            </td>
-                            <td className="p-2.5 text-right">
-                              <CanvasActionMenu
-                                ariaLabel={`Acciones para ${sec.code}`}
-                                items={[
-                                  {
-                                    label: "Ver y editar curso",
-                                    icon: <BookOpen size={14} className="text-[#008EE2]" />,
-                                    onClick: () => {
-                                      const matched = getSectionByCourseCode(sec.code);
-                                      setSelectedDetailSection(matched);
-                                    },
-                                  },
-                                ]}
-                              />
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="bg-[#F0F8FF] border border-[#B3E5FC] rounded-[4px] p-3.5 flex items-center justify-between text-xs text-[#0277BD]">
-            <div className="flex items-center gap-2">
-              <Sparkles size={16} />
-              <span>
-                <strong>Arquitectura CREA UDP:</strong> 1 Agente Teórico unificado por curso garantiza que el contenido académico sea idéntico entre secciones, mientras que los Agentes Técnicos preservan la autonomía docente y las particularidades de cada profesor.
-              </span>
-            </div>
-          </div>
-        </div>
+        <AdminCourseAgentsTab
+          sections={sections}
+          onSelectSection={(sec) => setSelectedDetailSection(sec)}
+        />
       )}
 
       {/* TAB 2: Agentes Técnicos (Workers Especializados) */}
