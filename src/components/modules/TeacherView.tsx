@@ -39,18 +39,21 @@ export const TeacherView: React.FC<TeacherViewProps> = ({
   const [notification, setNotification] = useState<string | null>(null);
   const [showImportModal, setShowImportModal] = useState<boolean>(false);
   const [customCourses, setCustomCourses] = useState<CanvasCourse[]>([]);
-  const [savedOrderIds, setSavedOrderIds] = useState<number[]>(() => {
-    if (typeof window === "undefined") return [];
+  const [savedOrderIds, setSavedOrderIds] = useState<number[]>([]);
+  const [sections, setSections] = useState<CourseSection[]>([]);
+
+  // Sincronizar estado local en cliente tras el montaje (previene errores de hidratación SSR)
+  useEffect(() => {
     try {
       const raw = localStorage.getItem(COURSES_ORDER_STORAGE_KEY);
-      return raw ? JSON.parse(raw) : [];
+      if (raw) {
+        setSavedOrderIds(JSON.parse(raw));
+      }
     } catch {
-      return [];
+      // ignore
     }
-  });
-
-  // Estado sincronizado de secciones y horarios (modificados por Admin)
-  const [sections, setSections] = useState<CourseSection[]>(() => getSavedSections());
+    setSections(getSavedSections());
+  }, []);
 
   // Escuchar cambios de horarios realizados por el administrador
   useEffect(() => {
