@@ -149,10 +149,10 @@ export function getSavedSections(): CourseSection[] {
 
     return deduplicated.map((sec: CourseSection) => {
       const matchInit = INITIAL_SECTIONS.find((init) => init.id === sec.id || init.codigo === sec.codigo);
-      const catRaw = (sec.horarioCatedra?.dias || []).filter((d) => d >= 1 && d <= 5);
+      const catRaw = (sec.horarioCatedra?.dias || []).filter((d) => d >= 0 && d <= 6);
       const catDias = catRaw.length > 0 ? catRaw : (matchInit?.horarioCatedra?.dias || [3]);
 
-      const ayudRaw = (sec.horarioAyudantia?.dias || []).filter((d) => d >= 1 && d <= 5);
+      const ayudRaw = (sec.horarioAyudantia?.dias || []).filter((d) => d >= 0 && d <= 6);
       const ayudDias = ayudRaw.length > 0 ? ayudRaw : (matchInit?.horarioAyudantia?.dias || [3]);
 
       let prof = sec.profesor || matchInit?.profesor;
@@ -195,12 +195,19 @@ export function getSavedSections(): CourseSection[] {
           horaFin: sec.horarioAyudantia?.horaFin || matchInit?.horarioAyudantia?.horaFin || "17:20",
           sala: sec.horarioAyudantia?.sala || matchInit?.horarioAyudantia?.sala || "SALA X",
         },
-        horarioAyudantia2: sec.horarioAyudantia2 && sec.horarioAyudantia2.dias?.length > 0 ? {
+        horarioAyudantia2: sec.horarioAyudantia2 && (sec.horarioAyudantia2.dias?.length ?? 0) > 0 ? {
           ...sec.horarioAyudantia2,
-          dias: (sec.horarioAyudantia2.dias || []).filter((d) => d >= 1 && d <= 5),
+          dias: (sec.horarioAyudantia2.dias || []).filter((d) => d >= 0 && d <= 6),
           horaInicio: sec.horarioAyudantia2.horaInicio || "14:30",
           horaFin: sec.horarioAyudantia2.horaFin || "16:00",
           sala: sec.horarioAyudantia2.sala || "SALA X",
+        } : undefined,
+        horarioCatedra2: sec.horarioCatedra2 && (sec.horarioCatedra2.dias?.length ?? 0) > 0 ? {
+          ...sec.horarioCatedra2,
+          dias: (sec.horarioCatedra2.dias || []).filter((d) => d >= 0 && d <= 6),
+          horaInicio: sec.horarioCatedra2.horaInicio || "14:30",
+          horaFin: sec.horarioCatedra2.horaFin || "16:00",
+          sala: sec.horarioCatedra2.sala || "SALA X",
         } : undefined,
       };
     });

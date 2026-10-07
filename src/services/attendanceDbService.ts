@@ -1,6 +1,6 @@
 import { getSupabaseClient, isSupabaseConfigured } from "./supabaseClient";
 import { ClassSession, CourseSection, AttendanceValue } from "@/types/attendance";
-import { StudentRosterItem, generateSemesterSessions } from "./attendanceStore";
+import { StudentRosterItem, generateSemesterSessions, getSavedSections } from "./attendanceStore";
 
 export interface AttendanceDbSyncResult {
   success: boolean;
@@ -374,36 +374,42 @@ export async function fetchSectionsFromSupabase(): Promise<CourseSection[] | nul
       return "Asignatura UDP";
     };
 
-    return data.map((sec) => ({
-      id: idMap[sec.code] || sec.code,
-      codigo: sec.code,
-      cursoNombre: getCourseName(sec.code),
-      nombre: sec.name,
-      profesor: (() => {
-        const t = sec.teacher_name?.trim();
-        if (sec.code === "CIT3203_CA01") return "Leandro Llanza";
-        if (sec.code === "CIT3203_CA02") return t || "Cristian Osorio";
-        if (sec.code === "CIT3203_CA03") return t || "Jorge Esteban Cruz León";
-        if (sec.code === "CIT3100_CA02") return t || "Jorge Elliott";
-        return t && t !== "Docente UDP" ? t : "No identificado";
-      })(),
-      ayudante: sec.assistant_name || "Benjamín Morales Pizarro",
-      horarioCatedra: {
-        dias: sec.horario_catedra_dias || [3],
-        horaInicio: sec.horario_catedra_inicio?.slice(0, 5) || "14:30",
-        horaFin: sec.horario_catedra_fin?.slice(0, 5) || "17:30",
-        sala: sec.horario_catedra_sala || "SALA X",
-      },
-      horarioAyudantia: {
-        dias: sec.horario_ayudantia_dias || [3],
-        horaInicio: sec.horario_ayudantia_inicio?.slice(0, 5) || "16:00",
-        horaFin: sec.horario_ayudantia_fin?.slice(0, 5) || "17:20",
-        sala: sec.horario_ayudantia_sala || "SALA X",
-      },
-      pinActivo: sec.pin_activo || "4821",
-      requierePin: Boolean(sec.requiere_pin),
-      requiereGeolocalizacion: Boolean(sec.requiere_geo),
-    }));
+    const currentSaved = getSavedSections();
+    return data.map((sec) => {
+      const matchLocal = currentSaved.find((ls) => ls.codigo === sec.code || ls.id === sec.code);
+      return {
+        id: idMap[sec.code] || sec.code,
+        codigo: sec.code,
+        cursoNombre: getCourseName(sec.code),
+        nombre: sec.name,
+        profesor: (() => {
+          const t = sec.teacher_name?.trim();
+          if (sec.code === "CIT3203_CA01") return "Leandro Llanza";
+          if (sec.code === "CIT3203_CA02") return t || "Cristian Osorio";
+          if (sec.code === "CIT3203_CA03") return t || "Jorge Esteban Cruz León";
+          if (sec.code === "CIT3100_CA02") return t || "Jorge Elliott";
+          return t && t !== "Docente UDP" ? t : "No identificado";
+        })(),
+        ayudante: sec.assistant_name || "Benjamín Morales Pizarro",
+        horarioCatedra: {
+          dias: sec.horario_catedra_dias || [3],
+          horaInicio: sec.horario_catedra_inicio?.slice(0, 5) || "14:30",
+          horaFin: sec.horario_catedra_fin?.slice(0, 5) || "17:30",
+          sala: sec.horario_catedra_sala || "SALA X",
+        },
+        horarioAyudantia: {
+          dias: sec.horario_ayudantia_dias || [3],
+          horaInicio: sec.horario_ayudantia_inicio?.slice(0, 5) || "16:00",
+          horaFin: sec.horario_ayudantia_fin?.slice(0, 5) || "17:20",
+          sala: sec.horario_ayudantia_sala || "SALA X",
+        },
+        horarioAyudantia2: sec.horario_ayudantia2 || matchLocal?.horarioAyudantia2,
+        horarioCatedra2: sec.horario_catedra2 || matchLocal?.horarioCatedra2,
+        pinActivo: sec.pin_activo || "4821",
+        requierePin: Boolean(sec.requiere_pin),
+        requiereGeolocalizacion: Boolean(sec.requiere_geo),
+      };
+    });
   } catch (e) {
     console.error("Error fetchSectionsFromSupabase:", e);
     return null;

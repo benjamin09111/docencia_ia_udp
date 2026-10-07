@@ -124,10 +124,11 @@ export const AdminView: React.FC = () => {
   const [selectedEditAgent, setSelectedEditAgent] = useState<TechnicalAgentItem | null>(null);
   const [technicalAgents, setTechnicalAgents] = useState<TechnicalAgentItem[]>(INITIAL_TECHNICAL_AGENTS);
   const [isEndSemesterModalOpen, setIsEndSemesterModalOpen] = useState(false);
-  const [sections, setSections] = useState<CourseSection[]>(() => getSavedSections());
+  const [sections, setSections] = useState<CourseSection[]>([]);
 
   // Sincronizar reactivamente cuando se actualice cualquier horario
   useEffect(() => {
+    setSections(getSavedSections());
     const handleSync = () => {
       setSections(getSavedSections());
     };
