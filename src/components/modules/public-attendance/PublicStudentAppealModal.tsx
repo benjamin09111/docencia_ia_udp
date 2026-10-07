@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { X, Send, Clock, CheckCircle2, AlertCircle, History, FileText, ShieldAlert } from "lucide-react";
 import { CourseSection, ClassSession, AttendanceAppeal } from "@/types/attendance";
 import { StudentRosterItem, getTodayDateStr } from "@/services/attendanceStore";
 import { createAppeal, getSavedAppeals } from "@/services/appealsStore";
+import { CanvasSearchableSelect, CanvasSearchOption } from "@/components/canvas/CanvasSearchableSelect";
 
 interface PublicStudentAppealModalProps {
   isOpen: boolean;
@@ -15,11 +16,7 @@ interface PublicStudentAppealModalProps {
 }
 
 export const PublicStudentAppealModal: React.FC<PublicStudentAppealModalProps> = ({
-  isOpen,
-  onClose,
-  section,
-  students,
-  sessions,
+  isOpen, onClose, section, students, sessions,
 }) => {
   const [activeTab, setActiveTab] = useState<"nueva" | "historial">("nueva");
   const [selectedCanvasId, setSelectedCanvasId] = useState<number | "">("");
@@ -29,13 +26,23 @@ export const PublicStudentAppealModal: React.FC<PublicStudentAppealModalProps> =
   const [statusMessage, setStatusMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [appealsHistory, setAppealsHistory] = useState<AttendanceAppeal[]>(() => getSavedAppeals(section.codigo));
 
+  const studentOptions = useMemo<CanvasSearchOption[]>(() => {
+    return students.map((st) => ({
+      value: st.canvas_id,
+      label: `${st.apellidos}, ${st.nombres}`,
+      subLabel: `RUT: ${st.rut || "Sin RUT"} • ${st.email || "Estudiante UDP"}`,
+      badge: "Estudiante",
+      keywords: [st.nombres, st.apellidos, st.rut || "", st.email || ""],
+    }));
+  }, [students]);
+
   const refreshHistory = () => setAppealsHistory(getSavedAppeals(section.codigo));
   if (!isOpen) return null;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedCanvasId) {
-      setStatusMessage({ type: "error", text: "Por favor selecciona tu nombre de la lista oficial." });
+      setStatusMessage({ type: "error", text: "Por favor busca y selecciona tu nombre de la lista." });
       return;
     }
     const student = students.find((s) => s.canvas_id === Number(selectedCanvasId));
@@ -73,31 +80,17 @@ export const PublicStudentAppealModal: React.FC<PublicStudentAppealModalProps> =
         </div>
 
         <div className="flex border-b border-gray-200 bg-[#FAFBFB] text-xs font-semibold">
-          <button
-            type="button"
-            onClick={() => { setActiveTab("nueva"); setStatusMessage(null); }}
-            className={`flex-1 py-2 px-3 flex items-center justify-center gap-1.5 border-b-2 cursor-pointer ${
-              activeTab === "nueva" ? "border-[#C8102E] text-[#C8102E] bg-white" : "border-transparent text-[#6B7780]"
-            }`}
-          >
+          <button type="button" onClick={() => { setActiveTab("nueva"); setStatusMessage(null); }} className={`flex-1 py-2 px-3 flex items-center justify-center gap-1.5 border-b-2 cursor-pointer ${activeTab === "nueva" ? "border-[#C8102E] text-[#C8102E] bg-white" : "border-transparent text-[#6B7780]"}`}>
             <Send size={13} /><span>Nueva Apelación</span>
           </button>
-          <button
-            type="button"
-            onClick={() => { setActiveTab("historial"); refreshHistory(); }}
-            className={`flex-1 py-2 px-3 flex items-center justify-center gap-1.5 border-b-2 cursor-pointer ${
-              activeTab === "historial" ? "border-[#C8102E] text-[#C8102E] bg-white" : "border-transparent text-[#6B7780]"
-            }`}
-          >
+          <button type="button" onClick={() => { setActiveTab("historial"); refreshHistory(); }} className={`flex-1 py-2 px-3 flex items-center justify-center gap-1.5 border-b-2 cursor-pointer ${activeTab === "historial" ? "border-[#C8102E] text-[#C8102E] bg-white" : "border-transparent text-[#6B7780]"}`}>
             <History size={13} /><span>Historial ({appealsHistory.length})</span>
           </button>
         </div>
 
         <div className="p-4 overflow-y-auto flex-1 space-y-3 text-xs">
           {statusMessage && (
-            <div className={`p-2.5 rounded-[4px] border flex items-start gap-2 ${
-              statusMessage.type === "success" ? "bg-emerald-50 border-emerald-300 text-emerald-900" : "bg-rose-50 border-rose-300 text-rose-900"
-            }`}>
+            <div className={`p-2.5 rounded-[4px] border flex items-start gap-2 ${statusMessage.type === "success" ? "bg-emerald-50 border-emerald-300 text-emerald-900" : "bg-rose-50 border-rose-300 text-rose-900"}`}>
               {statusMessage.type === "success" ? <CheckCircle2 size={15} className="text-emerald-700 shrink-0 mt-0.5" /> : <AlertCircle size={15} className="text-rose-700 shrink-0 mt-0.5" />}
               <span className="text-[11px] leading-relaxed">{statusMessage.text}</span>
             </div>
@@ -105,20 +98,15 @@ export const PublicStudentAppealModal: React.FC<PublicStudentAppealModalProps> =
 
           {activeTab === "nueva" ? (
             <form onSubmit={handleSubmit} className="space-y-3">
-              <div>
-                <label className="block text-[11px] font-bold text-[#2D3B45] uppercase mb-1">1. Selecciona tu Nombre:</label>
-                <select
-                  value={selectedCanvasId}
-                  onChange={(e) => setSelectedCanvasId(e.target.value ? Number(e.target.value) : "")}
-                  className="w-full p-2 bg-gray-50 border border-gray-300 rounded-[4px] text-[#2D3B45] font-medium"
-                  required
-                >
-                  <option value="">-- Elige tu nombre de la sección --</option>
-                  {students.map((st) => (
-                    <option key={st.canvas_id} value={st.canvas_id}>{st.apellidos}, {st.nombres}</option>
-                  ))}
-                </select>
-              </div>
+              <CanvasSearchableSelect
+                label="1. Selecciona tu Nombre Oficial:"
+                placeholder="Escribe tu nombre o RUT para buscar..."
+                options={studentOptions}
+                value={selectedCanvasId || null}
+                onChange={(val) => setSelectedCanvasId(val ? Number(val) : "")}
+                required
+                selectedCardLabel="Estudiante que Apela"
+              />
 
               <div className="grid grid-cols-2 gap-2">
                 <div>
@@ -127,28 +115,16 @@ export const PublicStudentAppealModal: React.FC<PublicStudentAppealModalProps> =
                 </div>
                 <div>
                   <label className="block text-[11px] font-bold text-[#2D3B45] uppercase mb-1">3. Fecha:</label>
-                  <select
-                    value={selectedDate}
-                    onChange={(e) => setSelectedDate(e.target.value)}
-                    className="w-full p-2 bg-gray-50 border border-gray-300 rounded-[4px] text-[#2D3B45] font-mono"
-                  >
+                  <select value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)} className="w-full p-2 bg-gray-50 border border-gray-300 rounded-[4px] text-[#2D3B45] font-mono">
                     <option value={todayStr}>Hoy ({todayStr})</option>
-                    {sessions.map((s) => (
-                      <option key={s.id} value={s.fecha}>{s.fecha} ({s.diaSemana})</option>
-                    ))}
+                    {sessions.map((s) => (<option key={s.id} value={s.fecha}>{s.fecha} ({s.diaSemana})</option>))}
                   </select>
                 </div>
               </div>
 
               <div>
                 <label className="block text-[11px] font-bold text-[#2D3B45] uppercase mb-1">4. Justificación:</label>
-                <input
-                  type="text"
-                  value={comentario}
-                  onChange={(e) => setComentario(e.target.value)}
-                  maxLength={150}
-                  className="w-full p-2 bg-gray-50 border border-gray-300 rounded-[4px] text-[#2D3B45]"
-                />
+                <input type="text" value={comentario} onChange={(e) => setComentario(e.target.value)} maxLength={150} className="w-full p-2 bg-gray-50 border border-gray-300 rounded-[4px] text-[#2D3B45]" />
               </div>
 
               <div className="p-2 bg-blue-50/70 border border-blue-200 rounded-[4px] flex items-center gap-1.5 text-[10px] text-[#0277BD]">
@@ -185,9 +161,7 @@ export const PublicStudentAppealModal: React.FC<PublicStudentAppealModalProps> =
                       app.status === "resuelta" ? "bg-emerald-100 text-emerald-800 border border-emerald-200" :
                       app.status === "rechazada" ? "bg-rose-100 text-rose-800 border border-rose-200" :
                       "bg-amber-100 text-amber-800 border border-amber-200"
-                    }`}>
-                      {app.status}
-                    </span>
+                    }`}>{app.status}</span>
                   </div>
                 ))
               )}
@@ -198,3 +172,4 @@ export const PublicStudentAppealModal: React.FC<PublicStudentAppealModalProps> =
     </div>
   );
 };
+
