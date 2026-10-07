@@ -65,6 +65,10 @@ Para evitar que con el avance del desarrollo las páginas diverjan visualmente, 
 
 ## ⚡ 3. Flujo de Trabajo y Eficiencia de Comandos
 1. **Validaciones pesadas (`npm run build`, etc.)**: Comandos pesados como `npm run build` o verificaciones globales de compilación se ejecutan **SOLO antes de hacer el push final** o cuando el usuario lo solicite de forma explícita. No deben ejecutarse durante el desarrollo iterativo para mantener la máxima velocidad y eficiencia.
+2. **Estrategia de Ramas (Staging Oficial para Testing)**:
+   - La rama por defecto para desarrollo, pruebas y despliegues preliminares es estrictamente **`staging`**.
+   - Todo push iterativo irá hacia `staging`.
+   - La rama `main` (producción) solo recibirá merges/pushes cuando una funcionalidad esté validada y el usuario solicite explícitamente pasar a producción.
 
 ---
 
