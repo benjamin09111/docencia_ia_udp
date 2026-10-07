@@ -186,6 +186,13 @@ export function getSavedSections(): CourseSection[] {
           horaFin: sec.horarioAyudantia?.horaFin || matchInit?.horarioAyudantia?.horaFin || "17:20",
           sala: sec.horarioAyudantia?.sala || matchInit?.horarioAyudantia?.sala || "SALA X",
         },
+        horarioAyudantia2: sec.horarioAyudantia2 && sec.horarioAyudantia2.dias?.length > 0 ? {
+          ...sec.horarioAyudantia2,
+          dias: (sec.horarioAyudantia2.dias || []).filter((d) => d >= 1 && d <= 5),
+          horaInicio: sec.horarioAyudantia2.horaInicio || "14:30",
+          horaFin: sec.horarioAyudantia2.horaFin || "16:00",
+          sala: sec.horarioAyudantia2.sala || "SALA X",
+        } : undefined,
       };
     });
   } catch {
@@ -370,10 +377,12 @@ export function generateSemesterSessions(
     const d = String(current.getDate()).padStart(2, "0");
     const dateStr = `${y}-${m}-${d}`;
 
-    const isCatedra = seccion.horarioCatedra.dias.includes(dayOfWeek);
+    const isCatedra = seccion.horarioCatedra?.dias?.includes(dayOfWeek);
+    const isCatedra2 = seccion.horarioCatedra2?.dias?.includes(dayOfWeek);
     const isAyudantia = seccion.horarioAyudantia?.dias?.includes(dayOfWeek);
+    const isAyudantia2 = seccion.horarioAyudantia2?.dias?.includes(dayOfWeek);
 
-    if (isCatedra || isAyudantia) {
+    if (isCatedra || isCatedra2 || isAyudantia || isAyudantia2) {
       const feriado = isDateUDPHoliday(dateStr);
 
       // Si es feriado o receso institucional, NO se crea sesión (solo clases reales efectivas)
@@ -390,7 +399,23 @@ export function generateSemesterSessions(
             estado: "programada",
             horaInicio: seccion.horarioCatedra.horaInicio,
             horaFin: seccion.horarioCatedra.horaFin,
-            sala: "No definida",
+            sala: seccion.horarioCatedra.sala || "No definida",
+            pin: getSectionDailyPin(seccion, dateStr),
+          });
+        }
+
+        if (isCatedra2 && seccion.horarioCatedra2) {
+          sessions.push({
+            id: `sess_${secIdentifier}_cat2_${dateStr}`,
+            seccionId: seccion.id,
+            fecha: dateStr,
+            diaSemana: DIA_SEMANA_NOMBRES[dayOfWeek],
+            tipo: "catedra",
+            modalidad: "presencial",
+            estado: "programada",
+            horaInicio: seccion.horarioCatedra2.horaInicio,
+            horaFin: seccion.horarioCatedra2.horaFin,
+            sala: seccion.horarioCatedra2.sala || "No definida",
             pin: getSectionDailyPin(seccion, dateStr),
           });
         }
@@ -406,7 +431,23 @@ export function generateSemesterSessions(
             estado: "programada",
             horaInicio: seccion.horarioAyudantia?.horaInicio || "14:30",
             horaFin: seccion.horarioAyudantia?.horaFin || "16:00",
-            sala: "No definida",
+            sala: seccion.horarioAyudantia?.sala || "No definida",
+            pin: getSectionDailyPin(seccion, dateStr),
+          });
+        }
+
+        if (isAyudantia2 && seccion.horarioAyudantia2) {
+          sessions.push({
+            id: `sess_${secIdentifier}_ayu2_${dateStr}`,
+            seccionId: seccion.id,
+            fecha: dateStr,
+            diaSemana: DIA_SEMANA_NOMBRES[dayOfWeek],
+            tipo: "ayudantia",
+            modalidad: "presencial",
+            estado: "programada",
+            horaInicio: seccion.horarioAyudantia2.horaInicio,
+            horaFin: seccion.horarioAyudantia2.horaFin,
+            sala: seccion.horarioAyudantia2.sala || "No definida",
             pin: getSectionDailyPin(seccion, dateStr),
           });
         }
@@ -714,11 +755,15 @@ export function formatSectionSchedule(section: CourseSection) {
   const tieneAyudantia = Boolean(section.horarioAyudantia?.dias && section.horarioAyudantia.dias.length > 0);
   const ayudantiaDias = tieneAyudantia ? section.horarioAyudantia.dias.map((d) => diasNombres[d]).join(" y ") : null;
 
+  const tieneAyudantia2 = Boolean(section.horarioAyudantia2?.dias && section.horarioAyudantia2.dias.length > 0);
+  const ayudantiaDias2 = tieneAyudantia2 ? section.horarioAyudantia2!.dias.map((d) => diasNombres[d]).join(" y ") : null;
+  const extraAyudantia = tieneAyudantia2 ? ` | Bloque 2: ${ayudantiaDias2} ${section.horarioAyudantia2!.horaInicio} - ${section.horarioAyudantia2!.horaFin}` : "";
+
   return {
     claseSemanal: `${catedraDias} ${section.horarioCatedra.horaInicio} - ${section.horarioCatedra.horaFin}`,
     catedra: `${catedraDias} ${section.horarioCatedra.horaInicio} - ${section.horarioCatedra.horaFin}`,
     catedraSala: section.horarioCatedra.sala,
-    ayudantia: tieneAyudantia ? `${ayudantiaDias} ${section.horarioAyudantia.horaInicio} - ${section.horarioAyudantia.horaFin}` : "Integrada en bloque semanal",
+    ayudantia: tieneAyudantia ? `${ayudantiaDias} ${section.horarioAyudantia.horaInicio} - ${section.horarioAyudantia.horaFin}${extraAyudantia}` : "Integrada en bloque semanal",
     ayudantiaSala: tieneAyudantia ? section.horarioAyudantia.sala : section.horarioCatedra.sala,
     profesor: section.profesor,
     ayudante: section.ayudante,

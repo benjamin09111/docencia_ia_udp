@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { CourseSection } from "@/types/attendance";
 import { CanvasBadge } from "@/components/canvas/CanvasBadge";
 import { CanvasButton } from "@/components/canvas/CanvasButton";
+import { AdminSectionScheduleEditor } from "./AdminSectionScheduleEditor";
 import {
   ArrowLeft,
   Calendar,
@@ -47,48 +48,30 @@ export const AdminCourseDetailView: React.FC<AdminCourseDetailViewProps> = ({
     "info" | "agents" | "files" | "history" | "feedback"
   >("info");
 
-  // Estado editable para horarios y sala
-  const [ayudantiaDia, setAyudantiaDia] = useState<number>(
-    section.horarioAyudantia?.dias?.[0] ?? 3
-  );
-  const [ayudantiaInicio, setAyudantiaInicio] = useState(
-    section.horarioAyudantia?.horaInicio || "16:00"
-  );
-  const [ayudantiaFin, setAyudantiaFin] = useState(
-    section.horarioAyudantia?.horaFin || "17:20"
-  );
-  const [ayudantiaSala, setAyudantiaSala] = useState(
-    section.horarioAyudantia?.sala || "SALA X"
-  );
   const [profesorTitular, setProfesorTitular] = useState(section.profesor || "Prof. Titular UDP");
   const [ayudanteTitular, setAyudanteTitular] = useState(section.ayudante || "Ayudante UDP");
   const [saveSuccess, setSaveSuccess] = useState(false);
 
-  // Sincronizar campos cuando la prop section cambie
   useEffect(() => {
-    setAyudantiaDia(section.horarioAyudantia?.dias?.[0] ?? 3);
-    setAyudantiaInicio(section.horarioAyudantia?.horaInicio || "16:00");
-    setAyudantiaFin(section.horarioAyudantia?.horaFin || "17:20");
-    setAyudantiaSala(section.horarioAyudantia?.sala || "SALA X");
     setProfesorTitular(section.profesor || "Prof. Titular UDP");
     setAyudanteTitular(section.ayudante || "Ayudante UDP");
   }, [section]);
 
-  // Guardar cambios en el curso
-  const handleSaveInfo = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSaveScheduleData = (updatedData: {
+    profesor: string;
+    ayudante: string;
+    horarioAyudantia: any;
+    horarioAyudantia2?: any;
+  }) => {
+    setProfesorTitular(updatedData.profesor);
+    setAyudanteTitular(updatedData.ayudante);
     if (onSaveSection) {
       onSaveSection({
         ...section,
-        profesor: profesorTitular,
-        ayudante: ayudanteTitular,
-        horarioAyudantia: {
-          ...section.horarioAyudantia,
-          dias: [ayudantiaDia],
-          horaInicio: ayudantiaInicio,
-          horaFin: ayudantiaFin,
-          sala: ayudantiaSala,
-        },
+        profesor: updatedData.profesor,
+        ayudante: updatedData.ayudante,
+        horarioAyudantia: updatedData.horarioAyudantia,
+        horarioAyudantia2: updatedData.horarioAyudantia2,
       });
     }
     setSaveSuccess(true);
@@ -107,7 +90,7 @@ export const AdminCourseDetailView: React.FC<AdminCourseDetailViewProps> = ({
       actualizado: "Vigencia Marzo 2026",
       contenido: `# Descriptor Oficial: ${section.cursoNombre || "Proyecto en TICs II"} (${section.codigo})
 - Créditos: 6 SCT | Semestre: 10 | Régimen: Semestral
-- Horario Ayudantía: ${ayudantiaSala} (${ayudantiaInicio} - ${ayudantiaFin} hrs)
+- Horario Ayudantía: ${section.horarioAyudantia?.sala || "SALA X"} (${section.horarioAyudantia?.horaInicio || "14:30"} - ${section.horarioAyudantia?.horaFin || "16:00"} hrs)
 - Asistencia Mínima: 75% obligatoria (Riesgo RI por inasistencia)
 - 6 Resultados de Aprendizaje (RAPs):
   1. Evalúa una problemática TIC real en una organización.
@@ -354,121 +337,14 @@ export const AdminCourseDetailView: React.FC<AdminCourseDetailViewProps> = ({
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
-            {/* Formulario de Horarios y Profesores (7 Cols) */}
-            <form
-              onSubmit={handleSaveInfo}
-              className="lg:col-span-7 bg-white border border-[#E0E3E6] rounded-[4px] p-4 sm:p-5 shadow-canvas-card space-y-4"
-            >
-              <div className="border-b border-gray-200 pb-3">
-                <h3 className="text-sm font-bold text-[#2D3B45] flex items-center gap-2">
-                  <Calendar size={16} className="text-[#008EE2]" />
-                  Horario Oficial y Datos de la Sección
-                </h3>
-                <p className="text-xs text-[#6B7780] mt-0.5">
-                  Edita la programación semanal de ayudantía, sala y docentes responsables.
-                </p>
-              </div>
-
-              {/* Días y Horarios */}
-              <div className="space-y-3">
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  <div>
-                    <label className="text-xs font-bold text-[#2D3B45] block mb-1">
-                      Día de Ayudantía
-                    </label>
-                    <select
-                      value={ayudantiaDia}
-                      onChange={(e) => setAyudantiaDia(Number(e.target.value))}
-                      className="w-full text-xs border border-gray-300 rounded-[4px] p-2 bg-white text-[#2D3B45] focus:outline-none focus:ring-1 focus:ring-[#008EE2]"
-                    >
-                      {diasNombres.map((d) => (
-                        <option key={d.val} value={d.val}>
-                          {d.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="text-xs font-bold text-[#2D3B45] block mb-1">
-                      Hora Inicio
-                    </label>
-                    <input
-                      type="time"
-                      value={ayudantiaInicio}
-                      onChange={(e) => setAyudantiaInicio(e.target.value)}
-                      className="w-full text-xs border border-gray-300 rounded-[4px] p-2 bg-white text-[#2D3B45] focus:outline-none focus:ring-1 focus:ring-[#008EE2]"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="text-xs font-bold text-[#2D3B45] block mb-1">
-                      Hora Fin
-                    </label>
-                    <input
-                      type="time"
-                      value={ayudantiaFin}
-                      onChange={(e) => setAyudantiaFin(e.target.value)}
-                      className="w-full text-xs border border-gray-300 rounded-[4px] p-2 bg-white text-[#2D3B45] focus:outline-none focus:ring-1 focus:ring-[#008EE2]"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="text-xs font-bold text-[#2D3B45] block mb-1">
-                    Sala Asignada (Laboratorio / Aula)
-                  </label>
-                  <div className="relative">
-                    <Building2 size={14} className="absolute left-2.5 top-2.5 text-gray-400" />
-                    <input
-                      type="text"
-                      value={ayudantiaSala}
-                      onChange={(e) => setAyudantiaSala(e.target.value)}
-                      placeholder="Ej: Laboratorio TIC 2, Sala 301"
-                      className="w-full pl-8 pr-3 py-2 text-xs border border-gray-300 rounded-[4px] bg-white text-[#2D3B45] focus:outline-none focus:ring-1 focus:ring-[#008EE2]"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-                  <div>
-                    <label className="text-xs font-bold text-[#2D3B45] block mb-1">
-                      Profesor Titular
-                    </label>
-                    <input
-                      type="text"
-                      value={profesorTitular}
-                      onChange={(e) => setProfesorTitular(e.target.value)}
-                      className="w-full text-xs border border-gray-300 rounded-[4px] p-2 bg-white text-[#2D3B45] focus:outline-none focus:ring-1 focus:ring-[#008EE2]"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs font-bold text-[#2D3B45] block mb-1">
-                      Ayudante a Cargo
-                    </label>
-                    <input
-                      type="text"
-                      value={ayudanteTitular}
-                      onChange={(e) => setAyudanteTitular(e.target.value)}
-                      className="w-full text-xs border border-gray-300 rounded-[4px] p-2 bg-white text-[#2D3B45] focus:outline-none focus:ring-1 focus:ring-[#008EE2]"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Botón Guardar Cambios */}
-              <div className="flex justify-end pt-2 border-t border-gray-100">
-                <CanvasButton
-                  variant="primary-canvas"
-                  size="sm"
-                  type="submit"
-                  icon={<Save size={14} />}
-                  title="Guardar cambios de horario y sala oficial"
-                >
-                  Guardar cambios
-                </CanvasButton>
-              </div>
-            </form>
+            {/* Formulario Modular de Horarios (Principal y Secundario) y Docentes */}
+            <div className="lg:col-span-7">
+              <AdminSectionScheduleEditor
+                section={section}
+                onSave={handleSaveScheduleData}
+                saveSuccess={saveSuccess}
+              />
+            </div>
 
             {/* Ubicación Física y Mini Visor Google Maps (5 Cols) */}
             <div className="lg:col-span-5 bg-white border border-[#E0E3E6] rounded-[4px] p-4 sm:p-5 shadow-canvas-card space-y-4">
@@ -622,12 +498,15 @@ export const AdminCourseDetailView: React.FC<AdminCourseDetailViewProps> = ({
                 <CanvasBadge variant="udp">{section.nombre}</CanvasBadge>
               </div>
               <p className="text-xs text-gray-700 leading-relaxed bg-[#F9FAFB] p-3 rounded border border-gray-200">
-                Custodia los parámetros de la sección: Profesor {profesorTitular}, horario {ayudantiaInicio} - {ayudantiaFin}, Sala {ayudantiaSala}, condición de eximición (nota ≥ 5.5) y asistencia mínima del 75%.
+                Custodia los parámetros de la sección: Profesor {profesorTitular}, horario {section.horarioAyudantia?.horaInicio || "14:30"} - {section.horarioAyudantia?.horaFin || "16:00"}, Sala {section.horarioAyudantia?.sala || "LAB-COMP 2"}, condición de eximición (nota ≥ 5.5) y asistencia mínima del 75%.
               </p>
               <div className="text-xs space-y-1 text-[#55636E]">
                 <strong className="block text-[11px] text-[#2D3B45] uppercase">Parámetros:</strong>
-                <div>• Horario: {diasNombres.find((d) => d.val === ayudantiaDia)?.label} {ayudantiaInicio} hrs</div>
-                <div>• Sala oficial: {ayudantiaSala}</div>
+                <div>• Horario Principal: {section.horarioAyudantia?.horaInicio || "14:30"} - {section.horarioAyudantia?.horaFin || "16:00"} hrs</div>
+                {section.horarioAyudantia2 && (
+                  <div>• Horario Secundario: {section.horarioAyudantia2.horaInicio} - {section.horarioAyudantia2.horaFin} hrs</div>
+                )}
+                <div>• Sala oficial: {section.horarioAyudantia?.sala || "SALA X"}</div>
                 <div>• RAG: Descriptor oficial de la sección y reglamento RI</div>
               </div>
             </div>

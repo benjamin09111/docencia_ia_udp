@@ -343,13 +343,24 @@ export const AdminCourseScheduleManagement: React.FC = () => {
                                     </span>
                                   </td>
                                   <td className="p-2.5 text-purple-950 font-medium">
-                                    <span className="flex items-center gap-1">
-                                      <Clock size={11} className="text-purple-600" />
-                                      <span>{getDiasTexto(sec.horarioAyudantia.dias)} {sec.horarioAyudantia.horaInicio} - {sec.horarioAyudantia.horaFin}</span>
-                                    </span>
+                                    <div className="space-y-0.5">
+                                      <span className="flex items-center gap-1">
+                                        <Clock size={11} className="text-purple-600" />
+                                        <span>{getDiasTexto(sec.horarioAyudantia.dias)} {sec.horarioAyudantia.horaInicio} - {sec.horarioAyudantia.horaFin}</span>
+                                      </span>
+                                      {sec.horarioAyudantia2 && (
+                                        <span className="flex items-center gap-1 text-[11px] text-amber-700">
+                                          <Clock size={10} className="text-amber-600" />
+                                          <span>Bloque 2: {getDiasTexto(sec.horarioAyudantia2.dias)} {sec.horarioAyudantia2.horaInicio} - {sec.horarioAyudantia2.horaFin}</span>
+                                        </span>
+                                      )}
+                                    </div>
                                   </td>
                                   <td className="p-2.5 font-mono text-gray-600">
-                                    {sec.horarioAyudantia.sala}
+                                    <div>{sec.horarioAyudantia.sala}</div>
+                                    {sec.horarioAyudantia2 && (
+                                      <div className="text-[11px] text-gray-500">{sec.horarioAyudantia2.sala}</div>
+                                    )}
                                   </td>
                                   <td
                                     className="p-2.5 text-right"
