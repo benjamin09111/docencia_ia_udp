@@ -75,6 +75,19 @@ import {
 import { getPublicCheckinUrl, getPublicVisualUrl } from "@/utils/urlHelper";
 import { StudentExcelRow } from "@/types";
 
+const DEFAULT_FALLBACK_SECTION: CourseSection = {
+  id: "sec_default",
+  codigo: "CIT3203_CA01",
+  cursoNombre: "Proyecto en TICs II",
+  nombre: "Sección 1",
+  profesor: "Docente UDP",
+  ayudante: "Ayudante UDP",
+  horarioCatedra: { dias: [3], horaInicio: "14:30", horaFin: "16:00", sala: "UDP" },
+  horarioAyudantia: { dias: [3], horaInicio: "16:15", horaFin: "17:45", sala: "UDP" },
+  requierePin: true,
+  requiereGeolocalizacion: false,
+};
+
 interface TeacherAttendanceWorkspaceProps {
   courseCode?: string;
   courseName?: string;
@@ -166,7 +179,11 @@ export const TeacherAttendanceWorkspace: React.FC<TeacherAttendanceWorkspaceProp
     return exact.length > 0 ? exact : sections;
   }, [sections, courseCode]);
 
-  const selectedSection = sections.find((s) => s.id === selectedSectionId || s.codigo === selectedSectionId) || relevantSections[0] || sections[0];
+  const selectedSection =
+    sections.find((s) => s.id === selectedSectionId || s.codigo === selectedSectionId) ||
+    relevantSections[0] ||
+    sections[0] ||
+    DEFAULT_FALLBACK_SECTION;
 
   // Generar sesiones por sección con base en el horario guardado
   const [sessionsBySection, setSessionsBySection] = useState<Record<string, ClassSession[]>>(() => {
@@ -685,7 +702,7 @@ export const TeacherAttendanceWorkspace: React.FC<TeacherAttendanceWorkspaceProp
     if (!sess) {
       setQuickNotification({
         type: "warning",
-        message: `Hoy (${todaySessionInfo.diaActualNombre}) no hay sesión de ayudantía configurada para ${selectedSection.nombre}. Horario oficial: ${todaySessionInfo.diasConfigurados} de ${selectedSection.horarioAyudantia.horaInicio} a ${selectedSection.horarioAyudantia.horaFin}.`,
+        message: `Hoy (${todaySessionInfo.diaActualNombre}) no hay sesión de ayudantía configurada para ${selectedSection.nombre}. Horario oficial: ${todaySessionInfo.diasConfigurados} de ${selectedSection.horarioAyudantia?.horaInicio || "16:15"} a ${selectedSection.horarioAyudantia?.horaFin || "17:45"}.`,
       });
       setTimeout(() => setQuickNotification(null), 5000);
       return;
