@@ -23,7 +23,7 @@ export const CourseGroupsWorkspace: React.FC<CourseGroupsWorkspaceProps> = ({
   students,
   sectionId = "sec_1",
 }) => {
-  const [groups, setGroups] = useState<CourseGroup[]>(() => getSavedGroups(courseCode, sectionId));
+  const [groups, setGroups] = useState<CourseGroup[]>([]);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isSyncingCanvas, setIsSyncingCanvas] = useState(false);
   const [notification, setNotification] = useState<{ type: "success" | "error"; text: string } | null>(null);

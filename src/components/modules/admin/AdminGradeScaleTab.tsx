@@ -23,7 +23,7 @@ import {
 } from "lucide-react";
 
 export const AdminGradeScaleTab: React.FC = () => {
-  const [config, setConfig] = useState<GradeScaleConfig>(() => getGradeScaleConfig());
+  const [config, setConfig] = useState<GradeScaleConfig>(DEFAULT_GRADE_SCALE_CONFIG);
   const [testScore, setTestScore] = useState<number>(42);
   const [testMaxScore, setTestMaxScore] = useState<number>(70);
   const [isSaved, setIsSaved] = useState(false);

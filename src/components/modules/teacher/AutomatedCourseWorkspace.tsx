@@ -132,9 +132,12 @@ export const AutomatedCourseWorkspace: React.FC<AutomatedCourseWorkspaceProps> =
   const section = useMemo(() => getSectionByCourseCode(course.code, sections), [course.code, sections]);
   const scheduleInfo = useMemo(() => formatSectionSchedule(section), [section]);
 
-  const publicShareUrl = typeof window !== "undefined"
-    ? `${window.location.origin}/calificaciones/${encodeURIComponent(course.code)}`
-    : `/calificaciones/${encodeURIComponent(course.code)}`;
+  const [publicShareUrl, setPublicShareUrl] = useState(`/calificaciones/${encodeURIComponent(course.code)}`);
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setPublicShareUrl(`${window.location.origin}/calificaciones/${encodeURIComponent(course.code)}`);
+    }
+  }, [course.code]);
 
   const handleDownloadExcel = () => {
     exportAnonymousGradesToExcel({

@@ -26,9 +26,7 @@ export const TeacherGradebookTableView: React.FC<TeacherGradebookTableViewProps>
   onUpdateGrade,
   onNotify,
 }) => {
-  const [hiddenCols, setHiddenCols] = useState<Record<string, boolean>>(() =>
-    getHiddenColumns(courseCode)
-  );
+  const [hiddenCols, setHiddenCols] = useState<Record<string, boolean>>({});
   const [activeMenuCol, setActiveMenuCol] = useState<string | null>(null);
 
   useEffect(() => {
