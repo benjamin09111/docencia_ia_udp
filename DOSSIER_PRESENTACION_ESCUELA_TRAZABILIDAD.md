@@ -111,3 +111,38 @@ Cuando presentes esta solución ante la Dirección de Escuela o Decanato, utiliz
 | **Estudiante** | Recibe feedback constructivo inmediato de la IA antes de entregar, gana décimas trazables y nunca queda desamparado. |
 | **Director de Escuela / Decano** | Visibilidad en tiempo real de qué ramos tienen riesgo de deserción o reprobación, y reportes de acreditación instantáneos. |
 | **Universidad (UDP / Institución)** | Posicionamiento como institución pionera en Inteligencia Artificial aplicada a la docencia de vanguardia. |
+
+---
+
+## 🔍 6. Anatomía del Problema: ¿Por qué Canvas Gradebook es Tan Pesado e Inútil para los Profesores?
+
+Uno de los mayores argumentos para convencer a la Escuela es explicar **por qué la herramienta nativa de Canvas falla en la práctica**:
+
+### 1. Origen en el Sistema Escolar de EE.UU. vs. Realidad Chilena
+* **Canvas fue diseñado para EE.UU.**: Calificaciones en letras (**A, B, C, D, F**), cálculo de **GPA (0.0 a 4.0)**, curvas estadísticas y percentiles.
+* **El choque con la realidad chilena**: Cuando se intenta usar la escala **1.0 a 7.0 con 60% de exigencia y Punto Base 1.0 obligatorio**, Canvas colapsa en esquemas de calificación (*Grading Schemes*) crípticos, redondeos distorsionados y menús ocultos.
+
+### 2. Ceguera ante la Dinámica Real de una Cátedra Universitaria
+* **No entiende qué es una "décima"**: Si el ayudante regala 3 décimas por taller, el profesor debe sumarlas a mano en un Excel externo.
+* **No sabe calcular la regla de eximición**: Incapaz de cruzar automáticamente que *si Nota $\ge$ 5.0 y Asistencia $\ge$ 75% $\rightarrow$ Eximido*.
+* **No entiende la condición de RI**: No bloquea ni etiqueta automáticamente a los estudiantes reprobados por inasistencia ($<75\%$).
+* **Castiga las actividades formativas**: Para crear una tarea sin nota, Canvas exige asignarle ponderación 0%, lo que confunde a los estudiantes creyendo que es "inútil".
+
+### 3. La Confusión entre "Módulo de Tareas" vs. "Módulo de Evaluaciones"
+* En Canvas existen dos menús separados: *Tareas* (para subir archivos) y *Evaluaciones* (para cuestionarios). El docente nunca sabe cuál usar.
+* **Nuestra Solución**: Un **único Creador Inteligente de Actividades con IA** que genera el enunciado, la pauta y la rúbrica, y la publica automáticamente en Canvas vía API en el lugar exacto.
+
+---
+
+## ⚖️ 7. Punto Base Oficial UDP (1.0 Obligatorio y Parametrizable)
+
+La plataforma integra de forma nativa la **fórmula oficial de la Universidad Diego Portales**:
+* **Puntaje 0 pts**: Otorga exactamente el **Punto Base 1.0**.
+* **Puntaje de Corte (60%)**: Otorga la nota de aprobación **4.0**.
+* **Puntaje Máximo**: Otorga la nota máxima **7.0**.
+
+$$\text{Tramo } 0 \text{ a } 60\%: \quad \text{Nota} = \text{PuntoBase} + (4.0 - \text{PuntoBase}) \times \frac{\text{PuntajeObtenido}}{\text{PuntajeCorte}}$$
+$$\text{Tramo } 60\% \text{ a } 100\%: \quad \text{Nota} = 4.0 + (7.0 - 4.0) \times \frac{\text{PuntajeObtenido} - \text{PuntajeCorte}}{\text{PuntajeMax} - \text{PuntajeCorte}}$$
+
+*(Incluye un panel de administración con simulador en tiempo real para ajustar el Punto Base si se licencia a otras instituciones).*
+
