@@ -101,7 +101,7 @@ export default function LoginPage() {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Ingresa clave (ej. udp2026)"
+                placeholder="Ingresa tu clave de acceso..."
                 autoFocus
                 className="w-full px-3 py-2 text-sm bg-gray-50 border border-[#E0E3E6] rounded-[4px] focus:bg-white focus:outline-hidden focus:border-[#008EE2] transition-colors"
               />

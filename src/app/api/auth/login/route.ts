@@ -5,10 +5,15 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { password } = body;
 
-    const expectedKey =
-      process.env.APP_ACCESS_KEY ||
-      process.env.NEXT_PUBLIC_APP_ACCESS_KEY ||
-      "udp2026";
+    const expectedKey = process.env.APP_ACCESS_KEY || process.env.NEXT_PUBLIC_APP_ACCESS_KEY;
+
+    if (!expectedKey) {
+      console.error("APP_ACCESS_KEY no está configurada en las variables de entorno.");
+      return NextResponse.json(
+        { error: "Error de configuración: Clave institucional no configurada en el servidor." },
+        { status: 500 }
+      );
+    }
 
     if (!password || typeof password !== "string") {
       return NextResponse.json({ error: "Debe ingresar una clave de acceso." }, { status: 400 });
