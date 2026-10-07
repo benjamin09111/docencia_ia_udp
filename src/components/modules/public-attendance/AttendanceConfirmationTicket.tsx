@@ -105,7 +105,7 @@ export const AttendanceConfirmationTicket: React.FC<AttendanceConfirmationTicket
 
       <div className="text-center pt-1 border-t border-gray-100">
         <Link
-          href={`/asistencia/${encodeURIComponent(section.codigo)}/visual`}
+          href={`/${encodeURIComponent(section.codigo)}/visual`}
           className="text-xs font-bold text-[#008EE2] hover:underline inline-flex items-center gap-1"
         >
           <span>Ver Planilla de Asistencias y Décimas a la Fecha</span>

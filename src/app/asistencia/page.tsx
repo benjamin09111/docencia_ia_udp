@@ -141,7 +141,7 @@ export default function PublicAttendanceDirectoryPage({
                       <ArrowRight size={11} />
                     </Link>
                     <Link
-                      href={`/asistencia/${encodeURIComponent(sec.codigo)}/visual`}
+                      href={`/${encodeURIComponent(sec.codigo)}/visual`}
                       title="Ver planilla de notas y décimas"
                       className="p-1.5 bg-white hover:bg-gray-100 border border-gray-300 text-gray-700 rounded-[4px] transition-colors"
                     >

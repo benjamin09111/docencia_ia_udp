@@ -4,9 +4,10 @@ export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // 1. Rutas que son 100% públicas y NUNCA requieren autenticación
-  // Toda la asistencia de cualquier curso (/asistencia, /asistencia/CIT3203_CA01, /asistencia/.../visual)
+  // Toda la asistencia y portales visuales de cualquier curso (/asistencia, /[cursoId]/visual, etc.)
   if (
     pathname.startsWith("/asistencia") ||
+    pathname.endsWith("/visual") ||
     pathname.startsWith("/api/") ||
     pathname.startsWith("/_next/") ||
     pathname.includes(".") // favicon.ico, svgs, etc.

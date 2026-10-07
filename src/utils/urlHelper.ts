@@ -40,7 +40,7 @@ export function getAppBaseUrl(): string {
 export function getPublicVisualUrl(sectionCode: string): string {
   const base = getAppBaseUrl();
   const safeCode = encodeURIComponent(sectionCode || "CIT3203_CA01");
-  return `${base}/asistencia/${safeCode}/visual`;
+  return `${base}/${safeCode}/visual`;
 }
 
 /**

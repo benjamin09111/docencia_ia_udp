@@ -22,6 +22,8 @@ import { CourseSection, ClassSession, StudentWorkRecord, AttendanceValue } from 
 import { PublicAttendancePinLockScreen } from "./PublicAttendancePinLockScreen";
 import { PublicAttendanceVisualHeader } from "./PublicAttendanceVisualHeader";
 import { PublicAttendanceRosterMatrix, StudentVisualRow } from "./PublicAttendanceRosterMatrix";
+import { PublicStudentPortalNav, PublicMainModule, PublicAttendanceSubmodule } from "./PublicStudentPortalNav";
+import { PublicLockedModuleCard } from "./PublicLockedModuleCard";
 
 interface PublicAttendanceVisualViewProps {
   courseCode?: string;
@@ -33,11 +35,13 @@ export const PublicAttendanceVisualView: React.FC<PublicAttendanceVisualViewProp
   initialSectionId,
 }) => {
   const [sections, setSections] = useState<CourseSection[]>(() => getSavedSections());
+  const [activeMainModule, setActiveMainModule] = useState<PublicMainModule>("asistencia");
+  const [activeAttendanceSub, setActiveAttendanceSub] = useState<PublicAttendanceSubmodule>("ayudantias");
 
   useEffect(() => {
     if (isSupabaseConfigured()) {
       fetchSectionsFromSupabase().then((cloudSections) => {
-        if (cloudSections && cloudSections.length > 0) {
+        if (cloudSections?.length) {
           setSections(cloudSections);
           saveSections(cloudSections);
         }
@@ -45,13 +49,13 @@ export const PublicAttendanceVisualView: React.FC<PublicAttendanceVisualViewProp
     }
   }, []);
 
-  const selectedSection = useMemo(() => {
-    return getSectionByCourseCode(initialSectionId || courseCode, sections);
-  }, [sections, initialSectionId, courseCode]);
+  const selectedSection = useMemo(
+    () => getSectionByCourseCode(initialSectionId || courseCode, sections),
+    [sections, initialSectionId, courseCode]
+  );
 
-  // Estado de desbloqueo mediante PIN semestral de la sección
-  const [isUnlocked, setIsUnlocked] = useState<boolean>(false);
-  const [hasCheckedUnlock, setHasCheckedUnlock] = useState<boolean>(false);
+  const [isUnlocked, setIsUnlocked] = useState(false);
+  const [hasCheckedUnlock, setHasCheckedUnlock] = useState(false);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -63,11 +67,9 @@ export const PublicAttendanceVisualView: React.FC<PublicAttendanceVisualViewProp
     }
   }, [selectedSection.codigo, selectedSection.id]);
 
-  // Sesiones de ayudantía hasta la fecha
   const sessions: ClassSession[] = useMemo(() => {
     const todayStr = getTodayDateStr();
-    const all = generateSemesterSessions(selectedSection);
-    return all.filter(
+    return generateSemesterSessions(selectedSection).filter(
       (s) => s.tipo === "ayudantia" && s.estado !== "cancelada" && s.fecha <= todayStr
     );
   }, [selectedSection]);
@@ -75,18 +77,15 @@ export const PublicAttendanceVisualView: React.FC<PublicAttendanceVisualViewProp
   const [students, setStudents] = useState<StudentRosterItem[]>([]);
   const [attendanceMap, setAttendanceMap] = useState<Record<string, AttendanceValue>>({});
   const [studentWorkRecords, setStudentWorkRecords] = useState<Record<number, StudentWorkRecord>>({});
-  const [totalTrabajos, setTotalTrabajos] = useState<number>(() => getSavedTotalTrabajos(selectedSection.id));
+  const [totalTrabajos, setTotalTrabajos] = useState(() => getSavedTotalTrabajos(selectedSection.id));
 
-  // Cargar datos locales y remotos
   useEffect(() => {
     setAttendanceMap(getSavedAttendanceMap());
     setStudentWorkRecords(getSavedStudentWorkRecords());
     setTotalTrabajos(getSavedTotalTrabajos(selectedSection.id));
 
-    // Cargar alumnos desde API Canvas
     const courseIdMap: Record<string, number> = { CIT3203_CA01: 44999, CIT3203_CA02: 45002, CIT3203_CA03: 47552, CIT3100_CA02: 44988 };
     const effectiveCourseId = courseIdMap[selectedSection.codigo] || 44999;
-
     fetch(`/api/canvas/courses/${effectiveCourseId}/students`)
       .then((res) => res.json())
       .then((data) => { if (Array.isArray(data) && data.length > 0) setStudents(data); })
@@ -94,37 +93,24 @@ export const PublicAttendanceVisualView: React.FC<PublicAttendanceVisualViewProp
 
     if (isSupabaseConfigured()) {
       const secCode = selectedSection.codigo || courseCode;
-      fetchAttendanceMapFromSupabase(secCode).then((map) => {
-        if (Object.keys(map).length > 0) setAttendanceMap((prev) => ({ ...prev, ...map }));
-      });
-      fetchStudentWorkRecordsFromSupabase(secCode).then((rec) => {
-        if (Object.keys(rec).length > 0) setStudentWorkRecords((prev) => ({ ...prev, ...rec }));
-      });
+      fetchAttendanceMapFromSupabase(secCode).then((map) => { if (Object.keys(map).length > 0) setAttendanceMap((prev) => ({ ...prev, ...map })); });
+      fetchStudentWorkRecordsFromSupabase(secCode).then((rec) => { if (Object.keys(rec).length > 0) setStudentWorkRecords((prev) => ({ ...prev, ...rec })); });
     }
   }, [selectedSection, courseCode]);
 
-  // Buscador por Nombre y Filtro de Condición
   const [searchTerm, setSearchTerm] = useState("");
   const [conditionFilter, setConditionFilter] = useState<"all" | "ok" | "risk">("all");
-  const normalizeRut = (rut: string) => (rut || "").toLowerCase().replace(/[^0-9k]/g, "");
 
   const studentSummaries: StudentVisualRow[] = useMemo(() => {
     const query = searchTerm.trim().toLowerCase();
-
     return students
       .map((st) => {
-        let asistidas = 0;
-        sessions.forEach((sess) => {
-          if (attendanceMap[`${sess.id}_${st.canvas_id}`] === 1) asistidas++;
-        });
+        const asistidas = sessions.filter((sess) => attendanceMap[`${sess.id}_${st.canvas_id}`] === 1).length;
         const validas = sessions.length;
         const pct = validas > 0 ? Math.round((asistidas / validas) * 100) : 0;
-        const ok = pct >= 75;
         const work = studentWorkRecords[st.canvas_id];
         const trabCount = work ? (work.trabajosRealizados ?? 0) : 0;
-        const decimas = Math.round(trabCount * 0.2 * 10) / 10;
         const fullName = `${st.nombres || ""} ${st.apellidos || ""}`.trim() || (st as any).name || st.rut || `Estudiante ${st.canvas_id}`;
-
         return {
           canvas_id: st.canvas_id,
           nombreCompleto: fullName,
@@ -134,17 +120,13 @@ export const PublicAttendanceVisualView: React.FC<PublicAttendanceVisualViewProp
           asistidas,
           validas,
           pct,
-          ok,
-          decimas,
+          ok: pct >= 75,
+          decimas: Math.round(trabCount * 0.2 * 10) / 10,
           trabajosRealizados: trabCount,
         };
       })
       .filter((st) => {
-        if (query) {
-          const matchName = st.nombreCompleto.toLowerCase().includes(query);
-          const matchRut = normalizeRut(st.rut || "").includes(normalizeRut(searchTerm));
-          if (!matchName && !matchRut) return false;
-        }
+        if (query && !st.nombreCompleto.toLowerCase().includes(query)) return false;
         if (conditionFilter === "ok" && !st.ok) return false;
         if (conditionFilter === "risk" && st.ok) return false;
         return true;
@@ -157,31 +139,48 @@ export const PublicAttendanceVisualView: React.FC<PublicAttendanceVisualViewProp
   }, [searchTerm, studentSummaries]);
 
   if (!hasCheckedUnlock) return null;
-  if (!isUnlocked) {
-    return <PublicAttendancePinLockScreen section={selectedSection} onUnlocked={() => setIsUnlocked(true)} />;
-  }
+  if (!isUnlocked) return <PublicAttendancePinLockScreen section={selectedSection} onUnlocked={() => setIsUnlocked(true)} />;
+
+  const courseTitle = selectedSection.cursoNombre || selectedSection.codigo || "Asignatura UDP";
+  const resetToAyudantias = () => { setActiveMainModule("asistencia"); setActiveAttendanceSub("ayudantias"); };
 
   return (
     <div className="w-full max-w-[1400px] mx-auto space-y-4 animate-fadeIn pb-12">
-      <PublicAttendanceVisualHeader
+      <PublicStudentPortalNav
         section={selectedSection}
-        totalStudents={students.length}
-        filteredCount={studentSummaries.length}
-        searchTerm={searchTerm}
-        onSearchChange={setSearchTerm}
-        conditionFilter={conditionFilter}
-        onConditionChange={setConditionFilter}
-        highlightedStudent={highlightedStudent}
-        totalTrabajos={totalTrabajos}
+        activeMainModule={activeMainModule}
+        onSelectMainModule={setActiveMainModule}
+        activeAttendanceSub={activeAttendanceSub}
+        onSelectAttendanceSub={setActiveAttendanceSub}
       />
 
-      <PublicAttendanceRosterMatrix
-        sessions={sessions}
-        studentSummaries={studentSummaries}
-        attendanceMap={attendanceMap}
-        totalTrabajos={totalTrabajos}
-        highlightedStudentId={highlightedStudent?.canvas_id}
-      />
+      {activeMainModule === "notas" && <PublicLockedModuleCard moduleName={courseTitle} moduleType="notas" onReturnToAyudantias={resetToAyudantias} />}
+      {activeMainModule === "resumen" && <PublicLockedModuleCard moduleName={courseTitle} moduleType="resumen" onReturnToAyudantias={resetToAyudantias} />}
+      {activeMainModule === "asistencia" && activeAttendanceSub === "catedras" && <PublicLockedModuleCard moduleName={courseTitle} moduleType="catedra" onReturnToAyudantias={resetToAyudantias} />}
+      {activeMainModule === "asistencia" && activeAttendanceSub === "resumen" && <PublicLockedModuleCard moduleName={courseTitle} moduleType="resumen_asistencia" onReturnToAyudantias={resetToAyudantias} />}
+
+      {activeMainModule === "asistencia" && activeAttendanceSub === "ayudantias" && (
+        <>
+          <PublicAttendanceVisualHeader
+            section={selectedSection}
+            totalStudents={students.length}
+            filteredCount={studentSummaries.length}
+            searchTerm={searchTerm}
+            onSearchChange={setSearchTerm}
+            conditionFilter={conditionFilter}
+            onConditionChange={setConditionFilter}
+            highlightedStudent={highlightedStudent}
+            totalTrabajos={totalTrabajos}
+          />
+          <PublicAttendanceRosterMatrix
+            sessions={sessions}
+            studentSummaries={studentSummaries}
+            attendanceMap={attendanceMap}
+            totalTrabajos={totalTrabajos}
+            highlightedStudentId={highlightedStudent?.canvas_id}
+          />
+        </>
+      )}
     </div>
   );
 };
