@@ -128,7 +128,7 @@ export function getSavedGroups(courseCode?: string, sectionId?: string): CourseG
     const list: CourseGroup[] = raw ? JSON.parse(raw) : DEFAULT_GROUPS;
     if (!courseCode) return list;
     return list.filter((g) => {
-      const matchCourse = g.courseCode === courseCode || courseCode.includes(g.courseCode);
+      const matchCourse = g.courseCode === courseCode || courseCode.includes(g.courseCode) || g.courseCode.includes(courseCode);
       if (!sectionId || sectionId === "all") return matchCourse;
       return matchCourse && (!g.sectionId || g.sectionId === sectionId || g.sectionId === "all");
     });
@@ -152,6 +152,16 @@ export function saveGroups(groups: CourseGroup[]): void {
   } catch (e) {
     console.error("Error saving groups to localStorage:", e);
   }
+}
+
+export function syncCourseGroups(courseCode: string, sectionId: string, newGroups: CourseGroup[]): void {
+  const current = getSavedGroups(); // gets all groups from storage
+  // Keep groups from other courses or sections
+  const otherGroups = current.filter(
+    (g) => !(g.courseCode === courseCode && (g.sectionId === sectionId || sectionId === "all"))
+  );
+  const updated = [...otherGroups, ...newGroups];
+  saveGroups(updated);
 }
 
 export function createGroup(

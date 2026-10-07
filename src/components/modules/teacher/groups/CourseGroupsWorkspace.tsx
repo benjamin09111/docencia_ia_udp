@@ -4,7 +4,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { Users, FolderPlus, RefreshCw, CheckCircle2, AlertCircle, Sparkles, Folder } from "lucide-react";
 import { CourseGroup, StudentGroupMember } from "@/types/groups";
 import { StudentRosterItem } from "@/services/attendanceStore";
-import { getSavedGroups, saveGroups, createGroup, deleteGroup, addMemberToGroup, removeMemberFromGroup } from "@/services/groupsStore";
+import { getSavedGroups, saveGroups, syncCourseGroups, createGroup, deleteGroup, addMemberToGroup, removeMemberFromGroup } from "@/services/groupsStore";
 import { CourseGroupCard } from "./CourseGroupCard";
 import { CreateGroupModal } from "./CreateGroupModal";
 
@@ -69,8 +69,10 @@ export const CourseGroupsWorkspace: React.FC<CourseGroupsWorkspaceProps> = ({
             members: cg.members || [],
             createdAt: cg.createdAt || new Date().toISOString(),
           }));
-          saveGroups(formatted);
+          syncCourseGroups(courseCode, sectionId, formatted);
           if (!isSilent) setNotification({ type: "success", text: `✓ Sincronizados ${formatted.length} grupos oficiales desde Canvas.` });
+        } else if (!isSilent) {
+          setNotification({ type: "success", text: "No se encontraron grupos en Canvas para este curso. Puedes crearlos aquí manualmente." });
         }
       }
     } catch {
