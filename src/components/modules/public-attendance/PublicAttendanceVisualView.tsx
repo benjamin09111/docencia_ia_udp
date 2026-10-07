@@ -24,6 +24,7 @@ import { PublicAttendanceVisualHeader } from "./PublicAttendanceVisualHeader";
 import { PublicAttendanceRosterMatrix, StudentVisualRow } from "./PublicAttendanceRosterMatrix";
 import { PublicStudentPortalNav, PublicMainModule, PublicAttendanceSubmodule } from "./PublicStudentPortalNav";
 import { PublicLockedModuleCard } from "./PublicLockedModuleCard";
+import { PublicStudentAppealModal } from "./PublicStudentAppealModal";
 
 interface PublicAttendanceVisualViewProps {
   courseCode?: string;
@@ -37,6 +38,7 @@ export const PublicAttendanceVisualView: React.FC<PublicAttendanceVisualViewProp
   const [sections, setSections] = useState<CourseSection[]>(() => getSavedSections());
   const [activeMainModule, setActiveMainModule] = useState<PublicMainModule>("asistencia");
   const [activeAttendanceSub, setActiveAttendanceSub] = useState<PublicAttendanceSubmodule>("ayudantias");
+  const [isAppealModalOpen, setIsAppealModalOpen] = useState(false);
 
   useEffect(() => {
     if (isSupabaseConfigured()) {
@@ -171,6 +173,7 @@ export const PublicAttendanceVisualView: React.FC<PublicAttendanceVisualViewProp
             onConditionChange={setConditionFilter}
             highlightedStudent={highlightedStudent}
             totalTrabajos={totalTrabajos}
+            onOpenAppealModal={() => setIsAppealModalOpen(true)}
           />
           <PublicAttendanceRosterMatrix
             sessions={sessions}
@@ -178,6 +181,13 @@ export const PublicAttendanceVisualView: React.FC<PublicAttendanceVisualViewProp
             attendanceMap={attendanceMap}
             totalTrabajos={totalTrabajos}
             highlightedStudentId={highlightedStudent?.canvas_id}
+          />
+          <PublicStudentAppealModal
+            isOpen={isAppealModalOpen}
+            onClose={() => setIsAppealModalOpen(false)}
+            section={selectedSection}
+            students={students}
+            sessions={sessions}
           />
         </>
       )}

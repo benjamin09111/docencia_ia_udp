@@ -24,6 +24,7 @@ interface PublicAttendanceVisualHeaderProps {
   } | null;
   totalTrabajos: number;
   decimasPorTrabajo?: number;
+  onOpenAppealModal?: () => void;
 }
 
 export const PublicAttendanceVisualHeader: React.FC<PublicAttendanceVisualHeaderProps> = ({
@@ -37,6 +38,7 @@ export const PublicAttendanceVisualHeader: React.FC<PublicAttendanceVisualHeader
   highlightedStudent,
   totalTrabajos,
   decimasPorTrabajo = 0.2,
+  onOpenAppealModal,
 }) => {
   return (
     <div className="space-y-4">
@@ -93,34 +95,48 @@ export const PublicAttendanceVisualHeader: React.FC<PublicAttendanceVisualHeader
             )}
           </div>
 
-          <div className="flex items-center gap-1 bg-gray-100 p-0.5 rounded-[4px] border border-gray-200 shrink-0">
-            <button
-              type="button"
-              onClick={() => onConditionChange("all")}
-              className={`px-2.5 py-1 text-[11px] font-semibold rounded-[3px] transition-colors cursor-pointer ${
-                conditionFilter === "all" ? "bg-white text-[#2D3B45] shadow-xs" : "text-[#6B7780] hover:text-[#2D3B45]"
-              }`}
-            >
-              Todos ({totalStudents})
-            </button>
-            <button
-              type="button"
-              onClick={() => onConditionChange("ok")}
-              className={`px-2.5 py-1 text-[11px] font-semibold rounded-[3px] transition-colors cursor-pointer ${
-                conditionFilter === "ok" ? "bg-emerald-600 text-white shadow-xs" : "text-emerald-700 hover:bg-emerald-50"
-              }`}
-            >
-              ≥75%
-            </button>
-            <button
-              type="button"
-              onClick={() => onConditionChange("risk")}
-              className={`px-2.5 py-1 text-[11px] font-semibold rounded-[3px] transition-colors cursor-pointer ${
-                conditionFilter === "risk" ? "bg-red-600 text-white shadow-xs" : "text-red-700 hover:bg-red-50"
-              }`}
-            >
-              &lt;75%
-            </button>
+          <div className="flex items-center gap-2 flex-wrap">
+            <div className="flex items-center gap-1 bg-gray-100 p-0.5 rounded-[4px] border border-gray-200 shrink-0">
+              <button
+                type="button"
+                onClick={() => onConditionChange("all")}
+                className={`px-2.5 py-1 text-[11px] font-semibold rounded-[3px] transition-colors cursor-pointer ${
+                  conditionFilter === "all" ? "bg-white text-[#2D3B45] shadow-xs" : "text-[#6B7780] hover:text-[#2D3B45]"
+                }`}
+              >
+                Todos ({totalStudents})
+              </button>
+              <button
+                type="button"
+                onClick={() => onConditionChange("ok")}
+                className={`px-2.5 py-1 text-[11px] font-semibold rounded-[3px] transition-colors cursor-pointer ${
+                  conditionFilter === "ok" ? "bg-emerald-600 text-white shadow-xs" : "text-emerald-700 hover:bg-emerald-50"
+                }`}
+              >
+                ≥75%
+              </button>
+              <button
+                type="button"
+                onClick={() => onConditionChange("risk")}
+                className={`px-2.5 py-1 text-[11px] font-semibold rounded-[3px] transition-colors cursor-pointer ${
+                  conditionFilter === "risk" ? "bg-red-600 text-white shadow-xs" : "text-red-700 hover:bg-red-50"
+                }`}
+              >
+                &lt;75%
+              </button>
+            </div>
+
+            {onOpenAppealModal && (
+              <button
+                type="button"
+                onClick={onOpenAppealModal}
+                className="px-3 py-1.5 text-[11px] font-bold bg-[#C8102E] hover:bg-[#A00D24] text-white rounded-[4px] transition-colors shadow-2xs inline-flex items-center gap-1.5 cursor-pointer shrink-0"
+                title="Apelar asistencia de una clase pasada o de hoy"
+              >
+                <AlertTriangle size={13} />
+                <span>Apelar Asistencia</span>
+              </button>
+            )}
           </div>
         </div>
 

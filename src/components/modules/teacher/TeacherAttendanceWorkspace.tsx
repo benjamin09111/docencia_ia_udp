@@ -8,6 +8,7 @@ import {
   AttendanceValue,
   TodaySessionInfo,
   StudentWorkRecord,
+  AttendanceAppeal,
 } from "@/types/attendance";
 import {
   INITIAL_SECTIONS,
@@ -33,6 +34,7 @@ import {
   getSectionDailyPin,
   getSectionVisualPin,
 } from "@/services/attendanceStore";
+import { getSavedAppeals } from "@/services/appealsStore";
 import { exportAttendanceToExcel, AttendanceExportScope } from "@/services/excelExportService";
 import {
   syncCourseAndSectionToSupabase,
@@ -51,6 +53,7 @@ import {
 } from "@/services/attendanceDbService";
 import { AttendanceMatrixTable } from "./attendance/AttendanceMatrixTable";
 import { AttendanceCancelClassModal } from "./attendance/AttendanceCancelClassModal";
+import { TeacherAppealsWorkspace } from "./TeacherAppealsWorkspace";
 import {
   GraduationCap,
   KeyRound,
@@ -62,6 +65,8 @@ import {
   Search,
   Globe,
   MapPin,
+  Clock,
+  FileSpreadsheet,
 } from "lucide-react";
 import { getPublicCheckinUrl, getPublicVisualUrl } from "@/utils/urlHelper";
 import { StudentExcelRow } from "@/types";
@@ -110,16 +115,29 @@ export const TeacherAttendanceWorkspace: React.FC<TeacherAttendanceWorkspaceProp
   }, [courseCode, sections]);
 
   const [selectedSectionId, setSelectedSectionId] = useState<string>(matchedSectionId);
+  const [attendanceSubTab, setAttendanceSubTab] = useState<"matriz" | "apelaciones">("matriz");
   const [filterType, setFilterType] = useState<"catedras" | "ayudantias">("ayudantias");
   const [incluirAyudantiasEnFinal, setIncluirAyudantiasEnFinal] = useState<boolean>(true);
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [showOnlyUpToToday, setShowOnlyUpToToday] = useState<boolean>(true);
   const [isCloudSynced, setIsCloudSynced] = useState<boolean>(() => isSupabaseConfigured());
+  const [pendingAppealsCount, setPendingAppealsCount] = useState<number>(0);
 
   // Actualizar sección automáticamente cuando cambia el curso seleccionado
   useEffect(() => {
     setSelectedSectionId(matchedSectionId);
   }, [matchedSectionId]);
+
+  // Contar apelaciones pendientes para la sección
+  useEffect(() => {
+    const updateCount = () => {
+      const list = getSavedAppeals(selectedSectionId);
+      setPendingAppealsCount(list.filter((a) => a.status === "pendiente").length);
+    };
+    updateCount();
+    window.addEventListener("udp_appeals_updated", updateCount);
+    return () => window.removeEventListener("udp_appeals_updated", updateCount);
+  }, [selectedSectionId]);
 
   // Modales y estados de copiado
   const [cancelModalSession, setCancelModalSession] = useState<ClassSession | null>(null);
@@ -736,6 +754,70 @@ export const TeacherAttendanceWorkspace: React.FC<TeacherAttendanceWorkspaceProp
     }
   };
 
+  // Resolver todas las apelaciones de asistencia marcando 1 en la planilla y persistiendo
+  const handleResolveAllAttendanceAppeals = (resolvedAppeals: AttendanceAppeal[]) => {
+    lastLocalEditTimeRef.current = Date.now();
+    const batch: Array<{ session_code: string; student_canvas_id: number; value: number }> = [];
+
+    setAttendanceMap((prev) => {
+      const next: Record<string, AttendanceValue> = { ...prev };
+      resolvedAppeals.forEach((app) => {
+        const matchingSess =
+          activeSessions.find((s) => s.fecha === app.date && s.tipo === "ayudantia") ||
+          activeSessions.find((s) => s.fecha === app.date);
+
+        if (matchingSess) {
+          const key = `${matchingSess.id}_${app.studentCanvasId}`;
+          next[key] = 1;
+          batch.push({
+            session_code: matchingSess.id,
+            student_canvas_id: app.studentCanvasId,
+            value: 1,
+          });
+        }
+      });
+      saveAttendanceMap(next);
+      return next;
+    });
+
+    if (batch.length > 0) {
+      saveAttendanceBatchToSupabase(batch).catch((err) =>
+        console.warn("Error guardando apelaciones en Supabase:", err)
+      );
+    }
+
+    setQuickNotification({
+      type: "success",
+      message: `✓ Se resolvieron ${resolvedAppeals.length} apelaciones. Todos los estudiantes quedaron con asistencia PRESENTE (1) en la planilla.`,
+    });
+    setTimeout(() => setQuickNotification(null), 5000);
+  };
+
+  // Resolver una apelación individual
+  const handleResolveSingleAttendanceAppeal = (app: AttendanceAppeal) => {
+    lastLocalEditTimeRef.current = Date.now();
+    const matchingSess =
+      activeSessions.find((s) => s.fecha === app.date && s.tipo === "ayudantia") ||
+      activeSessions.find((s) => s.fecha === app.date);
+
+    if (matchingSess) {
+      const key = `${matchingSess.id}_${app.studentCanvasId}`;
+      setAttendanceMap((prev) => {
+        const next: Record<string, AttendanceValue> = { ...prev, [key]: 1 };
+        saveAttendanceMap(next);
+        return next;
+      });
+      saveAttendanceMarkToSupabase(matchingSess.id, app.studentCanvasId, 1).catch((err) =>
+        console.warn("Error guardando apelación en Supabase:", err)
+      );
+      setQuickNotification({
+        type: "success",
+        message: `✓ Apelación resuelta: ${app.studentName} marcado como PRESENTE en ${matchingSess.fecha}.`,
+      });
+      setTimeout(() => setQuickNotification(null), 4000);
+    }
+  };
+
   // Alternar modalidad Online / Presencial por sesión (P <-> O)
   const handleToggleSessionModality = (sessionId: string) => {
     const currentSessions = sessionsBySection[selectedSectionId] || [];
@@ -1139,47 +1221,90 @@ export const TeacherAttendanceWorkspace: React.FC<TeacherAttendanceWorkspaceProp
         </div>
       )}
 
-      {/* Banner informativo si hoy no es el día programado de la clase */}
-      {!todaySessionInfo.isScheduledDay && (
-        <div className="bg-amber-50/80 border border-amber-200 rounded-[4px] px-3 py-2 text-xs text-amber-900 flex flex-col sm:flex-row sm:items-center justify-between gap-2 animate-fadeIn">
-          <div className="flex items-center gap-2">
-            <span className="font-bold">📅 Programación semanal:</span>
-            <span>
-              Hoy es <strong>{todaySessionInfo.diaActualNombre}</strong>, mientras que la ayudantía está configurada los <strong>{todaySessionInfo.diasConfigurados}</strong> (próxima clase: {todaySessionInfo.nextSession ? todaySessionInfo.nextSession.fecha.split("-").reverse().slice(0, 2).join("/") : "próximamente"}). 
-              Por defecto el Excel muestra sesiones pasadas hasta hoy.
+      {/* Sub-Pestañas: Matriz de Asistencia vs Módulo de Apelaciones */}
+      <div className="flex items-center gap-2 border-b border-gray-200 bg-white px-3 pt-2 rounded-t-[4px]">
+        <button
+          type="button"
+          onClick={() => setAttendanceSubTab("matriz")}
+          className={`pb-2 px-2 text-xs font-bold border-b-2 flex items-center gap-1.5 transition-colors cursor-pointer ${
+            attendanceSubTab === "matriz"
+              ? "border-[#008EE2] text-[#008EE2]"
+              : "border-transparent text-[#6B7780] hover:text-[#2D3B45]"
+          }`}
+        >
+          <FileSpreadsheet size={13} />
+          <span>Planilla de Asistencia (Matriz)</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => setAttendanceSubTab("apelaciones")}
+          className={`pb-2 px-2 text-xs font-bold border-b-2 flex items-center gap-1.5 transition-colors cursor-pointer ${
+            attendanceSubTab === "apelaciones"
+              ? "border-[#C8102E] text-[#C8102E]"
+              : "border-transparent text-[#6B7780] hover:text-[#2D3B45]"
+          }`}
+        >
+          <Clock size={13} />
+          <span>Módulo de Apelaciones</span>
+          {pendingAppealsCount > 0 && (
+            <span className="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-[#C8102E] text-white">
+              {pendingAppealsCount}
             </span>
-          </div>
-          <button
-            type="button"
-            onClick={() => setShowOnlyUpToToday((prev) => !prev)}
-            className="px-2.5 py-1 bg-white hover:bg-gray-50 border border-amber-300 rounded text-[11px] font-semibold text-amber-900 shrink-0 cursor-pointer"
-          >
-            {showOnlyUpToToday ? "Ver calendario completo" : "Ver solo hasta hoy"}
-          </button>
-        </div>
-      )}
+          )}
+        </button>
+      </div>
 
-      {/* Ver Detalles: Planilla y Matriz Interactiva de Asistencia */}
-      <AttendanceMatrixTable
-        sessions={filteredSessions}
-        summaries={summaries}
-        attendanceMap={attendanceMap}
-        filterType={filterType}
-        incluirAyudantiasEnFinal={incluirAyudantiasEnFinal}
-        todaySessionInfo={todaySessionInfo}
-        showOnlyUpToToday={showOnlyUpToToday}
-        onToggleShowOnlyUpToToday={() => setShowOnlyUpToToday((prev) => !prev)}
-        onToggleAttendance={handleToggleAttendance}
-        onOpenCancelModal={(sess) => setCancelModalSession(sess)}
-        onReactivateSession={handleReactivateSession}
-        onToggleModality={handleToggleSessionModality}
-        studentWorkRecords={studentWorkRecords}
-        totalTrabajosRealizados={totalTrabajosRealizados}
-        onUpdateTotalTrabajos={handleUpdateTotalTrabajos}
-        decimasPorTrabajo={decimasPorTrabajo}
-        onUpdateDecimasPorTrabajo={handleUpdateDecimasPorTrabajo}
-        onUpdateWorkRecord={handleUpdateStudentWork}
-      />
+      {attendanceSubTab === "apelaciones" ? (
+        <TeacherAppealsWorkspace
+          section={selectedSection}
+          onResolveAllAttendance={handleResolveAllAttendanceAppeals}
+          onResolveSingleAttendance={handleResolveSingleAttendanceAppeal}
+        />
+      ) : (
+        <>
+          {/* Banner informativo si hoy no es el día programado de la clase */}
+          {!todaySessionInfo.isScheduledDay && (
+            <div className="bg-amber-50/80 border border-amber-200 rounded-[4px] px-3 py-2 text-xs text-amber-900 flex flex-col sm:flex-row sm:items-center justify-between gap-2 animate-fadeIn">
+              <div className="flex items-center gap-2">
+                <span className="font-bold">📅 Programación semanal:</span>
+                <span>
+                  Hoy es <strong>{todaySessionInfo.diaActualNombre}</strong>, mientras que la ayudantía está configurada los <strong>{todaySessionInfo.diasConfigurados}</strong> (próxima clase: {todaySessionInfo.nextSession ? todaySessionInfo.nextSession.fecha.split("-").reverse().slice(0, 2).join("/") : "próximamente"}). 
+                  Por defecto el Excel muestra sesiones pasadas hasta hoy.
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowOnlyUpToToday((prev) => !prev)}
+                className="px-2.5 py-1 bg-white hover:bg-gray-50 border border-amber-300 rounded text-[11px] font-semibold text-amber-900 shrink-0 cursor-pointer"
+              >
+                {showOnlyUpToToday ? "Ver calendario completo" : "Ver solo hasta hoy"}
+              </button>
+            </div>
+          )}
+
+          {/* Ver Detalles: Planilla y Matriz Interactiva de Asistencia */}
+          <AttendanceMatrixTable
+            sessions={filteredSessions}
+            summaries={summaries}
+            attendanceMap={attendanceMap}
+            filterType={filterType}
+            incluirAyudantiasEnFinal={incluirAyudantiasEnFinal}
+            todaySessionInfo={todaySessionInfo}
+            showOnlyUpToToday={showOnlyUpToToday}
+            onToggleShowOnlyUpToToday={() => setShowOnlyUpToToday((prev) => !prev)}
+            onToggleAttendance={handleToggleAttendance}
+            onOpenCancelModal={(sess) => setCancelModalSession(sess)}
+            onReactivateSession={handleReactivateSession}
+            onToggleModality={handleToggleSessionModality}
+            studentWorkRecords={studentWorkRecords}
+            totalTrabajosRealizados={totalTrabajosRealizados}
+            onUpdateTotalTrabajos={handleUpdateTotalTrabajos}
+            decimasPorTrabajo={decimasPorTrabajo}
+            onUpdateDecimasPorTrabajo={handleUpdateDecimasPorTrabajo}
+            onUpdateWorkRecord={handleUpdateStudentWork}
+          />
+        </>
+      )}
 
       {/* Modal de Cancelar / Reactivar Sesión */}
       {cancelModalSession && (

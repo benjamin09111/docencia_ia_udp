@@ -102,3 +102,22 @@ export interface StudentWorkRecord {
   decimas: number; // e.g. 8
   trabajosRealizados: number; // e.g. 3
 }
+
+export type AppealStatus = "pendiente" | "resuelta" | "rechazada";
+export type AppealMotivo = "asistencia";
+
+export interface AttendanceAppeal {
+  id: string;
+  sectionId: string;
+  sectionCode: string;
+  studentCanvasId: number;
+  studentName: string;
+  studentRut?: string;
+  date: string; // "YYYY-MM-DD"
+  motivo: AppealMotivo;
+  comentario: string;
+  status: AppealStatus;
+  createdAt: string; // ISO string
+  resolvedAt?: string;
+  resolvedBy?: string;
+}
