@@ -250,7 +250,31 @@ export const DEFAULT_ATTENDANCE_MAP: Record<string, 1 | 0> = {
   "sess_CIT3100_CA02_ayu_2026-08-26_51769": 1,
   "sess_sec_arq_emergentes_ayu_2026-08-26_51769": 1,
   "sess_CIT3100_CA02_ayu_2026-08-26_41667": 1,
-  "sess_sec_arq_emergentes_ayu_2026-08-26_41667": 1
+  "sess_sec_arq_emergentes_ayu_2026-08-26_41667": 1,
+  "sess_CIT3203_CA01_ayu_2026-09-09_10206": 1,
+  "sess_sec_1_ayu_2026-09-09_10206": 1,
+  "sess_CIT3203_CA01_ayu_2026-09-09_42253": 1,
+  "sess_sec_1_ayu_2026-09-09_42253": 1,
+  "sess_CIT3203_CA01_ayu_2026-09-09_41370": 1,
+  "sess_sec_1_ayu_2026-09-09_41370": 1,
+  "sess_CIT3203_CA01_ayu_2026-09-09_29380": 1,
+  "sess_sec_1_ayu_2026-09-09_29380": 1,
+  "sess_CIT3203_CA01_ayu_2026-09-09_42788": 1,
+  "sess_sec_1_ayu_2026-09-09_42788": 1,
+  "sess_CIT3203_CA01_ayu_2026-09-09_41835": 1,
+  "sess_sec_1_ayu_2026-09-09_41835": 1,
+  "sess_CIT3203_CA01_ayu_2026-09-09_41613": 1,
+  "sess_sec_1_ayu_2026-09-09_41613": 1,
+  "sess_CIT3203_CA01_ayu_2026-09-09_41882": 1,
+  "sess_sec_1_ayu_2026-09-09_41882": 1,
+  "sess_CIT3203_CA01_ayu_2026-09-09_41860": 1,
+  "sess_sec_1_ayu_2026-09-09_41860": 1,
+  "sess_CIT3203_CA01_ayu_2026-09-09_42615": 1,
+  "sess_sec_1_ayu_2026-09-09_42615": 1,
+  "sess_CIT3203_CA01_ayu_2026-09-09_42009": 1,
+  "sess_sec_1_ayu_2026-09-09_42009": 1,
+  "sess_CIT3203_CA03_ayu_2026-09-09_16170": 1,
+  "sess_sec_3_ayu_2026-09-09_16170": 1
 };
 
 export const DEFAULT_WORK_RECORDS: Record<string, { decimas: number; trabajosRealizados: number }> = {
