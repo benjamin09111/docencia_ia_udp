@@ -29,10 +29,11 @@ export default function DashboardPage() {
   const [perillas, setPerillas] = useState<AgentPerillas>(initialCourseData.perillas);
   const [cronograma, setCronograma] = useState(initialCourseData.cronograma);
   const [entregables, setEntregables] = useState<CourseDeliverable[]>(initialCourseData.entregables);
-  const [estudiantesExcel, setEstudiantesExcel] = useState<StudentExcelRow[]>(() => {
-    return getStoredCourseGrades("CIT3000_CA02");
-  });
-  const [entregasAlumnos, setEntregasAlumnos] = useState(initialCourseData.entregas_alumnos);
+  const [estudiantesExcel, setEstudiantesExcel] = useState<StudentExcelRow[]>([]);
+
+  useEffect(() => {
+    setEstudiantesExcel(getStoredCourseGrades("CIT3000_CA02"));
+  }, []);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -47,7 +48,9 @@ export default function DashboardPage() {
   }, []);
 
   useEffect(() => {
-    saveStoredCourseGrades("CIT3000_CA02", estudiantesExcel);
+    if (estudiantesExcel.length > 0) {
+      saveStoredCourseGrades("CIT3000_CA02", estudiantesExcel);
+    }
   }, [estudiantesExcel]);
 
   useEffect(() => {

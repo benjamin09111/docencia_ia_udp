@@ -98,15 +98,16 @@ export const AttendanceMatrixTable: React.FC<AttendanceMatrixTableProps> = ({
   }, [sessions]);
 
   // Estado de meses colapsados con persistencia en localStorage (parte todo abierto por defecto)
-  const [collapsedMonths, setCollapsedMonths] = useState<Record<string, boolean>>(() => {
-    if (typeof window === "undefined") return {};
+  const [collapsedMonths, setCollapsedMonths] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
     try {
       const saved = localStorage.getItem(STORAGE_COLLAPSED_KEY);
-      return saved ? JSON.parse(saved) : {};
+      if (saved) setCollapsedMonths(JSON.parse(saved));
     } catch {
-      return {};
+      // ignore
     }
-  });
+  }, []);
 
   const toggleMonth = (monthKey: string) => {
     setCollapsedMonths((prev) => {
