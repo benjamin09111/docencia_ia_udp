@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { ClassSession, StudentAttendanceSummary, AttendanceValue, TodaySessionInfo, StudentWorkRecord } from "@/types/attendance";
 import { Check, X, AlertTriangle, ChevronDown, ChevronRight, ChevronsRight, ChevronsLeft, Calendar, Zap, Award, CalendarX, Ban } from "lucide-react";
 
@@ -208,27 +208,6 @@ export const AttendanceMatrixTable: React.FC<AttendanceMatrixTableProps> = ({
                 Estudiante
               </th>
 
-              {/* Columna de Asistencia Rápida: Hoy */}
-              <th
-                rowSpan={2}
-                className="p-1 px-1 text-center bg-[#1E272E] text-white border-r border-white/20 w-[96px] min-w-[92px] text-[10px] font-bold uppercase"
-                title={
-                  hasSessionToday
-                    ? `Sesión activa de hoy (${todaySessionInfo?.todayDateStr}). Clic para marcar presencia`
-                    : `Hoy (${todaySessionInfo?.diaActualNombre}) no hay clase programada. Horario: ${todaySessionInfo?.diasConfigurados}`
-                }
-              >
-                <div className="flex flex-col items-center justify-center leading-tight">
-                  <span className="text-[#008EE2] font-extrabold flex items-center gap-1">
-                    <Zap size={11} className={hasSessionToday ? "text-amber-400 fill-amber-400" : "text-gray-400"} />
-                    <span>Asist. Hoy</span>
-                  </span>
-                  <span className="text-[9px] text-gray-300 font-mono">
-                    {hasSessionToday ? todaySessionInfo?.todayDateStr.slice(5) : "Sin Clase"}
-                  </span>
-                </div>
-              </th>
-
               {monthGroups.map((grp) => {
                 const isCollapsed = Boolean(collapsedMonths[grp.key]);
 
@@ -374,7 +353,7 @@ export const AttendanceMatrixTable: React.FC<AttendanceMatrixTableProps> = ({
                       title={
                         isCancelled
                           ? `Sesión CANCELADA (${s.motivoCancelacion || "Sin clase"}). Clic para reactivar o ver motivo`
-                          : `Ayudantía del ${s.fecha} (${s.diaSemana}). Clic en el calendario para marcar que no hubo clase`
+                          : `${s.tipo === "ayudantia" ? "Ayudantía" : "Cátedra"} (${s.horaInicio || "Horario oficial"} - ${s.horaFin || ""}) del ${s.fecha} (${s.diaSemana}). Clic en el calendario para suspender`
                       }
                     >
                       <div className="flex flex-col items-center justify-center leading-none py-1">
@@ -385,6 +364,11 @@ export const AttendanceMatrixTable: React.FC<AttendanceMatrixTableProps> = ({
                         >
                           {diaMes}
                         </span>
+                        {s.horaInicio && (
+                          <span className="text-[9px] font-mono text-cyan-300 font-semibold mt-0.5" title={`Bloque: ${s.horaInicio} a ${s.horaFin} hrs`}>
+                            {s.horaInicio}
+                          </span>
+                        )}
 
                         <div className="flex items-center justify-center gap-0.5 mt-1">
                           {!isCancelled ? (
@@ -449,42 +433,6 @@ export const AttendanceMatrixTable: React.FC<AttendanceMatrixTableProps> = ({
                     >
                       {sum.nombres.split(" ")[0]} {sum.apellidos.split(" ")[0]}
                     </div>
-                  </td>
-
-                  {/* Celda Asistencia Hoy */}
-                  <td className="p-1 text-center border-r border-gray-200 bg-blue-50/20 w-[96px]">
-                    {hasSessionToday && todaySessionInfo?.todaySession ? (
-                      <button
-                        type="button"
-                        onClick={() => onToggleAttendance(todaySessionInfo.todaySession!.id, sum.canvas_id)}
-                        className={`px-2 py-1 text-[11px] font-bold rounded-[3px] transition-all active:scale-90 inline-flex items-center gap-1 ${
-                          (attendanceMap[`${todaySessionInfo.todaySession.id}_${sum.canvas_id}`] ?? 0) === 1
-                            ? "bg-emerald-600 text-white shadow-2xs hover:bg-emerald-700"
-                            : "bg-white border border-[#008EE2] text-[#008EE2] hover:bg-blue-50"
-                        }`}
-                        title={
-                          (attendanceMap[`${todaySessionInfo.todaySession.id}_${sum.canvas_id}`] ?? 0) === 1
-                            ? "Presente hoy (clic para alternar)"
-                            : "Marcar presente hoy"
-                        }
-                      >
-                        {(attendanceMap[`${todaySessionInfo.todaySession.id}_${sum.canvas_id}`] ?? 0) === 1 ? (
-                          <>
-                            <Check size={11} className="stroke-[3]" />
-                            <span>Presente</span>
-                          </>
-                        ) : (
-                          <span>Marcar</span>
-                        )}
-                      </button>
-                    ) : (
-                      <span
-                        className="text-[10px] text-gray-400 font-mono block"
-                        title={`Hoy no hay ayudantía. Próxima: ${todaySessionInfo?.nextSession?.fecha || "N/A"}`}
-                      >
-                        -
-                      </span>
-                    )}
                   </td>
 
                   {/* Celdas por Mes (Expandidas o Contraídas) */}
