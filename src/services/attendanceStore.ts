@@ -427,7 +427,7 @@ export function generateSemesterSessions(
           });
         }
 
-        if (isCatedra2 && seccion.horarioCatedra2) {
+        if (isCatedra2 && seccion.horarioCatedra2 && !isCatedra) {
           sessions.push({
             id: `sess_${secIdentifier}_cat2_${dateStr}`,
             seccionId: seccion.id,
@@ -459,7 +459,7 @@ export function generateSemesterSessions(
           });
         }
 
-        if (isAyudantia2 && seccion.horarioAyudantia2) {
+        if (isAyudantia2 && seccion.horarioAyudantia2 && !isAyudantia) {
           sessions.push({
             id: `sess_${secIdentifier}_ayu2_${dateStr}`,
             seccionId: seccion.id,

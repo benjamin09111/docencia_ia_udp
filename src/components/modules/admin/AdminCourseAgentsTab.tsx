@@ -146,8 +146,12 @@ export const AdminCourseAgentsTab: React.FC<AdminCourseAgentsTabProps> = ({
                           <span className="text-[10px] text-[#6B7780]">Ayudante: {sec.ayudante}</span>
                         </td>
                         <td className="p-2.5 text-[#2D3B45]">
-                          <span className="block font-medium">{sec.horarioAyudantia}</span>
-                          <span className="text-[10px] text-gray-500 font-mono">{sec.sala}</span>
+                          <span className="block font-medium" suppressHydrationWarning>
+                            {typeof sec.horarioAyudantia === "string" ? sec.horarioAyudantia : String(sec.horarioAyudantia || "")}
+                          </span>
+                          <span className="text-[10px] text-gray-500 font-mono" suppressHydrationWarning>
+                            {sec.sala}
+                          </span>
                         </td>
                         <td className="p-2.5 text-[#2D3B45]">
                           <span className="px-2 py-0.5 bg-amber-50 text-amber-900 border border-amber-200 rounded text-[11px] font-medium block w-fit">
