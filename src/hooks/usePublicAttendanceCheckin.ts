@@ -95,7 +95,10 @@ export function usePublicAttendanceCheckin({
     return false;
   });
 
-  const currentSection = sections.find((s) => s.id === selectedSectionId) || sections[0];
+  const currentSection =
+    sections.find((s) => s.id === selectedSectionId || s.codigo === selectedSectionId) ||
+    sections[0] ||
+    getSectionByCourseCode(initialSectionId || courseCode, sections);
 
   const sessionStatus: SessionActiveStatus = checkCurrentSessionActive(
     currentSection,
@@ -104,27 +107,28 @@ export function usePublicAttendanceCheckin({
 
   const todayDateOnly = new Date().toISOString().split("T")[0];
   const activeSessionType = sessionStatus.tipo || "ayudantia";
-  const secIdOrCode = currentSection.codigo || currentSection.id;
+  const secIdOrCode = currentSection?.codigo || currentSection?.id || "sec_1";
   const activeSession: ClassSession = {
     id: `sess_${secIdOrCode}_${activeSessionType === "ayudantia" ? "ayu" : "cat"}_${todayDateOnly}`,
-    seccionId: currentSection.id,
+    seccionId: currentSection?.id || "sec_1",
     fecha: todayDateOnly,
     diaSemana: new Date().toLocaleDateString("es-CL", { weekday: "long" }),
     tipo: activeSessionType,
     estado: "realizada",
-    horaInicio: sessionStatus.horaInicio || currentSection.horarioAyudantia.horaInicio,
-    horaFin: sessionStatus.horaFin || currentSection.horarioAyudantia.horaFin,
+    horaInicio: sessionStatus.horaInicio || currentSection?.horarioAyudantia?.horaInicio || "16:15",
+    horaFin: sessionStatus.horaFin || currentSection?.horarioAyudantia?.horaFin || "17:45",
   };
 
   const [canvasStudents, setCanvasStudents] = useState<StudentRosterItem[]>([]);
   const effectiveCanvasId = useMemo(() => {
-    if (selectedSectionId === "sec_1" || currentSection.codigo.includes("CA01")) return 44999;
-    if (selectedSectionId === "sec_2" || currentSection.codigo.includes("CA02")) return 45002;
-    if (selectedSectionId === "sec_3" || currentSection.codigo.includes("CA03")) return 47552;
-    if (selectedSectionId === "sec_gestion_org" || currentSection.codigo.includes("CIT2206")) return 47047;
-    if (selectedSectionId === "sec_arq_emergentes" || currentSection.codigo.includes("CIT3100")) return 44988;
+    const code = currentSection?.codigo || "";
+    if (selectedSectionId === "sec_1" || code.includes("CA01")) return 44999;
+    if (selectedSectionId === "sec_2" || code.includes("CA02")) return 45002;
+    if (selectedSectionId === "sec_3" || code.includes("CA03")) return 47552;
+    if (selectedSectionId === "sec_gestion_org" || code.includes("CIT2206")) return 47047;
+    if (selectedSectionId === "sec_arq_emergentes" || code.includes("CIT3100")) return 44988;
     return 44999;
-  }, [selectedSectionId, currentSection.codigo]);
+  }, [selectedSectionId, currentSection?.codigo]);
 
   useEffect(() => {
     let isMounted = true;

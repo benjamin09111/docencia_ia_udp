@@ -140,16 +140,34 @@ export interface SessionActiveStatus {
 }
 
 export function checkCurrentSessionActive(
-  section: CourseSection,
+  section?: CourseSection,
   forceDemoActive = false
 ): SessionActiveStatus {
+  if (!section) {
+    return {
+      isActive: forceDemoActive,
+      tipo: "ayudantia",
+      horaInicio: "16:15",
+      horaFin: "17:45",
+      sala: "No definida",
+      proximaSesion: {
+        diaNombre: "Miércoles",
+        tipo: "ayudantia",
+        horaInicio: "16:15",
+        horaFin: "17:45",
+        sala: "No definida",
+      },
+    };
+  }
+
   const now = new Date();
   const currentDay = now.getDay(); // 0=Dom ... 6=Sab
   const currentMinutes = now.getHours() * 60 + now.getMinutes();
 
-  const toMinutes = (timeStr: string) => {
+  const toMinutes = (timeStr?: string) => {
+    if (!timeStr) return 0;
     const [h, m] = timeStr.split(":").map(Number);
-    return h * 60 + m;
+    return (h || 0) * 60 + (m || 0);
   };
 
   // Si se fuerza modo demo para pruebas
@@ -157,15 +175,15 @@ export function checkCurrentSessionActive(
     return {
       isActive: true,
       tipo: "ayudantia",
-      horaInicio: section.horarioAyudantia.horaInicio,
-      horaFin: section.horarioAyudantia.horaFin,
+      horaInicio: section.horarioAyudantia?.horaInicio || "16:15",
+      horaFin: section.horarioAyudantia?.horaFin || "17:45",
       sala: "No definida",
       edificio: "Edificio Informática UDP (Ejército 441)",
     };
   }
 
   // 1. Revisar si coincide con horario de Ayudantía principal (abre 15 min antes y cierra 15 min después)
-  if (section.horarioAyudantia?.dias?.includes(currentDay)) {
+  if (section.horarioAyudantia?.dias?.includes(currentDay) && section.horarioAyudantia?.horaInicio && section.horarioAyudantia?.horaFin) {
     const start = toMinutes(section.horarioAyudantia.horaInicio) - 15;
     const end = toMinutes(section.horarioAyudantia.horaFin) + 15;
     if (currentMinutes >= start && currentMinutes <= end) {
@@ -181,7 +199,7 @@ export function checkCurrentSessionActive(
   }
 
   // 1.1 Revisar si coincide con horario de Ayudantía secundario (2do horario)
-  if (section.horarioAyudantia2?.dias?.includes(currentDay)) {
+  if (section.horarioAyudantia2?.dias?.includes(currentDay) && section.horarioAyudantia2?.horaInicio && section.horarioAyudantia2?.horaFin) {
     const start = toMinutes(section.horarioAyudantia2.horaInicio) - 15;
     const end = toMinutes(section.horarioAyudantia2.horaFin) + 15;
     if (currentMinutes >= start && currentMinutes <= end) {
@@ -197,7 +215,7 @@ export function checkCurrentSessionActive(
   }
 
   // 2. Revisar si coincide con horario de Cátedra principal
-  if (section.horarioCatedra?.dias?.includes(currentDay)) {
+  if (section.horarioCatedra?.dias?.includes(currentDay) && section.horarioCatedra?.horaInicio && section.horarioCatedra?.horaFin) {
     const start = toMinutes(section.horarioCatedra.horaInicio) - 15;
     const end = toMinutes(section.horarioCatedra.horaFin) + 15;
     if (currentMinutes >= start && currentMinutes <= end) {
@@ -213,7 +231,7 @@ export function checkCurrentSessionActive(
   }
 
   // 2.1 Revisar si coincide con horario de Cátedra secundario
-  if (section.horarioCatedra2?.dias?.includes(currentDay)) {
+  if (section.horarioCatedra2?.dias?.includes(currentDay) && section.horarioCatedra2?.horaInicio && section.horarioCatedra2?.horaFin) {
     const start = toMinutes(section.horarioCatedra2.horaInicio) - 15;
     const end = toMinutes(section.horarioCatedra2.horaFin) + 15;
     if (currentMinutes >= start && currentMinutes <= end) {
@@ -230,7 +248,7 @@ export function checkCurrentSessionActive(
 
   // Si no está activa en este minuto, calcular datos precisos de la próxima sesión según la sección
   const diasNombres = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
-  const ayudDiaNum = section.horarioAyudantia.dias[0] ?? 3;
+  const ayudDiaNum = section.horarioAyudantia?.dias?.[0] ?? 3;
   const diaNombre = diasNombres[ayudDiaNum] || "Miércoles";
 
   return {
@@ -238,8 +256,8 @@ export function checkCurrentSessionActive(
     proximaSesion: {
       diaNombre,
       tipo: "ayudantia",
-      horaInicio: section.horarioAyudantia.horaInicio || "16:00",
-      horaFin: section.horarioAyudantia.horaFin || "17:20",
+      horaInicio: section.horarioAyudantia?.horaInicio || "16:00",
+      horaFin: section.horarioAyudantia?.horaFin || "17:20",
       sala: "No definida",
     },
   };
