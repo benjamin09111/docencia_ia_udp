@@ -10,7 +10,7 @@ import {
   PublicAttendanceDeviceLockedScreen,
 } from "./PublicAttendanceStatusScreens";
 import { usePublicAttendanceCheckin } from "@/hooks/usePublicAttendanceCheckin";
-import { KeyRound, ArrowRight, Building2 } from "lucide-react";
+import { KeyRound, ArrowRight, Building2, Globe, MapPin } from "lucide-react";
 
 interface PublicAttendanceCheckinProps {
   courseCode?: string;
@@ -87,37 +87,28 @@ export const PublicAttendanceCheckin: React.FC<PublicAttendanceCheckinProps> = (
         </div>
         <h2 className="text-base font-bold text-[#2D3B45] mt-0.5">{courseTitle}</h2>
         <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
-          <span
-            className={`text-xs font-extrabold px-2.5 py-0.5 rounded flex items-center gap-1.5 ${
-              isAyudantia
-                ? "bg-purple-100 text-purple-900 border border-purple-200"
-                : "bg-blue-100 text-blue-900 border border-blue-200"
-            }`}
-          >
+          <span className={`text-xs font-extrabold px-2.5 py-0.5 rounded flex items-center gap-1.5 ${isAyudantia ? "bg-purple-100 text-purple-900 border border-purple-200" : "bg-blue-100 text-blue-900 border border-blue-200"}`}>
             ● {isAyudantia ? "Ayudantía Activa" : "Cátedra Activa"} ({sessionStatus.horaInicio} - {sessionStatus.horaFin})
           </span>
           <span className="text-[11px] text-[#2D3B45] bg-gray-100 px-2 py-0.5 rounded border border-gray-200 flex items-center gap-1">
             <Building2 size={11} className="text-[#6B7780]" /> Sala: No definida
           </span>
+          {!currentSection.requiereGeolocalizacion && (
+            <span className="text-[11px] font-bold px-2 py-0.5 rounded border bg-blue-50 text-[#008EE2] border-blue-200 flex items-center gap-1">
+              <Globe size={11} /> Online (Sin GPS)
+            </span>
+          )}
         </div>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4 text-xs">
         <div className="p-3 bg-gray-50 border border-gray-200 rounded-[4px] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 shadow-2xs">
           <div>
-            <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wide block">
-              1. Sección Asignada:
-            </span>
-            <span className="text-xs font-bold text-[#2D3B45]">
-              {currentSection.nombre} ({currentSection.codigo})
-            </span>
-            <span className="text-[11px] text-gray-500 block">
-              Docente: {currentSection.profesor} • Ayudante: {currentSection.ayudante}
-            </span>
+            <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wide block">1. Sección Asignada:</span>
+            <span className="text-xs font-bold text-[#2D3B45]">{currentSection.nombre} ({currentSection.codigo})</span>
+            <span className="text-[11px] text-gray-500 block">Docente: {currentSection.profesor} • Ayudante: {currentSection.ayudante}</span>
           </div>
-          <span className="text-[10px] font-bold text-[#008EE2] bg-blue-50 border border-blue-200 px-2 py-0.5 rounded shrink-0">
-            Fijada
-          </span>
+          <span className="text-[10px] font-bold text-[#008EE2] bg-blue-50 border border-blue-200 px-2 py-0.5 rounded shrink-0">Fijada</span>
         </div>
 
         <CanvasSearchableSelect
@@ -162,7 +153,7 @@ export const PublicAttendanceCheckin: React.FC<PublicAttendanceCheckinProps> = (
           </div>
         )}
 
-        {currentSection.requiereGeolocalizacion && (
+        {currentSection.requiereGeolocalizacion ? (
           <PublicAttendanceLocationCard
             geoStatus={geoStatus}
             distancia={distancia}
@@ -170,6 +161,16 @@ export const PublicAttendanceCheckin: React.FC<PublicAttendanceCheckinProps> = (
             targetRadius={targetRadius}
             onVerifyLocation={handleVerifyLocation}
           />
+        ) : (
+          <div className="p-3 bg-blue-50/80 border border-blue-200 rounded-[4px] flex items-center gap-2.5 text-xs text-blue-900 animate-fadeIn">
+            <Globe size={16} className="text-[#008EE2] shrink-0" />
+            <div>
+              <span className="font-bold">Ayudantía Online Activa:</span>
+              <p className="text-[11px] text-gray-600 mt-0.5">
+                No se requiere verificar ubicación GPS en campus para registrar tu asistencia hoy.
+              </p>
+            </div>
+          </div>
         )}
 
         <button

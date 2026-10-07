@@ -322,6 +322,33 @@ export async function updateSectionScheduleInSupabase(
 }
 
 /**
+ * Actualiza la modalidad online/presencial (requiere_geo) de una sección en Supabase
+ */
+export async function updateSectionOnlineStatusInSupabase(
+  sectionCode: string,
+  requiereGeo: boolean
+): Promise<AttendanceDbSyncResult> {
+  const supabase = getSupabaseClient();
+  if (!supabase) return { success: false, message: "Supabase no configurado" };
+
+  try {
+    const { error } = await supabase
+      .from("sections")
+      .update({
+        requiere_geo: requiereGeo,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("code", sectionCode);
+
+    if (error) throw error;
+    return { success: true };
+  } catch (error: any) {
+    console.warn("Aviso updateSectionOnlineStatusInSupabase:", error);
+    return { success: false, error: error?.message || String(error) };
+  }
+}
+
+/**
  * Obtiene todas las secciones configuradas en Supabase
  */
 export async function fetchSectionsFromSupabase(): Promise<CourseSection[] | null> {

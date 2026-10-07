@@ -54,14 +54,25 @@ export function usePublicAttendanceCheckin({
   }, []);
 
   useEffect(() => {
-    if (isSupabaseConfigured()) {
+    if (!isSupabaseConfigured()) return;
+    const fetchLatest = () => {
       fetchSectionsFromSupabase().then((cloudSections) => {
         if (cloudSections && cloudSections.length > 0) {
           setSections(cloudSections);
           saveSections(cloudSections);
         }
       });
-    }
+    };
+    fetchLatest();
+
+    const onFocus = () => fetchLatest();
+    window.addEventListener("focus", onFocus);
+    const interval = setInterval(fetchLatest, 10000);
+
+    return () => {
+      window.removeEventListener("focus", onFocus);
+      clearInterval(interval);
+    };
   }, []);
 
   const resolvedInitialSec = useMemo(() => {

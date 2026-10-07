@@ -41,6 +41,8 @@ import {
   fetchStudentWorkRecordsFromSupabase,
   updateSessionStatusInSupabase,
   isSupabaseConfigured,
+  updateSectionOnlineStatusInSupabase,
+  fetchSectionsFromSupabase,
 } from "@/services/attendanceDbService";
 import { AttendanceMatrixTable } from "./attendance/AttendanceMatrixTable";
 import { AttendanceCancelClassModal } from "./attendance/AttendanceCancelClassModal";
@@ -53,6 +55,8 @@ import {
   Check,
   Copy,
   Search,
+  Globe,
+  MapPin,
 } from "lucide-react";
 import { getPublicCheckinUrl, getPublicVisualUrl } from "@/utils/urlHelper";
 import { StudentExcelRow } from "@/types";
@@ -81,6 +85,18 @@ export const TeacherAttendanceWorkspace: React.FC<TeacherAttendanceWorkspaceProp
     };
     window.addEventListener("udp_sections_updated", handleSync);
     return () => window.removeEventListener("udp_sections_updated", handleSync);
+  }, []);
+
+  // Cargar secciones y modalidad online/presencial desde Supabase al iniciar
+  useEffect(() => {
+    if (isSupabaseConfigured()) {
+      fetchSectionsFromSupabase().then((cloudSections) => {
+        if (cloudSections && cloudSections.length > 0) {
+          setSections(cloudSections);
+          saveSections(cloudSections);
+        }
+      });
+    }
   }, []);
 
   // 1 curso = 1 sección (determinada por el código del curso Canvas)
@@ -861,6 +877,44 @@ export const TeacherAttendanceWorkspace: React.FC<TeacherAttendanceWorkspaceProp
 
   const effectivePin = getSectionDailyPin(selectedSection, todaySessionInfo.todayDateStr);
 
+  const isOnlineAyudantia = selectedSection ? selectedSection.requiereGeolocalizacion === false : false;
+
+  const handleToggleOnlineAyudantia = async () => {
+    const nextIsOnline = !isOnlineAyudantia;
+    const nextRequiereGeo = !nextIsOnline;
+
+    const updatedSection: CourseSection = {
+      ...selectedSection,
+      requiereGeolocalizacion: nextRequiereGeo,
+    };
+
+    const updatedSections = sections.map((s) =>
+      s.id === selectedSection.id || s.codigo === selectedSection.codigo
+        ? updatedSection
+        : s
+    );
+
+    setSections(updatedSections);
+    saveSections(updatedSections);
+
+    setQuickNotification({
+      type: "success",
+      message: nextIsOnline
+        ? "🌐 Ayudantía marcada como ONLINE. Los alumnos ya NO verán el paso de verificar ubicación GPS."
+        : "📍 Ayudantía marcada como PRESENCIAL. Los alumnos deberán verificar su ubicación GPS en el campus.",
+    });
+    setTimeout(() => setQuickNotification(null), 5000);
+
+    const targetCode = selectedSection.codigo || courseCode;
+    if (isSupabaseConfigured() && targetCode) {
+      try {
+        await updateSectionOnlineStatusInSupabase(targetCode, nextRequiereGeo);
+      } catch (err) {
+        console.warn("Aviso al actualizar modalidad en Supabase:", err);
+      }
+    }
+  };
+
   const handleCopyPin = async () => {
     const ok = await copyText(effectivePin);
     if (ok) {
@@ -912,6 +966,45 @@ export const TeacherAttendanceWorkspace: React.FC<TeacherAttendanceWorkspaceProp
                 ) : (
                   <Copy size={11} className="text-amber-600 opacity-70" />
                 )}
+              </button>
+
+              {/* Switch: ¿Ayudantía online? */}
+              <button
+                type="button"
+                role="switch"
+                aria-checked={isOnlineAyudantia}
+                onClick={handleToggleOnlineAyudantia}
+                className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-[4px] text-[11px] font-semibold border transition-all cursor-pointer ${
+                  isOnlineAyudantia
+                    ? "bg-blue-50 border-blue-300 text-[#008EE2] hover:bg-blue-100 shadow-2xs"
+                    : "bg-gray-50 border-gray-300 text-[#55636E] hover:bg-gray-100"
+                }`}
+                title={
+                  isOnlineAyudantia
+                    ? "Ayudantía Online activa: Los alumnos NO necesitan verificar GPS. Clic para cambiar a Presencial."
+                    : "Ayudantía Presencial: Los alumnos deben verificar ubicación GPS en campus. Clic para cambiar a Online."
+                }
+              >
+                <span
+                  className={`w-6 h-3 rounded-full p-[1px] flex items-center transition-colors ${
+                    isOnlineAyudantia ? "bg-[#008EE2] justify-end" : "bg-gray-300 justify-start"
+                  }`}
+                >
+                  <span className="w-2.5 h-2.5 rounded-full bg-white shadow-xs"></span>
+                </span>
+                <span className="flex items-center gap-1">
+                  {isOnlineAyudantia ? (
+                    <>
+                      <Globe size={12} className="text-[#008EE2]" />
+                      <span>¿Ayudantía online? <strong className="text-[#008EE2]">SÍ (sin GPS)</strong></span>
+                    </>
+                  ) : (
+                    <>
+                      <MapPin size={12} className="text-gray-400" />
+                      <span>¿Ayudantía online? <span className="text-gray-500 font-normal">NO (con GPS)</span></span>
+                    </>
+                  )}
+                </span>
               </button>
             </div>
           </div>

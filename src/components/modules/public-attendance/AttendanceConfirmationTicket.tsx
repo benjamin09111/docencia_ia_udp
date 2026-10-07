@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { CheckCircle2, ShieldCheck, Clock, MapPin, User, ArrowLeft } from "lucide-react";
+import { CheckCircle2, ShieldCheck, Clock, MapPin, User, ArrowLeft, Globe } from "lucide-react";
 import { StudentRosterItem } from "@/services/attendanceStore";
 import { ClassSession, CourseSection } from "@/types/attendance";
 
@@ -75,13 +75,22 @@ export const AttendanceConfirmationTicket: React.FC<AttendanceConfirmationTicket
           <span className="font-mono text-[#2D3B45] font-semibold">{timestamp}</span>
         </div>
 
-        {distanciaMetros !== undefined && (
+        {distanciaMetros !== undefined ? (
           <div className="flex justify-between items-center">
             <span className="text-[#6B7780] font-medium flex items-center gap-1">
               <MapPin size={12} /> Ubicación:
             </span>
             <span className="text-emerald-800 font-medium">
               Dentro del Campus UDP ({distanciaMetros}m)
+            </span>
+          </div>
+        ) : (
+          <div className="flex justify-between items-center">
+            <span className="text-[#6B7780] font-medium flex items-center gap-1">
+              <Globe size={12} /> Modalidad:
+            </span>
+            <span className="text-[#008EE2] font-semibold">
+              Online / Remoto (Sin validación GPS)
             </span>
           </div>
         )}
