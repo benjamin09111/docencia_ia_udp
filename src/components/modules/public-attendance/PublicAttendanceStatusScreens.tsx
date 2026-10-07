@@ -1,5 +1,6 @@
 import React from "react";
-import { Clock, Calendar, Building2, MapPin, Sparkles, Lock, ShieldCheck } from "lucide-react";
+import Link from "next/link";
+import { Clock, Calendar, Building2, MapPin, Lock, ShieldCheck, ArrowLeft } from "lucide-react";
 import { CourseSection } from "@/types/attendance";
 import { SessionActiveStatus } from "@/services/udpRoomsService";
 
@@ -7,14 +8,12 @@ interface ClosedScreenProps {
   currentSection: CourseSection;
   sessionStatus: SessionActiveStatus;
   targetCampusNombre: string;
-  onForceDemo: () => void;
 }
 
 export const PublicAttendanceClosedScreen: React.FC<ClosedScreenProps> = ({
   currentSection,
   sessionStatus,
   targetCampusNombre,
-  onForceDemo,
 }) => {
   return (
     <div className="bg-white border border-[#E0E3E6] rounded-[6px] shadow-canvas-card p-6 max-w-md w-full mx-auto space-y-4 text-center animate-fadeIn">
@@ -52,14 +51,13 @@ export const PublicAttendanceClosedScreen: React.FC<ClosedScreenProps> = ({
       )}
 
       <div className="pt-2 border-t border-gray-100">
-        <button
-          type="button"
-          onClick={onForceDemo}
-          className="w-full py-2 bg-[#2D3B45] hover:bg-[#1E272E] text-white rounded-[4px] text-xs font-semibold flex items-center justify-center gap-2 transition-colors shadow-xs cursor-pointer"
+        <Link
+          href="/asistencia"
+          className="w-full py-2 bg-gray-100 hover:bg-gray-200 text-[#2D3B45] rounded-[4px] text-xs font-semibold flex items-center justify-center gap-2 transition-colors shadow-2xs"
         >
-          <Sparkles size={14} className="text-[#008EE2]" />
-          <span>Simular Sesión Activa Ahora (Modo Pruebas Docente)</span>
-        </button>
+          <ArrowLeft size={13} />
+          <span>Volver al Portal de Asistencia</span>
+        </Link>
       </div>
     </div>
   );
@@ -71,12 +69,10 @@ interface DeviceLockedScreenProps {
     studentRut?: string;
     timestamp: string;
   };
-  onUnlock: () => void;
 }
 
 export const PublicAttendanceDeviceLockedScreen: React.FC<DeviceLockedScreenProps> = ({
   deviceLockedData,
-  onUnlock,
 }) => {
   return (
     <div className="bg-white border border-[#E0E3E6] rounded-[6px] shadow-canvas-card p-6 max-w-md w-full mx-auto space-y-4 text-center animate-fadeIn">
@@ -102,13 +98,15 @@ export const PublicAttendanceDeviceLockedScreen: React.FC<DeviceLockedScreenProp
           Por normativas de la Universidad Diego Portales, no se permite registrar a otro estudiante desde el mismo dispositivo.
         </p>
       </div>
-      <button
-        type="button"
-        onClick={onUnlock}
-        className="text-[11px] text-gray-500 hover:text-red-700 underline pt-2 block mx-auto cursor-pointer"
-      >
-        Desbloquear dispositivo (Modo Pruebas Docente)
-      </button>
+      <div className="pt-2 border-t border-gray-100">
+        <Link
+          href="/asistencia"
+          className="text-xs font-semibold text-[#008EE2] hover:underline inline-flex items-center gap-1"
+        >
+          <ArrowLeft size={13} />
+          <span>Volver al Portal de Asistencia</span>
+        </Link>
+      </div>
     </div>
   );
 };

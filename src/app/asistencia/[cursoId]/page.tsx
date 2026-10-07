@@ -81,7 +81,6 @@ export default function PublicAttendancePage({
             section={confirmedData.section}
             timestamp={confirmedData.timestamp}
             distanciaMetros={confirmedData.distanciaMetros}
-            onResetDemo={() => setConfirmedData(null)}
           />
         )}
       </main>

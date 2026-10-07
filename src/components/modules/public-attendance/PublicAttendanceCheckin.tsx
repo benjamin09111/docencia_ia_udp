@@ -35,8 +35,6 @@ export const PublicAttendanceCheckin: React.FC<PublicAttendanceCheckinProps> = (
     targetCampusNombre,
     targetRadius,
     deviceLockedData,
-    unlockDevice,
-    setForceDemoActive,
     studentOptions,
     selectedStudent,
     setSelectedStudent,
@@ -57,7 +55,6 @@ export const PublicAttendanceCheckin: React.FC<PublicAttendanceCheckinProps> = (
         currentSection={currentSection}
         sessionStatus={sessionStatus}
         targetCampusNombre={targetCampusNombre}
-        onForceDemo={() => setForceDemoActive(true)}
       />
     );
   }
@@ -66,7 +63,6 @@ export const PublicAttendanceCheckin: React.FC<PublicAttendanceCheckinProps> = (
     return (
       <PublicAttendanceDeviceLockedScreen
         deviceLockedData={deviceLockedData}
-        onUnlock={unlockDevice}
       />
     );
   }

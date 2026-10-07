@@ -1,7 +1,8 @@
 "use client";
 
 import React from "react";
-import { CheckCircle2, ShieldCheck, Clock, MapPin, User, ArrowLeft, Globe } from "lucide-react";
+import Link from "next/link";
+import { CheckCircle2, ShieldCheck, Clock, MapPin, Globe, ArrowRight } from "lucide-react";
 import { StudentRosterItem } from "@/services/attendanceStore";
 import { ClassSession, CourseSection } from "@/types/attendance";
 
@@ -11,7 +12,6 @@ interface AttendanceConfirmationTicketProps {
   section: CourseSection;
   timestamp: string;
   distanciaMetros?: number;
-  onResetDemo?: () => void;
 }
 
 export const AttendanceConfirmationTicket: React.FC<AttendanceConfirmationTicketProps> = ({
@@ -20,7 +20,6 @@ export const AttendanceConfirmationTicket: React.FC<AttendanceConfirmationTicket
   section,
   timestamp,
   distanciaMetros,
-  onResetDemo,
 }) => {
   return (
     <div className="bg-white border border-[#E0E3E6] rounded-[6px] shadow-canvas-card p-4 sm:p-6 max-w-md w-full mx-auto space-y-5 animate-fadeIn">
@@ -100,20 +99,19 @@ export const AttendanceConfirmationTicket: React.FC<AttendanceConfirmationTicket
       <div className="p-3 bg-blue-50/60 border border-blue-200 rounded-[4px] text-[11px] text-[#0277BD] flex items-start gap-2">
         <ShieldCheck size={16} className="shrink-0 mt-0.5 text-[#008EE2]" />
         <span>
-          <strong>Dispositivo bloqueado:</strong> Tu navegador ha registrado esta marca. No se permite registrar la asistencia de otros compañeros desde este equipo.
+          <strong>Dispositivo bloqueado:</strong> Tu navegador ha registrado esta marca oficial. No se permite registrar la asistencia de otros compañeros desde este equipo.
         </span>
       </div>
 
-      {onResetDemo && (
-        <div className="text-center pt-1">
-          <button
-            onClick={onResetDemo}
-            className="text-[11px] text-gray-500 hover:text-gray-700 underline"
-          >
-            Probar con otro alumno (Modo Pruebas)
-          </button>
-        </div>
-      )}
+      <div className="text-center pt-1 border-t border-gray-100">
+        <Link
+          href={`/asistencia/${encodeURIComponent(section.codigo)}/visual`}
+          className="text-xs font-bold text-[#008EE2] hover:underline inline-flex items-center gap-1"
+        >
+          <span>Ver Planilla de Asistencias y Décimas a la Fecha</span>
+          <ArrowRight size={12} />
+        </Link>
+      </div>
     </div>
   );
 };
