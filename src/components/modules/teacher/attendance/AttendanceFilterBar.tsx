@@ -405,7 +405,7 @@ export const AttendanceFilterBar: React.FC<AttendanceFilterBarProps> = ({
                     {hasSessionToday ? (
                       <button
                         type="button"
-                        onClick={() => onMarkTodayAttendance && onMarkTodayAttendance(st.canvas_id)}
+                        onClick={() => onMarkTodayAttendance && onMarkTodayAttendance(st.canvas_id, targetSession?.id)}
                         className={`px-3 py-1.5 text-xs font-bold rounded-[3px] flex items-center gap-1.5 transition-all shrink-0 active:scale-95 ${
                           isPresent
                             ? "bg-emerald-600 hover:bg-emerald-700 text-white shadow-2xs"

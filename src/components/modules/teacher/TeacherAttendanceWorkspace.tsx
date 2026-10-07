@@ -105,6 +105,7 @@ export const TeacherAttendanceWorkspace: React.FC<TeacherAttendanceWorkspaceProp
   const [copiedCheckin, setCopiedCheckin] = useState(false);
   const [copiedVisual, setCopiedVisual] = useState(false);
   const [copiedPin, setCopiedPin] = useState(false);
+  const lastLocalEditTimeRef = useRef<number>(0);
 
   // Secciones relevantes para este curso
   const relevantSections = useMemo(() => {
@@ -468,6 +469,9 @@ export const TeacherAttendanceWorkspace: React.FC<TeacherAttendanceWorkspaceProp
     if (!isSupabaseConfigured()) return;
     const interval = setInterval(async () => {
       try {
+        // Si el profesor/ayudante editó localmente hace menos de 6 segundos, proteger el estado local
+        if (Date.now() - lastLocalEditTimeRef.current < 6000) return;
+
         const cloudMap = await fetchAttendanceMapFromSupabase(selectedSection.codigo || courseCode);
         if (Object.keys(cloudMap).length > 0) {
           setAttendanceMap((prev) => {
@@ -635,6 +639,7 @@ export const TeacherAttendanceWorkspace: React.FC<TeacherAttendanceWorkspaceProp
     const currentVal = attendanceMap[key] ?? 0;
     const nextVal: AttendanceValue = currentVal === 1 ? 0 : 1;
 
+    lastLocalEditTimeRef.current = Date.now();
     setAttendanceMap((prev) => {
       const next = { ...prev, [key]: nextVal };
       saveAttendanceMap(next);
@@ -663,6 +668,7 @@ export const TeacherAttendanceWorkspace: React.FC<TeacherAttendanceWorkspaceProp
     const key = `${sessionId}_${studentId}`;
     const current = attendanceMap[key] ?? 0;
     const nextVal: AttendanceValue = current === 1 ? 0 : 1;
+    lastLocalEditTimeRef.current = Date.now();
     setAttendanceMap((prev) => {
       const next = { ...prev, [key]: nextVal };
       saveAttendanceMap(next);
@@ -676,6 +682,7 @@ export const TeacherAttendanceWorkspace: React.FC<TeacherAttendanceWorkspaceProp
   };
 
   const handleMarkAllPresent = (sessionId: string) => {
+    lastLocalEditTimeRef.current = Date.now();
     const batch: Array<{ session_code: string; student_canvas_id: number; value: number }> = [];
     setAttendanceMap((prev) => {
       const next = { ...prev };

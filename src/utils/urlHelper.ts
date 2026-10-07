@@ -4,17 +4,33 @@
  */
 
 export function getAppBaseUrl(): string {
-  // 1. Prioridad: Variable de entorno explícita para Producción en .env
-  if (process.env.NEXT_PUBLIC_APP_URL && process.env.NEXT_PUBLIC_APP_URL.trim() !== "") {
-    return process.env.NEXT_PUBLIC_APP_URL.replace(/\/+$/, "");
-  }
-
-  // 2. Detección dinámica en el navegador (funciona automáticamente en cualquier dominio o puerto)
+  // 1. En el navegador del usuario, el origen real es siempre window.location.origin
   if (typeof window !== "undefined" && window.location?.origin) {
+    const envUrl = process.env.NEXT_PUBLIC_APP_URL?.trim();
+    // Si hay un dominio institucional explícito de producción configurado (que no sea localhost), lo usamos
+    if (envUrl && !envUrl.includes("localhost") && envUrl.startsWith("http")) {
+      return envUrl.replace(/\/+$/, "");
+    }
     return window.location.origin.replace(/\/+$/, "");
   }
 
-  // 3. Fallback de desarrollo local
+  // 2. En SSR: Variable de entorno explícita de producción (.env)
+  if (process.env.NEXT_PUBLIC_APP_URL && process.env.NEXT_PUBLIC_APP_URL.trim() !== "") {
+    const envUrl = process.env.NEXT_PUBLIC_APP_URL.trim();
+    if (!envUrl.includes("localhost")) {
+      return envUrl.replace(/\/+$/, "");
+    }
+  }
+
+  // 3. Dominio automático de Vercel en preview/production
+  if (process.env.NEXT_PUBLIC_VERCEL_URL) {
+    return `https://${process.env.NEXT_PUBLIC_VERCEL_URL.replace(/\/+$/, "")}`;
+  }
+  if (process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL.replace(/\/+$/, "")}`;
+  }
+
+  // 4. Fallback de desarrollo local
   return "http://localhost:3000";
 }
 

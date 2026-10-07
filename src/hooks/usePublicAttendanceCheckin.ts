@@ -90,12 +90,15 @@ export function usePublicAttendanceCheckin({
     forceDemoActive
   );
 
+  const todayDateOnly = new Date().toISOString().split("T")[0];
+  const activeSessionType = sessionStatus.tipo || "ayudantia";
+  const secIdOrCode = currentSection.codigo || currentSection.id;
   const activeSession: ClassSession = {
-    id: `sess_${currentSection.id}_today_${sessionStatus.tipo || "ayudantia"}`,
+    id: `sess_${secIdOrCode}_${activeSessionType === "ayudantia" ? "ayu" : "cat"}_${todayDateOnly}`,
     seccionId: currentSection.id,
-    fecha: new Date().toISOString().split("T")[0],
+    fecha: todayDateOnly,
     diaSemana: new Date().toLocaleDateString("es-CL", { weekday: "long" }),
-    tipo: sessionStatus.tipo || "ayudantia",
+    tipo: activeSessionType,
     estado: "realizada",
     horaInicio: sessionStatus.horaInicio || currentSection.horarioAyudantia.horaInicio,
     horaFin: sessionStatus.horaFin || currentSection.horarioAyudantia.horaFin,

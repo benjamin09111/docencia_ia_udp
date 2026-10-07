@@ -366,9 +366,10 @@ export function generateSemesterSessions(
 
       // Si es feriado o receso institucional, NO se crea sesión (solo clases reales efectivas)
       if (!feriado) {
+        const secIdentifier = seccion.codigo || seccion.id;
         if (isCatedra) {
           sessions.push({
-            id: `sess_${seccion.id}_cat_${idCounter++}`,
+            id: `sess_${secIdentifier}_cat_${dateStr}`,
             seccionId: seccion.id,
             fecha: dateStr,
             diaSemana: DIA_SEMANA_NOMBRES[dayOfWeek],
@@ -384,7 +385,7 @@ export function generateSemesterSessions(
 
         if (isAyudantia) {
           sessions.push({
-            id: `sess_${seccion.id}_ayu_${idCounter++}`,
+            id: `sess_${secIdentifier}_ayu_${dateStr}`,
             seccionId: seccion.id,
             fecha: dateStr,
             diaSemana: DIA_SEMANA_NOMBRES[dayOfWeek],
