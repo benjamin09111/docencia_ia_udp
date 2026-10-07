@@ -61,8 +61,8 @@ export const PublicAttendanceVisualHeader: React.FC<PublicAttendanceVisualHeader
               {section.cursoNombre || "Asignatura UDP"} — {section.nombre}
             </h1>
             <p className="text-xs text-[#6B7780] mt-0.5">
-              Profesor: <span className="font-semibold text-[#2D3B45]">{section.profesor}</span> • Ayudante:{" "}
-              <span className="font-semibold text-[#2D3B45]">{section.ayudante}</span>
+              Profesor: <span className="font-semibold text-[#2D3B45]">{section.profesor?.trim() || "No identificado"}</span> • Ayudante:{" "}
+              <span className="font-semibold text-[#2D3B45]">{section.ayudante?.trim() || "No identificado"}</span>
             </p>
           </div>
         </div>

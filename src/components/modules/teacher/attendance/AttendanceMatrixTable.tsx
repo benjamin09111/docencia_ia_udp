@@ -23,6 +23,7 @@ interface AttendanceMatrixTableProps {
   onMarkAllPresent: (sessionId: string) => void;
   onMarkAllAbsent?: (sessionId: string) => void;
   onOpenCancelModal: (session: ClassSession) => void;
+  onReactivateSession?: (sessionId: string) => void;
   onToggleModality?: (sessionId: string) => void;
 }
 
@@ -62,6 +63,7 @@ export const AttendanceMatrixTable: React.FC<AttendanceMatrixTableProps> = ({
   onMarkAllPresent,
   onMarkAllAbsent,
   onOpenCancelModal,
+  onReactivateSession,
   onToggleModality,
 }) => {
   const isAyud = filterType === "ayudantias";
@@ -528,11 +530,21 @@ export const AttendanceMatrixTable: React.FC<AttendanceMatrixTableProps> = ({
                           <td
                             key={s.id}
                             className="p-0.5 text-center border-l border-gray-100 w-[42px] bg-gray-50/80"
-                            title={`Sesión cancelada (${s.motivoCancelacion || "Sin clase"}). No contabiliza para el total.`}
+                            title={`Sesión cancelada (${s.motivoCancelacion || "Sin clase"}). Clic para reactivar y registrar asistencia.`}
                           >
-                            <span className="w-6 h-6 rounded-[2px] font-mono text-gray-400 text-xs inline-flex items-center justify-center select-none bg-gray-100 border border-gray-200">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (onReactivateSession) {
+                                  onReactivateSession(s.id);
+                                }
+                                onToggleAttendance(s.id, sum.canvas_id);
+                              }}
+                              className="w-6 h-6 rounded-[2px] font-mono text-gray-400 hover:text-emerald-700 hover:bg-emerald-50 hover:border-emerald-300 text-xs inline-flex items-center justify-center select-none bg-gray-100 border border-gray-200 transition-colors cursor-pointer"
+                              title="Sesión suspendida. Clic para reactivar y registrar asistencia"
+                            >
                               —
-                            </span>
+                            </button>
                           </td>
                         );
                       }

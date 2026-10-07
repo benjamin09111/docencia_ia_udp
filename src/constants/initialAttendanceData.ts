@@ -455,10 +455,6 @@ export const DEFAULT_SESSION_OVERRIDES: Record<string, { estado: "programada" | 
     "estado": "cancelada",
     "motivoCancelacion": "Sin clase"
   },
-  "sess_CIT3203_CA01_ayu_2026-10-07": {
-    "estado": "cancelada",
-    "motivoCancelacion": "Sin clase"
-  },
   "sess_sec_1_ayu_2026-08-12": {
     "estado": "cancelada",
     "motivoCancelacion": "Sin clase"
@@ -468,10 +464,6 @@ export const DEFAULT_SESSION_OVERRIDES: Record<string, { estado: "programada" | 
     "motivoCancelacion": "Sin clase"
   },
   "sess_sec_1_ayu_2026-09-30": {
-    "estado": "cancelada",
-    "motivoCancelacion": "Sin clase"
-  },
-  "sess_sec_1_ayu_2026-10-07": {
     "estado": "cancelada",
     "motivoCancelacion": "Sin clase"
   },
@@ -487,10 +479,6 @@ export const DEFAULT_SESSION_OVERRIDES: Record<string, { estado: "programada" | 
     "estado": "cancelada",
     "motivoCancelacion": "Sin clase"
   },
-  "sess_CIT3203_CA02_ayu_2026-10-07": {
-    "estado": "cancelada",
-    "motivoCancelacion": "Sin clase"
-  },
   "sess_sec_2_ayu_2026-08-12": {
     "estado": "cancelada",
     "motivoCancelacion": "Sin clase"
@@ -500,10 +488,6 @@ export const DEFAULT_SESSION_OVERRIDES: Record<string, { estado: "programada" | 
     "motivoCancelacion": "Sin clase"
   },
   "sess_sec_2_ayu_2026-09-30": {
-    "estado": "cancelada",
-    "motivoCancelacion": "Sin clase"
-  },
-  "sess_sec_2_ayu_2026-10-07": {
     "estado": "cancelada",
     "motivoCancelacion": "Sin clase"
   },
@@ -519,10 +503,6 @@ export const DEFAULT_SESSION_OVERRIDES: Record<string, { estado: "programada" | 
     "estado": "cancelada",
     "motivoCancelacion": "Sin clase"
   },
-  "sess_CIT3203_CA03_ayu_2026-10-07": {
-    "estado": "cancelada",
-    "motivoCancelacion": "Sin clase"
-  },
   "sess_sec_3_ayu_2026-08-12": {
     "estado": "cancelada",
     "motivoCancelacion": "Sin clase"
@@ -532,10 +512,6 @@ export const DEFAULT_SESSION_OVERRIDES: Record<string, { estado: "programada" | 
     "motivoCancelacion": "Sin clase"
   },
   "sess_sec_3_ayu_2026-09-30": {
-    "estado": "cancelada",
-    "motivoCancelacion": "Sin clase"
-  },
-  "sess_sec_3_ayu_2026-10-07": {
     "estado": "cancelada",
     "motivoCancelacion": "Sin clase"
   },
@@ -559,10 +535,6 @@ export const DEFAULT_SESSION_OVERRIDES: Record<string, { estado: "programada" | 
     "estado": "cancelada",
     "motivoCancelacion": "Sin clase"
   },
-  "sess_CIT3100_CA02_ayu_2026-10-07": {
-    "estado": "cancelada",
-    "motivoCancelacion": "Sin clase"
-  },
   "sess_sec_arq_emergentes_ayu_2026-08-12": {
     "estado": "cancelada",
     "motivoCancelacion": "Sin clase"
@@ -580,10 +552,6 @@ export const DEFAULT_SESSION_OVERRIDES: Record<string, { estado: "programada" | 
     "motivoCancelacion": "Sin clase"
   },
   "sess_sec_arq_emergentes_ayu_2026-09-30": {
-    "estado": "cancelada",
-    "motivoCancelacion": "Sin clase"
-  },
-  "sess_sec_arq_emergentes_ayu_2026-10-07": {
     "estado": "cancelada",
     "motivoCancelacion": "Sin clase"
   }

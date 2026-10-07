@@ -60,11 +60,11 @@ const agentesDelCurso: CourseAgentInfo[] = [
     colorIcono: "text-[#C8102E]",
     bgIcono: "bg-red-100",
     mision:
-      "Custodia los parámetros particulares de cada sección y profesor titular: Sección 1 (Prof. Jorge Cruz León / Mié 14:30 / Eximición ≥ 5.5), Sección 2 (Prof. Claudio Meneses / Mié 10:00 / Eximición ≥ 5.0), y Sección 3 (Prof. Leandro Lanza / Mié 17:00 / Régimen 100% taller).",
+      "Custodia los parámetros particulares de cada sección y profesor titular: Sección 1 (Prof. Leandro Llanza / Mié 14:30 / Eximición ≥ 5.5), Sección 2 (Prof. Cristian Osorio / Mié 10:00 / Eximición ≥ 5.0), y Sección 3 (Prof. Jorge Esteban Cruz León / Mié 17:00 / Régimen 100% taller).",
     conocimientoClave: [
-      "Sección 1 (CIT3203_CA01): Prof. Jorge Esteban Cruz León • Eximición ≥ 5.5 + 75% asist.",
-      "Sección 2 (CIT3203_CA02): Prof. Claudio Meneses Silva • Eximición ≥ 5.0 + 75% asist.",
-      "Sección 3 (CIT3203_CA03): Prof. Leandro Lanza • Régimen 100% taller (sin examen).",
+      "Sección 1 (CIT3203_CA01): Prof. Leandro Llanza • Eximición ≥ 5.5 + 75% asist.",
+      "Sección 2 (CIT3203_CA02): Prof. Cristian Osorio • Eximición ≥ 5.0 + 75% asist.",
+      "Sección 3 (CIT3203_CA03): Prof. Jorge Esteban Cruz León • Régimen 100% taller (sin examen).",
       "Descriptor Oficial CIT3621 / CIT3203 (Vigencia Marzo 2026, 6 RAPs y 7 Unidades).",
       "Reglamento de evaluación y causal de Reprobación por Inasistencia (RI < 75%).",
     ],

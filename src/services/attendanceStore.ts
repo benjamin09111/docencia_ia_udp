@@ -14,7 +14,7 @@ export const INITIAL_SECTIONS: CourseSection[] = [
     codigo: "CIT3203_CA01",
     cursoNombre: "Proyecto en TICs II",
     nombre: "Sección 1",
-    profesor: "Jorge Esteban Cruz León",
+    profesor: "Leandro Llanza",
     ayudante: "Benjamín Morales Pizarro",
     horarioCatedra: { dias: [3], horaInicio: "14:30", horaFin: "17:30", sala: "SALA X" },
     horarioAyudantia: { dias: [3], horaInicio: "16:00", horaFin: "17:20", sala: "SALA X" },
@@ -31,7 +31,7 @@ export const INITIAL_SECTIONS: CourseSection[] = [
     codigo: "CIT3203_CA02",
     cursoNombre: "Proyecto en TICs II",
     nombre: "Sección 2",
-    profesor: "Claudio Meneses Silva",
+    profesor: "Cristian Osorio",
     ayudante: "Benjamín Morales Pizarro",
     horarioCatedra: { dias: [3], horaInicio: "10:00", horaFin: "13:00", sala: "SALA X" },
     horarioAyudantia: { dias: [3], horaInicio: "16:00", horaFin: "17:20", sala: "SALA X" },
@@ -48,7 +48,7 @@ export const INITIAL_SECTIONS: CourseSection[] = [
     codigo: "CIT3203_CA03",
     cursoNombre: "Proyecto en TICs II",
     nombre: "Sección 3",
-    profesor: "Leandro Lanza",
+    profesor: "Jorge Esteban Cruz León",
     ayudante: "Benjamín Morales Pizarro",
     horarioCatedra: { dias: [3], horaInicio: "17:00", horaFin: "20:00", sala: "SALA X" },
     horarioAyudantia: { dias: [3], horaInicio: "16:00", horaFin: "17:20", sala: "SALA X" },
@@ -82,7 +82,7 @@ export const INITIAL_SECTIONS: CourseSection[] = [
     codigo: "CIT3100_CA02",
     cursoNombre: "Arquitecturas Emergentes de Software",
     nombre: "Sección 2",
-    profesor: "Jorge Esteban Cruz León",
+    profesor: "Jorge Elliott",
     ayudante: "Benjamín Morales Pizarro",
     horarioCatedra: { dias: [3], horaInicio: "14:30", horaFin: "17:30", sala: "SALA X" },
     horarioAyudantia: { dias: [4], horaInicio: "16:00", horaFin: "17:20", sala: "SALA X" },
@@ -123,12 +123,12 @@ export function getCourseNameByCode(codigo?: string): string {
   return "Asignatura UDP";
 }
 
-const SECTIONS_STORAGE_KEY = "udp_course_sections_v2026_5secciones_ca03_leandro_lanza_v4";
+const SECTIONS_STORAGE_KEY = "udp_course_sections_v2026_5secciones_ca01_leandro_llanza_v5";
 
 export function getSavedSections(): CourseSection[] {
   if (typeof window === "undefined") return INITIAL_SECTIONS;
   try {
-    const raw = localStorage.getItem(SECTIONS_STORAGE_KEY) || localStorage.getItem("udp_course_sections_v2026_5secciones_ca03_fixed_v3");
+    const raw = localStorage.getItem(SECTIONS_STORAGE_KEY) || localStorage.getItem("udp_course_sections_v2026_5secciones_ca03_leandro_lanza_v4") || localStorage.getItem("udp_course_sections_v2026_5secciones_ca03_fixed_v3");
     if (!raw) return INITIAL_SECTIONS;
     const parsed = JSON.parse(raw);
     if (!Array.isArray(parsed) || parsed.length === 0) return INITIAL_SECTIONS;
@@ -146,10 +146,15 @@ export function getSavedSections(): CourseSection[] {
       const ayudRaw = (sec.horarioAyudantia?.dias || []).filter((d) => d >= 1 && d <= 5);
       const ayudDias = ayudRaw.length > 0 ? ayudRaw : (matchInit?.horarioAyudantia?.dias || [3]);
 
-      let prof = sec.profesor || matchInit?.profesor || "Docente UDP";
-      // Corrección específica para Sección 3: Prof. Leandro Lanza
-      if (sec.codigo?.includes("CA03") && (prof === "Jorge Esteban Cruz León" || prof === "Docente UDP")) {
-        prof = "Leandro Lanza";
+      let prof = sec.profesor || matchInit?.profesor;
+      if (sec.codigo === "CIT3203_CA01") {
+        prof = "Leandro Llanza";
+      } else if (sec.codigo === "CIT3203_CA03") {
+        prof = "Jorge Esteban Cruz León";
+      } else if (sec.codigo === "CIT3100_CA02") {
+        prof = "Jorge Elliott";
+      } else if (!prof || prof === "Docente UDP") {
+        prof = "No identificado";
       }
 
       return {
@@ -434,7 +439,7 @@ import {
 
 export { DEFAULT_ATTENDANCE_MAP, DEFAULT_STUDENT_WORK_RECORDS, DEFAULT_SESSION_OVERRIDES };
 
-const SESSION_OVERRIDES_KEY = "udp_session_overrides_v1";
+const SESSION_OVERRIDES_KEY = "udp_session_overrides_v2";
 
 export interface SessionOverride {
   estado: "programada" | "realizada" | "cancelada";
@@ -444,8 +449,14 @@ export interface SessionOverride {
 export function getSavedSessionOverrides(): Record<string, SessionOverride> {
   if (typeof window === "undefined") return DEFAULT_SESSION_OVERRIDES;
   try {
-    const raw = localStorage.getItem(SESSION_OVERRIDES_KEY);
+    const raw = localStorage.getItem(SESSION_OVERRIDES_KEY) || localStorage.getItem("udp_session_overrides_v1");
     const parsed = raw ? JSON.parse(raw) : {};
+    // Garantizar que la fecha de hoy 2026-10-07 NUNCA quede arrastrada como cancelada por caché antiguo
+    Object.keys(parsed).forEach((k) => {
+      if (k.includes("2026-10-07") && parsed[k]?.estado === "cancelada") {
+        delete parsed[k];
+      }
+    });
     return { ...DEFAULT_SESSION_OVERRIDES, ...parsed };
   } catch {
     return DEFAULT_SESSION_OVERRIDES;
@@ -460,11 +471,8 @@ export function saveSessionOverride(
   if (typeof window === "undefined") return;
   try {
     const current = getSavedSessionOverrides();
-    if (estado === "programada" && !motivoCancelacion) {
-      delete current[sessionId];
-    } else {
-      current[sessionId] = { estado, motivoCancelacion };
-    }
+    // Guardar explícitamente el estado seleccionado (incluso 'programada') para que sobreescriba cualquier valor por defecto
+    current[sessionId] = { estado, motivoCancelacion };
     localStorage.setItem(SESSION_OVERRIDES_KEY, JSON.stringify(current));
     window.dispatchEvent(new CustomEvent("udp_sessions_overrides_updated", { detail: current }));
   } catch (e) {

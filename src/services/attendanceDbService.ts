@@ -379,7 +379,14 @@ export async function fetchSectionsFromSupabase(): Promise<CourseSection[] | nul
       codigo: sec.code,
       cursoNombre: getCourseName(sec.code),
       nombre: sec.name,
-      profesor: sec.teacher_name || "Docente UDP",
+      profesor: (() => {
+        const t = sec.teacher_name?.trim();
+        if (sec.code === "CIT3203_CA01") return "Leandro Llanza";
+        if (sec.code === "CIT3203_CA02") return t || "Cristian Osorio";
+        if (sec.code === "CIT3203_CA03") return t || "Jorge Esteban Cruz León";
+        if (sec.code === "CIT3100_CA02") return t || "Jorge Elliott";
+        return t && t !== "Docente UDP" ? t : "No identificado";
+      })(),
       ayudante: sec.assistant_name || "Benjamín Morales Pizarro",
       horarioCatedra: {
         dias: sec.horario_catedra_dias || [3],

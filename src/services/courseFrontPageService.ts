@@ -70,9 +70,13 @@ export function getDefaultFrontPageData(courseId: number, courseCode: string, co
   const isCIT2206 = courseCode.includes("CIT2206") || courseName.toUpperCase().includes("GESTIÓN");
   const isCIT3100 = courseCode.includes("CIT3100") || courseName.toUpperCase().includes("ARQUITECTURAS");
 
-  const professorName = courseCode.includes("CA03")
-    ? "Prof. Leandro Lanza"
-    : "Prof. Jorge Esteban Cruz León";
+  const professorName = courseCode.includes("CA01")
+    ? "Prof. Leandro Llanza"
+    : courseCode.includes("CA02")
+    ? "Prof. Cristian Osorio"
+    : courseCode.includes("CA03")
+    ? "Prof. Jorge Esteban Cruz León"
+    : "No identificado";
 
   if (isCIT3203) {
     return {
@@ -95,7 +99,11 @@ export function getDefaultFrontPageData(courseId: number, courseCode: string, co
         {
           nombre: professorName,
           rol: "Profesor Titular",
-          email: courseCode.includes("CA03") ? "leandro.lanza@mail.udp.cl" : "jorge.cruz@mail.udp.cl",
+          email: courseCode.includes("CA01")
+            ? "leandro.llanza@mail.udp.cl"
+            : courseCode.includes("CA03")
+            ? "jorge.cruz@mail.udp.cl"
+            : "docencia.tics2@mail.udp.cl",
           horarioAtencion: "Lunes y Miércoles 16:30 - 17:30 (Previa coordinación)",
           salaAtencion: "Oficina Docente Edificio EIT, Toesca 1780",
         },

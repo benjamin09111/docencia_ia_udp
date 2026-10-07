@@ -806,12 +806,15 @@ export const TeacherAttendanceWorkspace: React.FC<TeacherAttendanceWorkspaceProp
       console.warn("Error cancelando sesión en Supabase:", err)
     );
 
-    setSessionsBySection((prev) => ({
-      ...prev,
-      [selectedSectionId]: (prev[selectedSectionId] || []).map((s) =>
-        s.id === sessionId ? { ...s, estado: "cancelada", motivoCancelacion: motivo } : s
-      ),
-    }));
+    setSessionsBySection((prev) => {
+      const next = { ...prev };
+      Object.keys(next).forEach((key) => {
+        next[key] = next[key].map((s) =>
+          s.id === sessionId ? { ...s, estado: "cancelada", motivoCancelacion: motivo } : s
+        );
+      });
+      return next;
+    });
 
     const sess = activeSessions.find((s) => s.id === sessionId);
     setQuickNotification({
@@ -829,12 +832,15 @@ export const TeacherAttendanceWorkspace: React.FC<TeacherAttendanceWorkspaceProp
       console.warn("Error reactivando sesión en Supabase:", err)
     );
 
-    setSessionsBySection((prev) => ({
-      ...prev,
-      [selectedSectionId]: (prev[selectedSectionId] || []).map((s) =>
-        s.id === sessionId ? { ...s, estado: "programada", motivoCancelacion: undefined } : s
-      ),
-    }));
+    setSessionsBySection((prev) => {
+      const next = { ...prev };
+      Object.keys(next).forEach((key) => {
+        next[key] = next[key].map((s) =>
+          s.id === sessionId ? { ...s, estado: "programada", motivoCancelacion: undefined } : s
+        );
+      });
+      return next;
+    });
 
     const sess = activeSessions.find((s) => s.id === sessionId);
     setQuickNotification({
@@ -1183,6 +1189,7 @@ export const TeacherAttendanceWorkspace: React.FC<TeacherAttendanceWorkspaceProp
         onMarkAllPresent={handleMarkAllPresent}
         onMarkAllAbsent={handleMarkAllAbsent}
         onOpenCancelModal={(sess) => setCancelModalSession(sess)}
+        onReactivateSession={handleReactivateSession}
         onToggleModality={handleToggleSessionModality}
         studentWorkRecords={studentWorkRecords}
         totalTrabajosRealizados={totalTrabajosRealizados}
