@@ -83,19 +83,13 @@ export const PublicAttendanceVisualView: React.FC<PublicAttendanceVisualViewProp
     setStudentWorkRecords(getSavedStudentWorkRecords());
     setTotalTrabajos(getSavedTotalTrabajos(selectedSection.id));
 
-    // Cargar alumnos desde caché local o API
-    const effectiveCourseId = selectedSection.codigo === "CIT3203_CA01" ? 44999 :
-      selectedSection.codigo === "CIT3203_CA02" ? 45002 :
-      selectedSection.codigo === "CIT3203_CA03" ? 47552 :
-      selectedSection.codigo === "CIT3100_CA02" ? 44988 : 44999;
+    // Cargar alumnos desde API Canvas
+    const courseIdMap: Record<string, number> = { CIT3203_CA01: 44999, CIT3203_CA02: 45002, CIT3203_CA03: 47552, CIT3100_CA02: 44988 };
+    const effectiveCourseId = courseIdMap[selectedSection.codigo] || 44999;
 
     fetch(`/api/canvas/courses/${effectiveCourseId}/students`)
       .then((res) => res.json())
-      .then((data) => {
-        if (Array.isArray(data) && data.length > 0) {
-          setStudents(data);
-        }
-      })
+      .then((data) => { if (Array.isArray(data) && data.length > 0) setStudents(data); })
       .catch(() => {});
 
     if (isSupabaseConfigured()) {
@@ -109,14 +103,13 @@ export const PublicAttendanceVisualView: React.FC<PublicAttendanceVisualViewProp
     }
   }, [selectedSection, courseCode]);
 
-  // Buscador por RUT y Filtro de Condición
+  // Buscador por Nombre y Filtro de Condición
   const [searchTerm, setSearchTerm] = useState("");
   const [conditionFilter, setConditionFilter] = useState<"all" | "ok" | "risk">("all");
-
   const normalizeRut = (rut: string) => (rut || "").toLowerCase().replace(/[^0-9k]/g, "");
 
   const studentSummaries: StudentVisualRow[] = useMemo(() => {
-    const rutQuery = normalizeRut(searchTerm);
+    const query = searchTerm.trim().toLowerCase();
 
     return students
       .map((st) => {
@@ -130,10 +123,14 @@ export const PublicAttendanceVisualView: React.FC<PublicAttendanceVisualViewProp
         const work = studentWorkRecords[st.canvas_id];
         const trabCount = work ? (work.trabajosRealizados ?? 0) : 0;
         const decimas = Math.round(trabCount * 0.2 * 10) / 10;
+        const fullName = `${st.nombres || ""} ${st.apellidos || ""}`.trim() || (st as any).name || st.rut || `Estudiante ${st.canvas_id}`;
 
         return {
           canvas_id: st.canvas_id,
-          rut: st.rut,
+          nombreCompleto: fullName,
+          nombres: st.nombres,
+          apellidos: st.apellidos,
+          rut: st.rut || "",
           asistidas,
           validas,
           pct,
@@ -143,7 +140,11 @@ export const PublicAttendanceVisualView: React.FC<PublicAttendanceVisualViewProp
         };
       })
       .filter((st) => {
-        if (rutQuery && !normalizeRut(st.rut).includes(rutQuery)) return false;
+        if (query) {
+          const matchName = st.nombreCompleto.toLowerCase().includes(query);
+          const matchRut = normalizeRut(st.rut || "").includes(normalizeRut(searchTerm));
+          if (!matchName && !matchRut) return false;
+        }
         if (conditionFilter === "ok" && !st.ok) return false;
         if (conditionFilter === "risk" && st.ok) return false;
         return true;
@@ -151,22 +152,13 @@ export const PublicAttendanceVisualView: React.FC<PublicAttendanceVisualViewProp
   }, [students, sessions, attendanceMap, studentWorkRecords, searchTerm, conditionFilter]);
 
   const highlightedStudent = useMemo(() => {
-    if (searchTerm.trim().length >= 3 && studentSummaries.length === 1) {
-      return studentSummaries[0];
-    }
+    if (searchTerm.trim().length >= 3 && studentSummaries.length === 1) return studentSummaries[0];
     return null;
   }, [searchTerm, studentSummaries]);
 
   if (!hasCheckedUnlock) return null;
-
-  // Si aún no ingresa el PIN de su sección, mostrar pantalla de bloqueo
   if (!isUnlocked) {
-    return (
-      <PublicAttendancePinLockScreen
-        section={selectedSection}
-        onUnlocked={() => setIsUnlocked(true)}
-      />
-    );
+    return <PublicAttendancePinLockScreen section={selectedSection} onUnlocked={() => setIsUnlocked(true)} />;
   }
 
   return (

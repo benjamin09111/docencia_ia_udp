@@ -63,7 +63,7 @@ export const PublicAttendancePinLockScreen: React.FC<PublicAttendancePinLockScre
             <span>Protección de Privacidad Estudiantil</span>
           </div>
           <p className="text-[11px] leading-relaxed">
-            Por confidencialidad, la planilla solo muestra RUTs y requiere el PIN semestral de tu sección para acceder.
+            Esta planilla es privada para tu curso y requiere el PIN semestral de tu sección para acceder.
           </p>
         </div>
 

@@ -13,7 +13,8 @@ interface PublicAttendanceVisualHeaderProps {
   conditionFilter: "all" | "ok" | "risk";
   onConditionChange: (filter: "all" | "ok" | "risk") => void;
   highlightedStudent: {
-    rut: string;
+    nombreCompleto?: string;
+    rut?: string;
     decimas: number;
     trabajosRealizados: number;
     pct: number;
@@ -53,8 +54,8 @@ export const PublicAttendanceVisualHeader: React.FC<PublicAttendanceVisualHeader
               <span className="text-[11px] font-mono text-[#008EE2] bg-blue-50 border border-blue-200 px-2 py-0.5 rounded font-bold">
                 {section.codigo}
               </span>
-              <span className="text-[11px] font-mono text-emerald-800 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded font-semibold flex items-center gap-1">
-                <ShieldCheck size={12} /> Anonimizada: Solo RUTs
+              <span className="text-[11px] font-mono text-blue-800 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded font-semibold flex items-center gap-1">
+                <ShieldCheck size={12} /> Nómina Oficial de Estudiantes
               </span>
             </div>
             <h1 className="text-lg sm:text-xl font-bold text-[#2D3B45] tracking-tight mt-0.5">
@@ -68,7 +69,7 @@ export const PublicAttendanceVisualHeader: React.FC<PublicAttendanceVisualHeader
         </div>
       </header>
 
-      {/* Buscador de RUT y Filtros */}
+      {/* Buscador de Estudiantes y Filtros */}
       <div className="bg-white border border-[#E0E3E6] rounded-[4px] p-3.5 shadow-xs space-y-3">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="relative flex-1 max-w-md">
@@ -77,8 +78,8 @@ export const PublicAttendanceVisualHeader: React.FC<PublicAttendanceVisualHeader
               type="text"
               value={searchTerm}
               onChange={(e) => onSearchChange(e.target.value)}
-              placeholder="Buscar por RUT (ej. 20.419...)"
-              className="w-full pl-9 pr-8 py-1.5 text-xs bg-gray-50 border border-gray-300 rounded-[4px] text-[#2D3B45] font-mono focus:bg-white focus:border-[#008EE2] focus:outline-hidden"
+              placeholder="Buscar estudiante por nombre o apellido..."
+              className="w-full pl-9 pr-8 py-1.5 text-xs bg-gray-50 border border-gray-300 rounded-[4px] text-[#2D3B45] focus:bg-white focus:border-[#008EE2] focus:outline-hidden"
             />
             {searchTerm && (
               <button
@@ -130,8 +131,8 @@ export const PublicAttendanceVisualHeader: React.FC<PublicAttendanceVisualHeader
               <span className="text-[10px] font-bold text-[#008EE2] uppercase tracking-wider block">
                 Ficha Personal de Asistencia (UDP)
               </span>
-              <h3 className="text-sm font-bold font-mono text-[#2D3B45]">
-                RUT: {highlightedStudent.rut}
+              <h3 className="text-sm font-bold text-[#2D3B45]">
+                {highlightedStudent.nombreCompleto || highlightedStudent.rut || "Estudiante"}
               </h3>
             </div>
 

@@ -6,6 +6,9 @@ import { Building2, Award } from "lucide-react";
 
 export interface StudentVisualRow {
   canvas_id: number;
+  nombreCompleto: string;
+  nombres?: string;
+  apellidos?: string;
   rut: string;
   asistidas: number;
   validas: number;
@@ -46,30 +49,17 @@ export const PublicAttendanceRosterMatrix: React.FC<PublicAttendanceRosterMatrix
         <table className="w-full text-left border-collapse text-xs min-w-[650px]">
           <thead className="sticky top-0 z-20 bg-[#2D3B45] text-white shadow-xs">
             <tr>
-              <th className="p-2.5 border-r border-[#1E272E] sticky left-0 z-30 bg-[#2D3B45] w-12 min-w-[48px] text-center text-[10px] font-bold">
-                #
-              </th>
-              <th className="p-2.5 border-r border-[#1E272E] sticky left-12 z-30 bg-[#2D3B45] w-[160px] min-w-[140px] text-xs font-bold">
-                RUT Estudiante
-              </th>
+              <th className="p-2.5 border-r border-[#1E272E] sticky left-0 z-30 bg-[#2D3B45] w-12 min-w-[48px] text-center text-[10px] font-bold">#</th>
+              <th className="p-2.5 border-r border-[#1E272E] sticky left-12 z-30 bg-[#2D3B45] w-[220px] min-w-[200px] text-xs font-bold">Estudiante</th>
               <th className="p-2 text-center border-r border-[#1E272E] w-[95px] min-w-[85px] text-[11px] font-bold bg-[#1E272E] text-amber-300">
-                <span className="flex items-center justify-center gap-1">
-                  <Award size={12} /> Trabajos
-                </span>
+                <span className="flex items-center justify-center gap-1"><Award size={12} /> Trabajos</span>
               </th>
-              <th className="p-2 text-center border-r border-[#1E272E] w-[85px] min-w-[75px] text-[11px] font-bold bg-[#1E272E] text-emerald-300">
-                Décimas
-              </th>
-
+              <th className="p-2 text-center border-r border-[#1E272E] w-[85px] min-w-[75px] text-[11px] font-bold bg-[#1E272E] text-emerald-300">Décimas</th>
               {sessions.map((sess) => {
                 const parts = sess.fecha.split("-");
                 const diaMes = parts.length === 3 ? `${parts[2]}/${parts[1]}` : sess.fecha;
                 return (
-                  <th
-                    key={sess.id}
-                    className="p-2 text-center border-r border-white/10 w-[55px] min-w-[48px] text-[11px] font-mono font-bold"
-                    title={`Ayudantía del ${sess.fecha} (${sess.diaSemana})`}
-                  >
+                  <th key={sess.id} className="p-2 text-center border-r border-white/10 w-[55px] min-w-[48px] text-[11px] font-mono font-bold" title={`Ayudantía del ${sess.fecha} (${sess.diaSemana})`}>
                     <div className="flex flex-col items-center justify-center leading-none">
                       <span>{diaMes}</span>
                       <span className="text-[9px] text-gray-300 font-sans mt-0.5">Ayu</span>
@@ -77,16 +67,9 @@ export const PublicAttendanceRosterMatrix: React.FC<PublicAttendanceRosterMatrix
                   </th>
                 );
               })}
-
-              <th className="p-2 text-center border-r border-[#1E272E] w-[58px] min-w-[52px] text-[11px] font-bold uppercase">
-                Asist.
-              </th>
-              <th className="p-2 text-center border-r border-[#1E272E] w-[55px] min-w-[50px] text-[11px] font-bold uppercase">
-                %
-              </th>
-              <th className="p-2 text-center w-[68px] min-w-[62px] text-[11px] font-bold uppercase">
-                Estado
-              </th>
+              <th className="p-2 text-center border-r border-[#1E272E] w-[58px] min-w-[52px] text-[11px] font-bold uppercase">Asist.</th>
+              <th className="p-2 text-center border-r border-[#1E272E] w-[55px] min-w-[50px] text-[11px] font-bold uppercase">%</th>
+              <th className="p-2 text-center w-[68px] min-w-[62px] text-[11px] font-bold uppercase">Estado</th>
             </tr>
           </thead>
 
@@ -108,13 +91,15 @@ export const PublicAttendanceRosterMatrix: React.FC<PublicAttendanceRosterMatrix
                     {idx + 1}
                   </td>
 
-                  {/* RUT (Sticky) - Sin Nombres para Privacidad */}
+                  {/* Nombre Estudiante (Sticky) */}
                   <td
-                    className={`p-2 sticky left-12 z-10 border-r border-gray-200 font-mono text-xs font-bold text-[#2D3B45] ${
+                    className={`p-2 sticky left-12 z-10 border-r border-gray-200 text-xs font-semibold text-[#2D3B45] ${
                       isHighlighted ? "bg-blue-100" : "bg-white group-hover:bg-blue-50"
                     }`}
                   >
-                    {st.rut}
+                    <span className="truncate block max-w-[210px]" title={st.nombreCompleto}>
+                      {st.nombreCompleto}
+                    </span>
                   </td>
 
                   {/* Trabajos Realizados */}
