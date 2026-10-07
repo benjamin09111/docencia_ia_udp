@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { UserRole } from "@/types";
-import { ShieldCheck, GraduationCap, School, CheckCircle2, Network } from "lucide-react";
+import { ShieldCheck, GraduationCap, School, CheckCircle2, Network, LogOut } from "lucide-react";
 import { FutureConnectionsModal } from "@/components/modules/common/FutureConnectionsModal";
 
 interface CanvasHeaderProps {
@@ -23,6 +23,13 @@ export const CanvasHeader: React.FC<CanvasHeaderProps> = ({
   userName = "Benjamín Morales Pizarro",
 }) => {
   const [showConnectionsModal, setShowConnectionsModal] = useState(false);
+
+  const handleLogout = async () => {
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+    } catch {}
+    window.location.href = "/login";
+  };
 
   return (
     <header className="h-16 bg-white border-b border-canvas-border-light px-3 sm:px-6 flex items-center justify-between shadow-canvas-card sticky top-0 z-20 gap-2">
@@ -129,6 +136,16 @@ export const CanvasHeader: React.FC<CanvasHeaderProps> = ({
               : "Estudiante UDP"}
           </span>
         </div>
+
+        <button
+          type="button"
+          onClick={handleLogout}
+          className="flex items-center gap-1.5 px-2 sm:px-2.5 py-1.5 rounded-[4px] text-xs font-semibold text-gray-500 hover:text-[#C8102E] hover:bg-red-50 border border-gray-200 hover:border-red-200 transition-colors cursor-pointer"
+          title="Cerrar sesión institucional y bloquear acceso"
+        >
+          <LogOut size={13} className="shrink-0" />
+          <span className="hidden sm:inline">Salir</span>
+        </button>
       </div>
 
       {/* Modal Futuras Conexiones */}
