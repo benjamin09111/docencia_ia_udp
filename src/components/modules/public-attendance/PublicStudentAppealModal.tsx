@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import { X, Send, Clock, CheckCircle2, AlertCircle, History, FileText, ShieldAlert } from "lucide-react";
+import { X, Send, Clock, CheckCircle2, AlertCircle, History, FileText } from "lucide-react";
 import { CourseSection, ClassSession, AttendanceAppeal } from "@/types/attendance";
 import { StudentRosterItem, getTodayDateStr } from "@/services/attendanceStore";
 import { createAppeal, getSavedAppeals } from "@/services/appealsStore";
@@ -125,11 +125,6 @@ export const PublicStudentAppealModal: React.FC<PublicStudentAppealModalProps> =
               <div>
                 <label className="block text-[11px] font-bold text-[#2D3B45] uppercase mb-1">4. Justificación:</label>
                 <input type="text" value={comentario} onChange={(e) => setComentario(e.target.value)} maxLength={150} className="w-full p-2 bg-gray-50 border border-gray-300 rounded-[4px] text-[#2D3B45]" />
-              </div>
-
-              <div className="p-2 bg-blue-50/70 border border-blue-200 rounded-[4px] flex items-center gap-1.5 text-[10px] text-[#0277BD]">
-                <ShieldAlert size={13} className="shrink-0 text-[#008EE2]" />
-                <span>Protección anti-spam: Máx. 1 apelación pendiente por fecha (30s cooldown).</span>
               </div>
 
               <div className="pt-2 flex justify-end gap-2">
