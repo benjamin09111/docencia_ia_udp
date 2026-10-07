@@ -1,25 +1,15 @@
 "use client";
 
 import React, { useState, useMemo, useEffect } from "react";
-import { CanvasCourse, CourseDeliverable, StudentExcelRow } from "@/types";
+import { CanvasCourse, CourseDeliverable, StudentExcelRow, StudentSubmission } from "@/types";
 import { CourseSection } from "@/types/attendance";
-import { CanvasBadge } from "@/components/canvas/CanvasBadge";
 import { CanvasButton } from "@/components/canvas/CanvasButton";
-import { CanvasActionMenu } from "@/components/canvas/CanvasActionMenu";
-import {
-  CanvasTable,
-  CanvasTableHeader,
-  CanvasTableRow,
-  CanvasTableCell,
-} from "@/components/canvas/CanvasTable";
 import { AutomatedCourseWorkspace } from "./teacher/AutomatedCourseWorkspace";
-import { TeacherAttendanceWorkspace } from "./teacher/TeacherAttendanceWorkspace";
-import { getSectionByCourseCode, formatSectionSchedule, getSavedSections, saveSections } from "@/services/attendanceStore";
+import { TeacherCoursesTable } from "./teacher/TeacherCoursesTable";
+import { getSavedSections, saveSections } from "@/services/attendanceStore";
 import { fetchSectionsFromSupabase, isSupabaseConfigured } from "@/services/attendanceDbService";
-import { BookOpen, Sparkles, CheckCircle2, ArrowRight, CalendarCheck, Calendar, Clock, Building2, TrendingUp, FileSpreadsheet } from "lucide-react";
+import { CheckCircle2, TrendingUp, FileSpreadsheet } from "lucide-react";
 import { ImportCourseExcelModal } from "./common/ImportCourseExcelModal";
-
-import { StudentSubmission } from "@/types";
 
 interface TeacherViewProps {
   canvasCourses: CanvasCourse[];
@@ -31,24 +21,7 @@ interface TeacherViewProps {
   onResolveAppeal?: (submissionId: string, action: "aceptar" | "ratificar") => void;
 }
 
-const getCourseDifficulty = (code: string) => {
-  if (code.includes("CIT1010") || code.includes("1010")) {
-    return {
-      nivel: "Baja",
-      color: "bg-emerald-50 text-emerald-700 border-emerald-200",
-    };
-  }
-  if (code.includes("CIT2206") || code.includes("2206")) {
-    return {
-      nivel: "Media",
-      color: "bg-amber-50 text-amber-700 border-amber-200",
-    };
-  }
-  return {
-    nivel: "Alta",
-    color: "bg-rose-50 text-[#C8102E] border-rose-200",
-  };
-};
+const COURSES_ORDER_STORAGE_KEY = "udp_teacher_courses_order_v1";
 
 export const TeacherView: React.FC<TeacherViewProps> = ({
   canvasCourses,
@@ -66,6 +39,15 @@ export const TeacherView: React.FC<TeacherViewProps> = ({
   const [notification, setNotification] = useState<string | null>(null);
   const [showImportModal, setShowImportModal] = useState<boolean>(false);
   const [customCourses, setCustomCourses] = useState<CanvasCourse[]>([]);
+  const [savedOrderIds, setSavedOrderIds] = useState<number[]>(() => {
+    if (typeof window === "undefined") return [];
+    try {
+      const raw = localStorage.getItem(COURSES_ORDER_STORAGE_KEY);
+      return raw ? JSON.parse(raw) : [];
+    } catch {
+      return [];
+    }
+  });
 
   // Estado sincronizado de secciones y horarios (modificados por Admin)
   const [sections, setSections] = useState<CourseSection[]>(() => getSavedSections());
@@ -141,8 +123,43 @@ export const TeacherView: React.FC<TeacherViewProps> = ({
       }
     });
 
+    // Aplicar orden personalizado arrastrado por el usuario
+    if (savedOrderIds && savedOrderIds.length > 0) {
+      return [...list].sort((a, b) => {
+        const idxA = savedOrderIds.indexOf(a.id);
+        const idxB = savedOrderIds.indexOf(b.id);
+        if (idxA === -1 && idxB === -1) return 0;
+        if (idxA === -1) return 1;
+        if (idxB === -1) return -1;
+        return idxA - idxB;
+      });
+    }
+
     return list;
-  }, [canvasCourses, customCourses]);
+  }, [canvasCourses, customCourses, savedOrderIds]);
+
+  const handleReorderCourses = (reordered: CanvasCourse[]) => {
+    const newOrderIds = reordered.map((c) => c.id);
+    setSavedOrderIds(newOrderIds);
+    try {
+      localStorage.setItem(COURSES_ORDER_STORAGE_KEY, JSON.stringify(newOrderIds));
+    } catch (e) {
+      console.error("Error saving courses order", e);
+    }
+    setNotification("Orden de asignaturas actualizado y guardado.");
+    setTimeout(() => setNotification(null), 2500);
+  };
+
+  const handleResetOrder = () => {
+    setSavedOrderIds([]);
+    try {
+      localStorage.removeItem(COURSES_ORDER_STORAGE_KEY);
+    } catch (e) {
+      console.error("Error clearing courses order", e);
+    }
+    setNotification("Disposición original predeterminada restaurada.");
+    setTimeout(() => setNotification(null), 2500);
+  };
 
   const openedCourse = useMemo(() => {
     if (!openedCourseId) return null;
@@ -259,25 +276,38 @@ export const TeacherView: React.FC<TeacherViewProps> = ({
         </div>
       </div>
 
-      {/* Filtro y Barra de Estado */}
+      {/* Filtro, Reset de Orden y Barra de Estado */}
       <div className="bg-white border border-[#E0E3E6] rounded-[4px] p-3 shadow-canvas-card flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <label className="inline-flex items-center gap-2.5 cursor-pointer select-none">
-          <input
-            type="checkbox"
-            checked={onlyAutomated}
-            onChange={(e) => setOnlyAutomated(e.target.checked)}
-            className="w-4 h-4 text-[#008EE2] rounded border-gray-300 focus:ring-[#008EE2] cursor-pointer"
-          />
-          <span className="text-xs font-semibold text-[#2D3B45]">
-            Mostrar solo cursos automatizados
-          </span>
-          <span className="px-1.5 py-0.5 bg-blue-50 text-[#008EE2] rounded-full text-[10px] font-bold border border-blue-200">
-            {automatedCoursesList.length} de {eligibleCourses.length}
-          </span>
-        </label>
+        <div className="flex items-center gap-3">
+          <label className="inline-flex items-center gap-2 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={onlyAutomated}
+              onChange={(e) => setOnlyAutomated(e.target.checked)}
+              className="w-4 h-4 text-[#008EE2] rounded border-gray-300 focus:ring-[#008EE2] cursor-pointer"
+            />
+            <span className="text-xs font-semibold text-[#2D3B45]">
+              Mostrar solo cursos automatizados
+            </span>
+            <span className="px-1.5 py-0.5 bg-blue-50 text-[#008EE2] rounded-full text-[10px] font-bold border border-blue-200">
+              {automatedCoursesList.length} de {eligibleCourses.length}
+            </span>
+          </label>
+
+          {savedOrderIds.length > 0 && (
+            <button
+              type="button"
+              onClick={handleResetOrder}
+              className="text-[11px] text-[#008EE2] hover:underline font-medium cursor-pointer"
+              title="Volver a la disposición original por defecto"
+            >
+              Restablecer orden
+            </button>
+          )}
+        </div>
 
         <span className="text-xs text-[#6B7780]">
-          Haz clic en cualquier curso para acceder a su panel de ayudantía y calificaciones
+          Haz clic en cualquier curso para acceder a su panel o arrástralo para ordenar
         </span>
       </div>
 
@@ -289,169 +319,19 @@ export const TeacherView: React.FC<TeacherViewProps> = ({
         </div>
       )}
 
-      {/* Tabla Unificada de Cursos de Canvas */}
-      <div className="space-y-3">
-        <CanvasTable tableClassName="min-w-[780px]">
-          <CanvasTableHeader>
-            <tr>
-              <th className="p-3">Código Canvas</th>
-              <th className="p-3">Nombre de Asignatura</th>
-              <th className="p-3 text-center">Dificultad</th>
-              <th className="p-3">Horario Ayudantía</th>
-              <th className="p-3 text-center">Agente Institucional</th>
-              <th className="p-3 text-center">Estado</th>
-              <th className="p-3 text-right w-16">Acciones</th>
-            </tr>
-          </CanvasTableHeader>
-          <tbody>
-            {displayedCourses.length === 0 ? (
-              <CanvasTableRow hoverable={false}>
-                <CanvasTableCell colSpan={7} align="center">
-                  <div className="py-8 text-center text-xs text-[#6B7780]">
-                    No se encontraron cursos automatizados. Desmarca el filtro para ver todos los cursos de Canvas.
-                  </div>
-                </CanvasTableCell>
-              </CanvasTableRow>
-            ) : (
-              displayedCourses.map((course: CanvasCourse) => {
-                const isAutomated = automatedCourseIds.includes(course.id);
-                const isMockCourse = course.code.includes("CIT1010");
-                const sec = getSectionByCourseCode(course.code, sections);
-                const sched = formatSectionSchedule(sec);
-                const diff = getCourseDifficulty(course.code);
-
-                return (
-                  <CanvasTableRow
-                    key={course.id}
-                    onClick={() => {
-                      if (isMockCourse) {
-                        setNotification("Curso Mock (PROGRAMACIÓN - Semestre 1): Demostración visual sin workspace activo para evaluar diferencia de dificultad.");
-                        setTimeout(() => setNotification(null), 3500);
-                        return;
-                      }
-                      if (isAutomated) {
-                        setOpenedCourseId(course.id);
-                      } else {
-                        handleAutomateCourse(course.id);
-                      }
-                    }}
-                    className={`cursor-pointer transition-colors group ${
-                      isMockCourse ? "hover:bg-amber-50/50 bg-gray-50/30" : "hover:bg-blue-50/60"
-                    }`}
-                  >
-                    <CanvasTableCell>
-                      <span className="font-mono font-bold text-[#008EE2] bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
-                        {course.code}
-                      </span>
-                    </CanvasTableCell>
-
-                    <CanvasTableCell>
-                      <div>
-                        <div className="flex items-center gap-1.5">
-                          <span className="font-bold text-[#2D3B45] text-xs group-hover:text-[#008EE2] transition-colors">
-                            {course.name}
-                          </span>
-                          {isMockCourse && (
-                            <span className="text-[10px] bg-amber-100 text-amber-800 font-bold px-1.5 py-0.2 rounded border border-amber-200">
-                              Mock 1er Año
-                            </span>
-                          )}
-                        </div>
-                        <span className="block text-[11px] text-[#6B7780]">
-                          Canvas ID: {course.id} • {sec.nombre} (Prof. {sec.profesor})
-                        </span>
-                      </div>
-                    </CanvasTableCell>
-
-                    {/* Columna Dificultad */}
-                    <CanvasTableCell align="center">
-                      <span className={`inline-block text-xs font-semibold px-2 py-0.5 rounded border ${diff.color}`}>
-                        {diff.nivel}
-                      </span>
-                    </CanvasTableCell>
-
-                    <CanvasTableCell>
-                      <div className="space-y-0.5 text-[11px] leading-tight min-w-[170px]">
-                        <div className="flex items-center gap-1.5 text-purple-950 font-medium">
-                          <span className="w-1.5 h-1.5 rounded-full bg-purple-600 shrink-0" />
-                          <span><strong>Ayudantía:</strong> {sched.ayudantia}</span>
-                        </div>
-                        <div className="text-[10px] text-[#6B7780] pl-3 font-mono flex items-center gap-1">
-                          <Building2 size={11} className="text-[#C8102E]" />
-                          <span>{sched.ayudantiaSala || "SALA X"}</span>
-                        </div>
-                      </div>
-                    </CanvasTableCell>
-
-                    <CanvasTableCell align="center">
-                      <span className="inline-flex items-center gap-1.5 text-xs text-[#2D3B45] bg-[#F5F6F8] px-2 py-0.5 rounded border border-[#E0E3E6]">
-                        <Sparkles size={12} className={isMockCourse ? "text-gray-400" : "text-[#C8102E]"} />
-                        <span>
-                          {isMockCourse
-                            ? "Agente Lógica Básica (CIT1010) [Mock]"
-                            : course.code.includes("CIT2206")
-                            ? "Agente Teoría Org (CIT2206)"
-                            : course.code.includes("CIT3100")
-                            ? "Agente Arq Cloud (CIT3100)"
-                            : "Agente PMBOK + Ágil (CIT3203)"}
-                        </span>
-                      </span>
-                    </CanvasTableCell>
-
-                    <CanvasTableCell align="center">
-                      {isMockCourse ? (
-                        <CanvasBadge variant="warning">Solo Mock</CanvasBadge>
-                      ) : isAutomated ? (
-                        <CanvasBadge variant="success">✓ Automatizado</CanvasBadge>
-                      ) : (
-                        <CanvasBadge variant="neutral">Sin Vincular</CanvasBadge>
-                      )}
-                    </CanvasTableCell>
-
-                    <CanvasTableCell align="right">
-                      <CanvasActionMenu
-                        ariaLabel={`Acciones para ${course.code}`}
-                        items={
-                          isMockCourse
-                            ? [
-                                {
-                                  label: "Curso Mock (Primer Año)",
-                                  icon: <BookOpen size={14} className="text-amber-600" />,
-                                  onClick: () => {
-                                    setNotification("Curso Mock (PROGRAMACIÓN - Semestre 1): Demostración visual sin workspace activo para evaluar diferencia de dificultad.");
-                                    setTimeout(() => setNotification(null), 3500);
-                                  },
-                                },
-                              ]
-                            : [
-                                {
-                                  label: "Ver panel",
-                                  icon: <ArrowRight size={14} className="text-[#008EE2]" />,
-                                  onClick: () =>
-                                    isAutomated
-                                      ? setOpenedCourseId(course.id)
-                                      : handleAutomateCourse(course.id),
-                                },
-                                ...(!isAutomated
-                                  ? [
-                                      {
-                                        label: "Automatizar con IA",
-                                        icon: <Sparkles size={14} className="text-[#C8102E]" />,
-                                        onClick: () => handleAutomateCourse(course.id),
-                                      },
-                                    ]
-                                  : []),
-                              ]
-                        }
-                      />
-                    </CanvasTableCell>
-                  </CanvasTableRow>
-                );
-              })
-            )}
-          </tbody>
-        </CanvasTable>
-      </div>
+      {/* Tabla Unificada de Cursos con Soporte Drag & Drop */}
+      <TeacherCoursesTable
+        courses={displayedCourses}
+        sections={sections}
+        automatedCourseIds={automatedCourseIds}
+        onOpenCourse={(id) => setOpenedCourseId(id)}
+        onAutomateCourse={handleAutomateCourse}
+        onReorderCourses={handleReorderCourses}
+        onMockNotice={() => {
+          setNotification("Curso Mock (PROGRAMACIÓN - Semestre 1): Demostración visual sin workspace activo para evaluar diferencia de dificultad.");
+          setTimeout(() => setNotification(null), 3500);
+        }}
+      />
 
       <ImportCourseExcelModal
         isOpen={showImportModal}

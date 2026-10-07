@@ -27,18 +27,27 @@ export const CanvasTableHeader: React.FC<{ children: React.ReactNode; className?
   );
 };
 
-export const CanvasTableRow: React.FC<{
+export interface CanvasTableRowProps extends React.HTMLAttributes<HTMLTableRowElement> {
   children: React.ReactNode;
   className?: string;
   onClick?: () => void;
   hoverable?: boolean;
-}> = ({ children, className = "", onClick, hoverable = true }) => {
+}
+
+export const CanvasTableRow: React.FC<CanvasTableRowProps> = ({
+  children,
+  className = "",
+  onClick,
+  hoverable = true,
+  ...props
+}) => {
   return (
     <tr
       onClick={onClick}
       className={`border-b border-[#E0E3E6] transition-colors last:border-b-0 ${
         hoverable ? "hover:bg-[#F9FAFB] cursor-pointer" : ""
       } ${className}`}
+      {...props}
     >
       {children}
     </tr>
