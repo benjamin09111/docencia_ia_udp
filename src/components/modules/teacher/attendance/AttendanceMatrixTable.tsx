@@ -65,7 +65,7 @@ export const AttendanceMatrixTable: React.FC<AttendanceMatrixTableProps> = ({
   const isAyud = filterType === "ayudantias";
   const hasSessionToday = Boolean(todaySessionInfo?.todaySession);
 
-  // Agrupar sesiones por mes cronológico
+  // Agrupar sesiones por mes cronológico (deduplicando por fecha para la planilla)
   const monthGroups = useMemo(() => {
     const groups: {
       key: string;
@@ -75,7 +75,17 @@ export const AttendanceMatrixTable: React.FC<AttendanceMatrixTableProps> = ({
       sessions: ClassSession[];
     }[] = [];
 
+    const uniqueSessionsByDate: ClassSession[] = [];
+    const seenDates = new Set<string>();
+
     sessions.forEach((s) => {
+      if (!seenDates.has(s.fecha)) {
+        seenDates.add(s.fecha);
+        uniqueSessionsByDate.push(s);
+      }
+    });
+
+    uniqueSessionsByDate.forEach((s) => {
       const parts = s.fecha.split("-");
       const key = `${parts[0]}-${parts[1]}`;
       const mNum = parts[1];
