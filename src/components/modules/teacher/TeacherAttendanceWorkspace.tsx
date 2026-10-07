@@ -301,7 +301,7 @@ export const TeacherAttendanceWorkspace: React.FC<TeacherAttendanceWorkspaceProp
     });
 
     saveStudentWorkRecordToSupabase(
-      selectedSection.codigo || courseCode,
+      selectedSection?.codigo || courseCode,
       studentId,
       decimas,
       trabajosRealizados
@@ -444,7 +444,7 @@ export const TeacherAttendanceWorkspace: React.FC<TeacherAttendanceWorkspaceProp
           await syncStudentsAndSessionsToSupabase(sectionId, sectionStudents, activeSessions);
 
           // Cargar cualquier asistencia previamente guardada en Supabase y fusionar sin perder datos
-          const cloudMap = await fetchAttendanceMapFromSupabase(selectedSection.codigo || courseCode);
+          const cloudMap = await fetchAttendanceMapFromSupabase(selectedSection?.codigo || courseCode);
           if (isMounted && Object.keys(cloudMap).length > 0) {
             setAttendanceMap((prev) => {
               const merged = { ...prev, ...cloudMap };
@@ -454,7 +454,7 @@ export const TeacherAttendanceWorkspace: React.FC<TeacherAttendanceWorkspaceProp
           }
 
           // Cargar cualquier registro de décimas y trabajos guardado en Supabase
-          const cloudWorkRecords = await fetchStudentWorkRecordsFromSupabase(selectedSection.codigo || courseCode);
+          const cloudWorkRecords = await fetchStudentWorkRecordsFromSupabase(selectedSection?.codigo || courseCode);
           if (isMounted && Object.keys(cloudWorkRecords).length > 0) {
             setStudentWorkRecords((prev) => {
               const merged = { ...prev, ...cloudWorkRecords };
@@ -479,7 +479,7 @@ export const TeacherAttendanceWorkspace: React.FC<TeacherAttendanceWorkspaceProp
   useEffect(() => {
     if (!isSupabaseConfigured()) return;
     let isMounted = true;
-    const secCode = selectedSection.codigo || courseCode;
+    const secCode = selectedSection?.codigo || courseCode;
 
     (async () => {
       try {
@@ -504,8 +504,8 @@ export const TeacherAttendanceWorkspace: React.FC<TeacherAttendanceWorkspaceProp
             return {
               ...prev,
               [selectedSectionId]: sorted,
-              [selectedSection.id]: sorted,
-              [selectedSection.codigo]: sorted,
+              ...(selectedSection?.id ? { [selectedSection.id]: sorted } : {}),
+              ...(selectedSection?.codigo ? { [selectedSection.codigo]: sorted } : {}),
             };
           });
         }
@@ -517,7 +517,7 @@ export const TeacherAttendanceWorkspace: React.FC<TeacherAttendanceWorkspaceProp
     return () => {
       isMounted = false;
     };
-  }, [sections, selectedSection.codigo, selectedSection.id, selectedSectionId, courseCode]);
+  }, [sections, selectedSection?.codigo, selectedSection?.id, selectedSectionId, courseCode]);
 
 
   // Polling automático cada 6 segundos desde Supabase para reflejar marcajes móviles en vivo en la sala
@@ -528,7 +528,7 @@ export const TeacherAttendanceWorkspace: React.FC<TeacherAttendanceWorkspaceProp
         // Si el profesor/ayudante editó localmente hace menos de 6 segundos, proteger el estado local
         if (Date.now() - lastLocalEditTimeRef.current < 6000) return;
 
-        const cloudMap = await fetchAttendanceMapFromSupabase(selectedSection.codigo || courseCode);
+        const cloudMap = await fetchAttendanceMapFromSupabase(selectedSection?.codigo || courseCode);
         if (Object.keys(cloudMap).length > 0) {
           setAttendanceMap((prev) => {
             const hasChanges = Object.keys(cloudMap).some((k) => prev[k] !== cloudMap[k]);
@@ -542,7 +542,7 @@ export const TeacherAttendanceWorkspace: React.FC<TeacherAttendanceWorkspaceProp
     }, 6000);
 
     return () => clearInterval(interval);
-  }, [selectedSection.codigo, courseCode]);
+  }, [selectedSection?.codigo, courseCode]);
 
   // Calcular resúmenes de asistencia por alumno (evaluadas sobre clases realizadas hasta la fecha actual)
   const summaries: StudentAttendanceSummary[] = useMemo(() => {
