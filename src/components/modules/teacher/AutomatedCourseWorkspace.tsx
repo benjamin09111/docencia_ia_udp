@@ -2,14 +2,20 @@
 
 import React, { useState, useMemo, useEffect } from "react";
 import { CanvasCourse, CourseDeliverable, StudentExcelRow, StudentSubmission } from "@/types";
-import { CourseSection } from "@/types/attendance";
+import { CourseSection, ClassSession } from "@/types/attendance";
 import { CanvasBadge } from "@/components/canvas/CanvasBadge";
 import { CanvasButton } from "@/components/canvas/CanvasButton";
 import { CourseMetricsView } from "./CourseMetricsView";
 import { CourseDeliverablesView } from "./CourseDeliverablesView";
 import { CourseActivitiesView } from "./CourseActivitiesView";
 import { TeacherAttendanceWorkspace } from "./TeacherAttendanceWorkspace";
-import { getSectionByCourseCode, formatSectionSchedule, getSavedSections } from "@/services/attendanceStore";
+import {
+  getSectionByCourseCode,
+  formatSectionSchedule,
+  getSavedSections,
+  generateSemesterSessions,
+  StudentRosterItem,
+} from "@/services/attendanceStore";
 import { fetchSectionsFromSupabase, isSupabaseConfigured } from "@/services/attendanceDbService";
 import {
   FileSpreadsheet,
@@ -39,6 +45,8 @@ import {
   Edit3,
   Lock,
   Bot,
+  Users,
+  Zap,
 } from "lucide-react";
 import { CourseHomePageView } from "./CourseHomePageView";
 import { CourseEvaluacionesView } from "./evaluaciones/CourseEvaluacionesView";
@@ -46,6 +54,8 @@ import { CourseSolemnesView } from "./CourseSolemnesView";
 import { CourseCronogramaView } from "./CourseCronogramaView";
 import { CourseAnnouncementsView } from "./CourseAnnouncementsView";
 import { CourseAgentMiniYoView } from "./CourseAgentMiniYoView";
+import { CourseGroupsWorkspace } from "./groups/CourseGroupsWorkspace";
+import { CourseAutomationsWorkspace } from "./automations/CourseAutomationsWorkspace";
 import { exportAnonymousGradesToExcel } from "@/services/excelExportService";
 
 interface AutomatedCourseWorkspaceProps {
@@ -76,6 +86,8 @@ export const AutomatedCourseWorkspace: React.FC<AutomatedCourseWorkspaceProps> =
     | "cronograma"
     | "anuncios"
     | "asistencia"
+    | "grupos"
+    | "automatizaciones"
     | "excel"
     | "metricas"
     | "entregables"
@@ -171,6 +183,21 @@ export const AutomatedCourseWorkspace: React.FC<AutomatedCourseWorkspaceProps> =
       return name.includes(cleanSearch) || (s.rut && s.rut.replace(/[\.\-\s]/g, "").toLowerCase().includes(cleanSearch));
     });
   }, [estudiantesExcel, excelRutFilter]);
+
+  const rosterStudents: StudentRosterItem[] = useMemo(() => {
+    return estudiantesExcel.map((st) => ({
+      canvas_id: st.canvas_id,
+      nombres: st.nombres,
+      apellidos: st.apellidos,
+      rut: st.rut,
+      email: st.email || "",
+      seccionId: section.id,
+    }));
+  }, [estudiantesExcel, section.id]);
+
+  const courseSessions: ClassSession[] = useMemo(() => {
+    return generateSemesterSessions(section);
+  }, [section]);
 
   return (
     <div className="space-y-5">
@@ -308,6 +335,30 @@ export const AutomatedCourseWorkspace: React.FC<AutomatedCourseWorkspaceProps> =
           </button>
 
           <button
+            onClick={() => setActiveTab("grupos")}
+            className={`pb-2.5 px-1 border-b-2 transition-all flex items-center gap-1.5 shrink-0 whitespace-nowrap cursor-pointer ${
+              activeTab === "grupos"
+                ? "border-[#008EE2] text-[#008EE2] font-bold"
+                : "border-transparent text-[#6B7780] hover:text-[#2D3B45]"
+            }`}
+          >
+            <Users size={14} />
+            <span>Grupos</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab("automatizaciones")}
+            className={`pb-2.5 px-1 border-b-2 transition-all flex items-center gap-1.5 shrink-0 whitespace-nowrap cursor-pointer ${
+              activeTab === "automatizaciones"
+                ? "border-[#008EE2] text-[#008EE2] font-bold"
+                : "border-transparent text-[#6B7780] hover:text-[#2D3B45]"
+            }`}
+          >
+            <Zap size={14} className="text-amber-500" />
+            <span>Automatizaciones</span>
+          </button>
+
+          <button
             onClick={() => setActiveTab("excel")}
             className={`pb-2.5 px-1 border-b-2 transition-all flex items-center gap-1.5 shrink-0 whitespace-nowrap ${
               activeTab === "excel"
@@ -399,6 +450,26 @@ export const AutomatedCourseWorkspace: React.FC<AutomatedCourseWorkspaceProps> =
           canvasCourseId={course.id}
           estudiantesExcel={estudiantesExcel}
           onUpdateGrade={onUpdateGrade}
+        />
+      )}
+
+      {/* TAB GRUPOS DE TRABAJO (Canvas Sync & Agrupación) */}
+      {activeTab === "grupos" && (
+        <CourseGroupsWorkspace
+          courseCode={course.code}
+          courseName={course.name}
+          canvasCourseId={course.id}
+          students={rosterStudents}
+          sectionId={section.id}
+        />
+      )}
+
+      {/* TAB MOTOR DE AUTOMATIZACIONES Y REGLAS */}
+      {activeTab === "automatizaciones" && (
+        <CourseAutomationsWorkspace
+          courseCode={course.code}
+          courseName={course.name}
+          sessions={courseSessions}
         />
       )}
 

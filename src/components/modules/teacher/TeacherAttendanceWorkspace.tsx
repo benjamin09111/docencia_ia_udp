@@ -35,6 +35,9 @@ import {
   getSectionVisualPin,
 } from "@/services/attendanceStore";
 import { getSavedAppeals } from "@/services/appealsStore";
+import { getSavedRules } from "@/services/automationsStore";
+import { getSavedGroups } from "@/services/groupsStore";
+import { evaluateSharedAttendanceRule } from "@/utils/rulesEngine";
 import { exportAttendanceToExcel, AttendanceExportScope } from "@/services/excelExportService";
 import {
   syncCourseAndSectionToSupabase,
@@ -67,6 +70,7 @@ import {
   MapPin,
   Clock,
   FileSpreadsheet,
+  Zap,
 } from "lucide-react";
 import { getPublicCheckinUrl, getPublicVisualUrl } from "@/utils/urlHelper";
 import { StudentExcelRow } from "@/types";
@@ -818,6 +822,43 @@ export const TeacherAttendanceWorkspace: React.FC<TeacherAttendanceWorkspaceProp
     }
   };
 
+  // Ejecutar reglas de asistencia compartida (quórum grupal) para la sección
+  const handleExecuteSharedAttendanceRules = () => {
+    lastLocalEditTimeRef.current = Date.now();
+    const rules = getSavedRules(courseCode);
+    const groups = getSavedGroups(courseCode, selectedSectionId);
+    let currentMap = { ...attendanceMap };
+    let totalBenefited = 0;
+    const allBatch: Array<{ session_code: string; student_canvas_id: number; value: number }> = [];
+
+    rules.filter((r) => r.enabled).forEach((rule) => {
+      const outcome = evaluateSharedAttendanceRule(rule, groups, activeSessions, currentMap);
+      currentMap = outcome.updatedAttendanceMap;
+      totalBenefited += outcome.modificationsCount;
+      allBatch.push(...outcome.batchPayload);
+    });
+
+    if (totalBenefited > 0) {
+      setAttendanceMap(currentMap);
+      saveAttendanceMap(currentMap);
+      if (allBatch.length > 0) {
+        saveAttendanceBatchToSupabase(allBatch).catch((err) =>
+          console.warn("Error guardando quórum grupal en Supabase:", err)
+        );
+      }
+      setQuickNotification({
+        type: "success",
+        message: `⚡ Regla de asistencia compartida aplicada: ${totalBenefited} asistencias completadas por quórum grupal.`,
+      });
+    } else {
+      setQuickNotification({
+        type: "info",
+        message: "No hay alumnos pendientes por completar: los grupos con quórum ya están al día.",
+      });
+    }
+    setTimeout(() => setQuickNotification(null), 5000);
+  };
+
   // Alternar modalidad Online / Presencial por sesión (P <-> O)
   const handleToggleSessionModality = (sessionId: string) => {
     const currentSessions = sessionsBySection[selectedSectionId] || [];
@@ -1222,36 +1263,50 @@ export const TeacherAttendanceWorkspace: React.FC<TeacherAttendanceWorkspaceProp
       )}
 
       {/* Sub-Pestañas: Matriz de Asistencia vs Módulo de Apelaciones */}
-      <div className="flex items-center gap-2 border-b border-gray-200 bg-white px-3 pt-2 rounded-t-[4px]">
-        <button
-          type="button"
-          onClick={() => setAttendanceSubTab("matriz")}
-          className={`pb-2 px-2 text-xs font-bold border-b-2 flex items-center gap-1.5 transition-colors cursor-pointer ${
-            attendanceSubTab === "matriz"
-              ? "border-[#008EE2] text-[#008EE2]"
-              : "border-transparent text-[#6B7780] hover:text-[#2D3B45]"
-          }`}
-        >
-          <FileSpreadsheet size={13} />
-          <span>Planilla de Asistencia (Matriz)</span>
-        </button>
-        <button
-          type="button"
-          onClick={() => setAttendanceSubTab("apelaciones")}
-          className={`pb-2 px-2 text-xs font-bold border-b-2 flex items-center gap-1.5 transition-colors cursor-pointer ${
-            attendanceSubTab === "apelaciones"
-              ? "border-[#C8102E] text-[#C8102E]"
-              : "border-transparent text-[#6B7780] hover:text-[#2D3B45]"
-          }`}
-        >
-          <Clock size={13} />
-          <span>Módulo de Apelaciones</span>
-          {pendingAppealsCount > 0 && (
-            <span className="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-[#C8102E] text-white">
-              {pendingAppealsCount}
-            </span>
-          )}
-        </button>
+      <div className="flex items-center justify-between border-b border-gray-200 bg-white px-3 pt-2 rounded-t-[4px] flex-wrap gap-2">
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setAttendanceSubTab("matriz")}
+            className={`pb-2 px-2 text-xs font-bold border-b-2 flex items-center gap-1.5 transition-colors cursor-pointer ${
+              attendanceSubTab === "matriz"
+                ? "border-[#008EE2] text-[#008EE2]"
+                : "border-transparent text-[#6B7780] hover:text-[#2D3B45]"
+            }`}
+          >
+            <FileSpreadsheet size={13} />
+            <span>Planilla de Asistencia (Matriz)</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setAttendanceSubTab("apelaciones")}
+            className={`pb-2 px-2 text-xs font-bold border-b-2 flex items-center gap-1.5 transition-colors cursor-pointer ${
+              attendanceSubTab === "apelaciones"
+                ? "border-[#C8102E] text-[#C8102E]"
+                : "border-transparent text-[#6B7780] hover:text-[#2D3B45]"
+            }`}
+          >
+            <Clock size={13} />
+            <span>Módulo de Apelaciones</span>
+            {pendingAppealsCount > 0 && (
+              <span className="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-[#C8102E] text-white">
+                {pendingAppealsCount}
+              </span>
+            )}
+          </button>
+        </div>
+
+        {attendanceSubTab === "matriz" && (
+          <button
+            type="button"
+            onClick={handleExecuteSharedAttendanceRules}
+            className="mb-1.5 px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 rounded-[3px] text-[11px] font-bold flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs"
+            title="Aplica automáticamente la regla de asistencia compartida si 2 o más integrantes del grupo asistieron"
+          >
+            <Zap size={13} className="text-amber-600" />
+            <span>⚡ Aplicar Quórum Grupal (Sección 1)</span>
+          </button>
+        )}
       </div>
 
       {attendanceSubTab === "apelaciones" ? (
