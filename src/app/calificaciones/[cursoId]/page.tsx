@@ -25,6 +25,8 @@ import { StudentExcelRow } from "@/types";
 import { initialCourseData, getStoredCourseGrades } from "@/services/courseStore";
 import { getSavedSections, getSectionByCourseCode } from "@/services/attendanceStore";
 import { exportAnonymousGradesToExcel } from "@/services/excelExportService";
+import { getHiddenColumns } from "@/services/gradesVisibilityStore";
+import { EyeOff } from "lucide-react";
 
 interface PublicGradesPageProps {
   params: Promise<{ cursoId: string }>;
@@ -37,6 +39,7 @@ export default function PublicGradesPage({ params }: PublicGradesPageProps) {
   const [grades, setGrades] = useState<StudentExcelRow[]>([]);
   const [rutQuery, setRutQuery] = useState("");
   const [copiedLink, setCopiedLink] = useState(false);
+  const [hiddenCols, setHiddenCols] = useState<Record<string, boolean>>(() => getHiddenColumns(courseCode));
 
   // Cargar calificaciones sincronizadas desde store / localStorage
   useEffect(() => {
@@ -47,15 +50,18 @@ export default function PublicGradesPage({ params }: PublicGradesPageProps) {
       } else {
         setGrades(initialCourseData.estudiantes_excel);
       }
+      setHiddenCols(getHiddenColumns(courseCode));
     };
 
     loadData();
 
     const handleUpdate = () => loadData();
     window.addEventListener("udp_grades_updated", handleUpdate);
+    window.addEventListener("udp_hidden_columns_updated", handleUpdate);
     window.addEventListener("storage", handleUpdate);
     return () => {
       window.removeEventListener("udp_grades_updated", handleUpdate);
+      window.removeEventListener("udp_hidden_columns_updated", handleUpdate);
       window.removeEventListener("storage", handleUpdate);
     };
   }, [courseCode]);
@@ -380,16 +386,30 @@ export default function PublicGradesPage({ params }: PublicGradesPageProps) {
               <thead>
                 <tr className="bg-gray-100 text-gray-700 font-bold border-b border-gray-300 text-[11px] uppercase tracking-wider">
                   <th className="p-2.5 border-r border-gray-300 w-36">RUT</th>
-                  <th className="p-2.5 border-r border-gray-300 text-center bg-blue-50/70">
-                    Informe Ini (20%)
+                  <th className={`p-2.5 border-r border-gray-300 text-center ${hiddenCols["solemne_1"] ? "bg-amber-100/50" : "bg-blue-50/70"}`}>
+                    <div>Informe Ini (20%)</div>
+                    {hiddenCols["solemne_1"] && <span className="text-[9px] text-amber-800 font-bold block normal-case">En revisión</span>}
                   </th>
-                  <th className="p-2.5 border-r border-gray-300 text-center bg-purple-50/70">
-                    +Décimas Ayud.
+                  <th className={`p-2.5 border-r border-gray-300 text-center ${hiddenCols["decimas"] ? "bg-amber-100/50" : "bg-purple-50/70"}`}>
+                    <div>+Décimas Ayud.</div>
+                    {hiddenCols["decimas"] && <span className="text-[9px] text-amber-800 font-bold block normal-case">En revisión</span>}
                   </th>
-                  <th className="p-2.5 border-r border-gray-300 text-center">Solemne (20%)</th>
-                  <th className="p-2.5 border-r border-gray-300 text-center">Avance 1 (20%)</th>
-                  <th className="p-2.5 border-r border-gray-300 text-center">Avance 2 (20%)</th>
-                  <th className="p-2.5 border-r border-gray-300 text-center">Final (20%)</th>
+                  <th className={`p-2.5 border-r border-gray-300 text-center ${hiddenCols["solemne_2"] ? "bg-amber-100/50" : ""}`}>
+                    <div>Solemne (20%)</div>
+                    {hiddenCols["solemne_2"] && <span className="text-[9px] text-amber-800 font-bold block normal-case">En revisión</span>}
+                  </th>
+                  <th className={`p-2.5 border-r border-gray-300 text-center ${hiddenCols["avance_1"] ? "bg-amber-100/50" : ""}`}>
+                    <div>Avance 1 (20%)</div>
+                    {hiddenCols["avance_1"] && <span className="text-[9px] text-amber-800 font-bold block normal-case">En revisión</span>}
+                  </th>
+                  <th className={`p-2.5 border-r border-gray-300 text-center ${hiddenCols["avance_2"] ? "bg-amber-100/50" : ""}`}>
+                    <div>Avance 2 (20%)</div>
+                    {hiddenCols["avance_2"] && <span className="text-[9px] text-amber-800 font-bold block normal-case">En revisión</span>}
+                  </th>
+                  <th className={`p-2.5 border-r border-gray-300 text-center ${hiddenCols["final"] ? "bg-amber-100/50" : ""}`}>
+                    <div>Final (20%)</div>
+                    {hiddenCols["final"] && <span className="text-[9px] text-amber-800 font-bold block normal-case">En revisión</span>}
+                  </th>
                   <th className="p-2.5 border-r border-gray-300 text-center">Asist %</th>
                   <th className="p-2.5 border-r border-gray-300 text-center font-extrabold bg-yellow-100/60">
                     Nota Final
@@ -422,24 +442,48 @@ export default function PublicGradesPage({ params }: PublicGradesPageProps) {
                           {row.rut}
                         </td>
                         <td className="p-2 text-center border-r border-gray-200 bg-blue-50/30 font-medium">
-                          {row.solemne_1.toFixed(1)}
+                          {hiddenCols["solemne_1"] ? (
+                            <span className="text-gray-400 italic text-[11px]">En revisión</span>
+                          ) : (
+                            row.solemne_1.toFixed(1)
+                          )}
                         </td>
                         <td className="p-2 text-center border-r border-gray-200 bg-purple-50/30">
-                          <span className="font-bold text-purple-800 px-2 py-0.5 bg-purple-100 rounded text-[11px]">
-                            +{row.decimas_act1.toFixed(1)}
-                          </span>
+                          {hiddenCols["decimas"] ? (
+                            <span className="text-gray-400 italic text-[11px]">—</span>
+                          ) : (
+                            <span className="font-bold text-purple-800 px-2 py-0.5 bg-purple-100 rounded text-[11px]">
+                              +{row.decimas_act1.toFixed(1)}
+                            </span>
+                          )}
                         </td>
                         <td className="p-2.5 text-center border-r border-gray-200 font-medium">
-                          {row.solemne_2.toFixed(1)}
+                          {hiddenCols["solemne_2"] ? (
+                            <span className="text-gray-400 italic text-[11px]">En revisión</span>
+                          ) : (
+                            row.solemne_2.toFixed(1)
+                          )}
                         </td>
                         <td className="p-2.5 text-center border-r border-gray-200 text-gray-600">
-                          6.0
+                          {hiddenCols["avance_1"] ? (
+                            <span className="text-gray-400 italic text-[11px]">En revisión</span>
+                          ) : (
+                            "6.0"
+                          )}
                         </td>
                         <td className="p-2.5 text-center border-r border-gray-200 text-gray-600">
-                          5.8
+                          {hiddenCols["avance_2"] ? (
+                            <span className="text-gray-400 italic text-[11px]">En revisión</span>
+                          ) : (
+                            "5.8"
+                          )}
                         </td>
                         <td className="p-2.5 text-center border-r border-gray-200 font-medium">
-                          {row.taller_proyecto.toFixed(1)}
+                          {hiddenCols["final"] ? (
+                            <span className="text-gray-400 italic text-[11px]">En revisión</span>
+                          ) : (
+                            row.taller_proyecto.toFixed(1)
+                          )}
                         </td>
                         <td className="p-2.5 text-center border-r border-gray-200 font-semibold">
                           <span

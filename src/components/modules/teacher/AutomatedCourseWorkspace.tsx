@@ -56,6 +56,7 @@ import { CourseAnnouncementsView } from "./CourseAnnouncementsView";
 import { CourseAgentMiniYoView } from "./CourseAgentMiniYoView";
 import { CourseGroupsWorkspace } from "./groups/CourseGroupsWorkspace";
 import { CourseAutomationsWorkspace } from "./automations/CourseAutomationsWorkspace";
+import { TeacherGradebookTableView } from "./gradebook/TeacherGradebookTableView";
 import { exportAnonymousGradesToExcel } from "@/services/excelExportService";
 
 interface AutomatedCourseWorkspaceProps {
@@ -645,73 +646,16 @@ export const AutomatedCourseWorkspace: React.FC<AutomatedCourseWorkspaceProps> =
             </div>
           </div>
 
-          <div className={`overflow-x-auto border rounded-[4px] transition-colors ${isEditingExcel ? "border-blue-400 ring-1 ring-blue-300" : "border-gray-300"}`}>
-            <table className="w-full text-left text-xs border-collapse min-w-[800px]">
-              <thead>
-                <tr className="bg-gray-100 text-gray-700 font-bold border-b border-gray-300 text-[11px] uppercase">
-                  <th className="p-2.5 border-r border-gray-300 w-48">Estudiante</th>
-                  <th className="p-2.5 border-r border-gray-300 text-center bg-blue-50/70">Informe Ini (20%)</th>
-                  <th className="p-2.5 border-r border-gray-300 text-center bg-purple-50/70">+Décimas Ayud.</th>
-                  <th className="p-2.5 border-r border-gray-300 text-center">Solemne (20%)</th>
-                  <th className="p-2.5 border-r border-gray-300 text-center">Avance 1 (20%)</th>
-                  <th className="p-2.5 border-r border-gray-300 text-center">Avance 2 (20%)</th>
-                  <th className="p-2.5 border-r border-gray-300 text-center">Final (20%)</th>
-                  <th className="p-2.5 border-r border-gray-300 text-center">Asist %</th>
-                  <th className="p-2.5 border-r border-gray-300 text-center font-extrabold bg-yellow-100/60">Nota Final</th>
-                  <th className="p-2.5 text-center">Estado</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredExcelStudents.length === 0 ? (
-                  <tr>
-                    <td colSpan={10} className="p-6 text-center text-gray-500 text-xs">
-                      No se encontraron estudiantes con el criterio de búsqueda.
-                    </td>
-                  </tr>
-                ) : (
-                  filteredExcelStudents.map((row) => (
-                    <tr key={row.canvas_id} className="border-b border-gray-200 hover:bg-gray-50/80">
-                      {/* Nombre completo */}
-                      <td className="p-2.5 font-semibold text-[#2D3B45] border-r border-gray-200">
-                        {row.nombres} {row.apellidos}
-                      </td>
-                      <td className="p-1.5 text-center border-r border-gray-200 bg-blue-50/30">
-                        {isEditingExcel ? (
-                          <input
-                            type="number"
-                            step="0.1"
-                            min="1.0"
-                            max="7.0"
-                            value={row.solemne_1}
-                            onChange={(e) => onUpdateGrade(row.canvas_id, "solemne_1", parseFloat(e.target.value) || 1.0)}
-                            className="w-14 text-center p-1 border border-blue-400 bg-white rounded font-bold text-xs focus:ring-1 focus:ring-[#008EE2]"
-                          />
-                        ) : (
-                          <span className="font-semibold text-gray-800">{row.solemne_1.toFixed(1)}</span>
-                        )}
-                      </td>
-                      <td className="p-1.5 text-center border-r border-gray-200 bg-purple-50/30">
-                        <span className="font-bold text-purple-800 px-2 py-0.5 bg-purple-100 rounded text-[11px]">
-                          +{row.decimas_act1.toFixed(1)}
-                        </span>
-                      </td>
-                      <td className="p-2.5 text-center border-r border-gray-200">{row.solemne_2.toFixed(1)}</td>
-                      <td className="p-2.5 text-center border-r border-gray-200">6.0</td>
-                      <td className="p-2.5 text-center border-r border-gray-200">5.8</td>
-                      <td className="p-2.5 text-center border-r border-gray-200">{row.taller_proyecto.toFixed(1)}</td>
-                      <td className="p-2.5 text-center border-r border-gray-200 font-semibold">{row.asistencia_pct}%</td>
-                      <td className="p-2.5 text-center font-extrabold text-xs bg-yellow-50 border-r border-gray-200">{row.nota_final.toFixed(1)}</td>
-                      <td className="p-2 text-center">
-                        <CanvasBadge variant={row.asistencia_pct < 75 ? "danger" : row.nota_final >= 4.0 ? "success" : "danger"}>
-                          {row.asistencia_pct < 75 ? "RI" : row.nota_final >= 4.0 ? "Aprobado" : "Reprobado"}
-                        </CanvasBadge>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+          <TeacherGradebookTableView
+            courseCode={course.code}
+            filteredExcelStudents={filteredExcelStudents}
+            isEditingExcel={isEditingExcel}
+            onUpdateGrade={onUpdateGrade}
+            onNotify={(msg) => {
+              setSaveSuccessToast(true);
+              setTimeout(() => setSaveSuccessToast(false), 3500);
+            }}
+          />
         </div>
       )}
 
