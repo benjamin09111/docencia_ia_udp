@@ -503,6 +503,35 @@ export async function updateSessionStatusInSupabase(
 }
 
 /**
+ * Actualiza la modalidad de una sesión de clase en Supabase (online / presencial)
+ */
+export async function updateSessionModalityInSupabase(
+  sessionCode: string,
+  modality: "presencial" | "online"
+): Promise<AttendanceDbSyncResult> {
+  const supabase = getSupabaseClient();
+  if (!supabase) return { success: false };
+
+  try {
+    const { error } = await supabase
+      .from("class_sessions")
+      .update({
+        modality,
+      })
+      .eq("session_code", sessionCode);
+
+    if (error) {
+      console.warn("Aviso actualizando modalidad en Supabase:", error.message);
+      return { success: false, error };
+    }
+    return { success: true };
+  } catch (error) {
+    console.warn("Error updateSessionModalityInSupabase:", error);
+    return { success: false, error };
+  }
+}
+
+/**
  * Obtiene sesiones de clase de una sección que ya tienen asistencia registrada en Supabase
  */
 export async function fetchHistoricalRecordedSessionsFromSupabase(

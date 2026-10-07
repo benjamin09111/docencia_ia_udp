@@ -416,15 +416,16 @@ export function generateSemesterSessions(
     current.setDate(current.getDate() + 1);
   }
 
-  // Aplicar sobreescrituras guardadas (ej. sesiones canceladas por el docente/ayudante)
+  // Aplicar sobreescrituras guardadas (ej. sesiones canceladas por el docente/ayudante o modalidad P/O)
   const overrides = getSavedSessionOverrides();
   return sessions.map((s) => {
     const ov = overrides[s.id];
     if (ov) {
       return {
         ...s,
-        estado: ov.estado,
+        estado: ov.estado || s.estado,
         motivoCancelacion: ov.motivoCancelacion,
+        modalidad: ov.modalidad || s.modalidad,
       };
     }
     return s;
@@ -444,6 +445,7 @@ const SESSION_OVERRIDES_KEY = "udp_session_overrides_v2";
 export interface SessionOverride {
   estado: "programada" | "realizada" | "cancelada";
   motivoCancelacion?: string;
+  modalidad?: "presencial" | "online";
 }
 
 export function getSavedSessionOverrides(): Record<string, SessionOverride> {
@@ -471,12 +473,28 @@ export function saveSessionOverride(
   if (typeof window === "undefined") return;
   try {
     const current = getSavedSessionOverrides();
-    // Guardar explícitamente el estado seleccionado (incluso 'programada') para que sobreescriba cualquier valor por defecto
-    current[sessionId] = { estado, motivoCancelacion };
+    const existing = current[sessionId];
+    current[sessionId] = { ...existing, estado, motivoCancelacion };
     localStorage.setItem(SESSION_OVERRIDES_KEY, JSON.stringify(current));
     window.dispatchEvent(new CustomEvent("udp_sessions_overrides_updated", { detail: current }));
   } catch (e) {
     console.error("Error saving session override to localStorage", e);
+  }
+}
+
+export function saveSessionModalityOverride(
+  sessionId: string,
+  modalidad: "presencial" | "online"
+): void {
+  if (typeof window === "undefined") return;
+  try {
+    const current = getSavedSessionOverrides();
+    const existing = current[sessionId] || { estado: "programada" };
+    current[sessionId] = { ...existing, modalidad };
+    localStorage.setItem(SESSION_OVERRIDES_KEY, JSON.stringify(current));
+    window.dispatchEvent(new CustomEvent("udp_sessions_overrides_updated", { detail: current }));
+  } catch (e) {
+    console.error("Error saving session modality to localStorage", e);
   }
 }
 

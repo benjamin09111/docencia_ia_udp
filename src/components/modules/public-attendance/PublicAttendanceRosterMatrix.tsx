@@ -59,10 +59,14 @@ export const PublicAttendanceRosterMatrix: React.FC<PublicAttendanceRosterMatrix
                 const parts = sess.fecha.split("-");
                 const diaMes = parts.length === 3 ? `${parts[2]}/${parts[1]}` : sess.fecha;
                 return (
-                  <th key={sess.id} className="p-2 text-center border-r border-white/10 w-[55px] min-w-[48px] text-[11px] font-mono font-bold" title={`Ayudantía del ${sess.fecha} (${sess.diaSemana})`}>
+                  <th key={sess.id} className="p-2 text-center border-r border-white/10 w-[58px] min-w-[50px] text-[11px] font-mono font-bold" title={`Ayudantía del ${sess.fecha} (${sess.diaSemana}) — ${sess.modalidad === "online" ? "Online (O)" : "Presencial (P)"}`}>
                     <div className="flex flex-col items-center justify-center leading-none">
                       <span>{diaMes}</span>
-                      <span className="text-[9px] text-gray-300 font-sans mt-0.5">Ayu</span>
+                      <span className={`text-[9px] font-sans font-bold mt-0.5 px-1 rounded ${
+                        sess.modalidad === "online" ? "bg-purple-900/60 text-purple-200" : "text-gray-300"
+                      }`}>
+                        {sess.modalidad === "online" ? "Online" : "Pres."}
+                      </span>
                     </div>
                   </th>
                 );

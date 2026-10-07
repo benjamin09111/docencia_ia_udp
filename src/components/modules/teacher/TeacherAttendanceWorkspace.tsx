@@ -28,6 +28,7 @@ import {
   getTodayDateStr,
   getSectionByCourseCode,
   saveSessionOverride,
+  saveSessionModalityOverride,
   regenerateSectionPin,
   getSectionDailyPin,
   getSectionVisualPin,
@@ -43,6 +44,7 @@ import {
   saveStudentWorkRecordToSupabase,
   fetchStudentWorkRecordsFromSupabase,
   updateSessionStatusInSupabase,
+  updateSessionModalityInSupabase,
   isSupabaseConfigured,
   updateSectionOnlineStatusInSupabase,
   fetchSectionsFromSupabase,
@@ -773,18 +775,39 @@ export const TeacherAttendanceWorkspace: React.FC<TeacherAttendanceWorkspaceProp
     }
   };
 
-  // Alternar modalidad Online / Presencial por sesión
+  // Alternar modalidad Online / Presencial por sesión (P <-> O)
   const handleToggleSessionModality = (sessionId: string) => {
-    setSessionsBySection((prev) => ({
-      ...prev,
-      [selectedSectionId]: prev[selectedSectionId].map((s) => {
+    const currentSessions = sessionsBySection[selectedSectionId] || [];
+    const targetSession = currentSessions.find((s) => s.id === sessionId);
+    const nextMod: "presencial" | "online" = targetSession?.modalidad === "online" ? "presencial" : "online";
+
+    setSessionsBySection((prev) => {
+      const sectionSessions = prev[selectedSectionId] || [];
+      const updated = sectionSessions.map((s) => {
         if (s.id === sessionId) {
-          const nextMod: "presencial" | "online" = s.modalidad === "online" ? "presencial" : "online";
           return { ...s, modalidad: nextMod };
         }
         return s;
-      }),
-    }));
+      });
+      return {
+        ...prev,
+        [selectedSectionId]: updated,
+      };
+    });
+
+    // Guardar en localStorage
+    saveSessionModalityOverride(sessionId, nextMod);
+
+    // Guardar en Supabase
+    updateSessionModalityInSupabase(sessionId, nextMod).catch((err) =>
+      console.warn("Error guardando modalidad en Supabase:", err)
+    );
+
+    setQuickNotification({
+      type: "info",
+      message: `Modalidad cambiada: clase quedó como ${nextMod === "online" ? "ONLINE (O)" : "PRESENCIAL (P)"}.`,
+    });
+    setTimeout(() => setQuickNotification(null), 3500);
   };
 
   // Cambiar modalidad de forma masiva (todas las ayudantías o todas las sesiones)

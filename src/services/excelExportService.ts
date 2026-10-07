@@ -60,7 +60,7 @@ export function exportAttendanceToExcel(params: {
       `CURSO: ${cursoNombre}`,
       `SECCIÓN: ${seccionNombre}`,
       `TIPO: ${sheetTitle.toUpperCase()}`,
-      `CORTE: Clases realizadas hasta hoy (${new Date().toLocaleDateString("es-CL")})`,
+      `CORTE: Clases realizadas hasta hoy (${new Date().toLocaleDateString("es-CL")}) • MODALIDADES: (P) Presencial / (O) Online`,
     ]);
     data.push([]);
 
@@ -68,13 +68,25 @@ export function exportAttendanceToExcel(params: {
     targetSessions.forEach((s) => {
       const parts = s.fecha.split("-");
       const diaMes = parts.length === 3 ? `${parts[2]}/${parts[1]}` : s.fecha;
-      headers.push(diaMes);
+      const modLetter = s.modalidad === "online" ? "O" : "P";
+      headers.push(`${diaMes} (${modLetter})`);
     });
     if (subtipo === "ayudantia") {
       headers.push("Trabajos Entregados", "Total Trabajos", "Décimas Totales");
     }
     headers.push("Asistidas", "Total Clases", "% Asistencia", "Estado");
     data.push(headers);
+
+    // Fila indicadora de modalidad por sesión
+    const modalityRow: any[] = ["MODALIDAD", "", "", ""];
+    targetSessions.forEach((s) => {
+      modalityRow.push(s.modalidad === "online" ? "Online (O)" : "Presencial (P)");
+    });
+    if (subtipo === "ayudantia") {
+      modalityRow.push("-", "-", "-");
+    }
+    modalityRow.push("-", "-", "-", "-");
+    data.push(modalityRow);
 
     summaries.forEach((sum) => {
       const row: any[] = [sum.rut, sum.apellidos, sum.nombres, sum.email];
@@ -128,7 +140,7 @@ export function exportAttendanceToExcel(params: {
       { wch: 16 }, // Apellidos
       { wch: 16 }, // Nombres
       { wch: 25 }, // Email
-      ...targetSessions.map(() => ({ wch: 7 })), // Fechas DD/MM
+      ...targetSessions.map(() => ({ wch: 14 })), // Fechas DD/MM (P/O) y modalidad
       ...(subtipo === "ayudantia" ? [{ wch: 18 }, { wch: 14 }, { wch: 15 }] : []),
       { wch: 10 },
       { wch: 12 },

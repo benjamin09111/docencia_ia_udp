@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo } from "react";
 import { ClassSession, StudentAttendanceSummary, AttendanceValue, TodaySessionInfo, StudentWorkRecord } from "@/types/attendance";
-import { Check, X, AlertTriangle, CheckCheck, ChevronDown, ChevronRight, ChevronsRight, ChevronsLeft, Calendar, Zap, Award, CalendarX, Ban } from "lucide-react";
+import { Check, X, AlertTriangle, ChevronDown, ChevronRight, ChevronsRight, ChevronsLeft, Calendar, Zap, Award, CalendarX, Ban } from "lucide-react";
 
 interface AttendanceMatrixTableProps {
   sessions: ClassSession[];
@@ -394,11 +394,18 @@ export const AttendanceMatrixTable: React.FC<AttendanceMatrixTableProps> = ({
                             <>
                               <button
                                 type="button"
-                                title="Marcar todos presentes (1)"
-                                onClick={() => onMarkAllPresent(s.id)}
-                                className="p-0.5 hover:bg-white/20 rounded text-emerald-300 opacity-60 hover:opacity-100 transition-opacity"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onToggleModality?.(s.id);
+                                }}
+                                title={`Modalidad actual: ${s.modalidad === "online" ? "Online (O)" : "Presencial (P)"}. Clic para cambiar P/O`}
+                                className={`w-3.5 h-3.5 rounded text-[8px] font-black uppercase flex items-center justify-center transition-all cursor-pointer ${
+                                  s.modalidad === "online"
+                                    ? "bg-purple-600 hover:bg-purple-500 text-white shadow-sm ring-1 ring-purple-400"
+                                    : "bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm ring-1 ring-emerald-400"
+                                }`}
                               >
-                                <CheckCheck size={11} />
+                                {s.modalidad === "online" ? "O" : "P"}
                               </button>
 
                               <button
