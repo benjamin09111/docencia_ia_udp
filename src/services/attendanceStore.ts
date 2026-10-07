@@ -138,7 +138,16 @@ export function getSavedSections(): CourseSection[] {
     const missing = INITIAL_SECTIONS.filter((init) => !existingCodes.has(init.codigo));
     const allParsed = [...parsed, ...missing];
 
-    return allParsed.map((sec: CourseSection) => {
+    // Deduplicar estrictamente por código de sección
+    const uniqueMap = new Map<string, CourseSection>();
+    allParsed.forEach((sec) => {
+      if (sec && sec.codigo && !uniqueMap.has(sec.codigo)) {
+        uniqueMap.set(sec.codigo, sec);
+      }
+    });
+    const deduplicated = Array.from(uniqueMap.values());
+
+    return deduplicated.map((sec: CourseSection) => {
       const matchInit = INITIAL_SECTIONS.find((init) => init.id === sec.id || init.codigo === sec.codigo);
       const catRaw = (sec.horarioCatedra?.dias || []).filter((d) => d >= 1 && d <= 5);
       const catDias = catRaw.length > 0 ? catRaw : (matchInit?.horarioCatedra?.dias || [3]);
@@ -203,8 +212,15 @@ export function getSavedSections(): CourseSection[] {
 export function saveSections(sections: CourseSection[]): void {
   if (typeof window === "undefined") return;
   try {
-    localStorage.setItem(SECTIONS_STORAGE_KEY, JSON.stringify(sections));
-    window.dispatchEvent(new CustomEvent("udp_sections_updated", { detail: sections }));
+    const uniqueMap = new Map<string, CourseSection>();
+    sections.forEach((sec) => {
+      if (sec && sec.codigo && !uniqueMap.has(sec.codigo)) {
+        uniqueMap.set(sec.codigo, sec);
+      }
+    });
+    const deduplicated = Array.from(uniqueMap.values());
+    localStorage.setItem(SECTIONS_STORAGE_KEY, JSON.stringify(deduplicated));
+    window.dispatchEvent(new CustomEvent("udp_sections_updated", { detail: deduplicated }));
   } catch (e) {
     console.error("Error saving sections to localStorage", e);
   }
