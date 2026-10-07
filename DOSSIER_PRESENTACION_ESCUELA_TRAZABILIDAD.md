@@ -83,10 +83,11 @@ Cuando presentes esta solución ante la Dirección de Escuela o Decanato, utiliz
 ### Diapositiva 2: La Solución: Suite de Automatización Docente con IA
 * **Título**: *"Un Centro de Mando Inteligente integrado directamente dentro de Canvas."*
 * **Mensaje**: No cambiamos de plataforma. Agregamos un botón en el menú de Canvas que automatiza todo el flujo docente:
-  1. Generador de Rúbricas y Tareas en 1 clic.
-  2. Pre-calificación SpeedGrader con IA (ahorro de 70% de tiempo de corrección).
-  3. Bolsa de Décimas y cruce con Asistencia geolocalizada.
-  4. Sincronización automática con Canvas Gradebook oficial.
+  1. **Generador de Rúbricas y Tareas en 1 Clic**: Rúbricas alineadas a Resultados de Aprendizaje publicadas vía API.
+  2. **SpeedGrader Copilot con IA (Sin trabajo manual)**: El docente ya no tiene que entrar alumno por alumno a SpeedGrader ni hacer 40 clics por rúbrica; la IA pre-evalúa los entregables y el profesor aprueba por lote con 1 clic.
+  3. **Propagación Automática a Grupos (Fix Fallo Canvas)**: Resuelve el error clásico de Canvas donde solo el líder queda con nota; el sistema califica y retroalimenta a todos los integrantes simultáneamente.
+  4. **Bolsa de Décimas y Cruce con Asistencia**: Bonificaciones de ayudantías aplicadas automáticamente a las solemnes oficiales.
+  5. **Sincronización Transparente con Canvas Gradebook**: Las notas y comentarios oficiales quedan publicados sin discrepancias.
 
 ### Diapositiva 3: Formación Formativa vs. Sumativa (La Calidad Educativa)
 * **Título**: *"No esperamos a que el alumno repruebe la Solemne: Aseguramos el aprendizaje semana a semana."*

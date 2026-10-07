@@ -124,7 +124,8 @@ El objetivo central es consolidar una **Suite Integral de Docencia Automatizada 
      - Módulo de Cronograma & Anuncios Automatizados.
 2. **Orquestador de Evaluaciones & Canvas Gradebook (LTI 1.3 + Standalone SaaS)**:
    - **Canvas como Sistema de Registro**: Canvas Gradebook actúa como repositorio oficial final de notas.
-   - **Capa Cognitiva de Automatización**: Nuestra suite genera las tareas y rúbricas matriciales vía API, pre-califica con IA entregas (SpeedGrader Copilot), gestiona la bolsa de décimas extraformativas y calcula eximiciones antes de publicar en Gradebook.
+   - **SpeedGrader Copilot & Auto-Evaluation Engine**: El docente NO necesita entrar manualmente a SpeedGrader ni hacer decenas de clics por alumno. El agente de IA descarga las entregas (PDFs, código, informes), evalúa contra cada criterio de la rúbrica Canvas, genera el puntaje y redacta feedback constructivo personalizado. El docente revisa en un panel por lotes y aprueba en 1 clic para inyectar a Canvas vía API (`submission[posted_grade]` y `rubric_assessment`).
+   - **Propagación Inteligente de Notas Grupales (Fix Fallo Canvas)**: Soluciona el fallo crítico de Canvas donde en tareas grupales solo el líder que subió el archivo queda con nota en Gradebook o se desincronizan los integrantes. Nuestra plataforma propaga automáticamente la evaluación y retroalimentación a cada miembro del grupo en Canvas API con opción de bonificación/penalización individual.
    - **Evaluación Formativa vs. Sumativa**:
      - *Formativa (Trazabilidad y Aprendizaje continuo)*: Talleres cortos, checkpoints de proyecto, quizes de ayudantía y borradores evaluados por IA con feedback inmediato (sin ponderación destructiva o con bolsa de décimas).
      - *Sumativa (Certificación oficial)*: Solemnes, exámenes e hitos finales con ponderación curricular.
