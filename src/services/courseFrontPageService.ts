@@ -193,7 +193,7 @@ export function getDefaultFrontPageData(courseId: number, courseCode: string, co
         { nombre: "Tareas y Entregables Canvas", url: "#assignments", descripcion: "Acceso directo a las pautas y buzones de entrega." },
         { nombre: "Anuncios Oficiales de la Cátedra", url: "#announcements", descripcion: "Comunicaciones semanales de los profesores." },
         { nombre: "Foro de Consultas y Dudas", url: "#discussions", descripcion: "Canal asíncrono para dudas de talleres y proyectos." },
-        { nombre: "Portal de Asistencia UDP", url: "/asistencia", descripcion: "Consulta tu porcentaje de asistencia en tiempo real." },
+        { nombre: "Portal de Asistencia UDP", url: `/asistencia/${courseCode}`, descripcion: "Consulta tu porcentaje de asistencia en tiempo real." },
       ],
       canvasWikiPageTitle: "Inicio - Proyecto en TICs II (CIT3203)",
     };
