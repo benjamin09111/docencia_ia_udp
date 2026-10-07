@@ -120,10 +120,12 @@ El objetivo central es consolidar una **Suite Integral de Docencia Automatizada 
      - Módulo de Evaluaciones Formativas & Sumativas, Rúbricas IA y Gradebook Orchestrator.
      - Módulo de Bolsa de Décimas & Bonificaciones contextuales.
      - Módulo de Trazabilidad del Aprendizaje & Métricas de Rendimiento (Learning Analytics).
-     - Módulo de Agente IA Docente (*Mini-Yo*) y Materiales de Cátedra.
+     - Módulo de Agente Copiloto Docente (*Teacher Copilot & Action Agent*): Asesor conversacional que ejecuta acciones directas sobre Canvas ("Quiero tener 20% en X", "Crea la rúbrica de Y") eliminando la fricción de uso.
+     - Módulo de Agente IA Tutor para Estudiantes (*Mini-Yo*) y Materiales de Cátedra.
      - Módulo de Cronograma & Anuncios Automatizados.
 2. **Orquestador de Evaluaciones & Canvas Gradebook (LTI 1.3 + Standalone SaaS)**:
    - **Canvas como Sistema de Registro**: Canvas Gradebook actúa como repositorio oficial final de notas.
+   - **Agente Copiloto para Docentes (Action-Oriented)**: El profesor puede interactuar mediante lenguaje natural para consultar dudas pedagógicas o pedirle al agente que configure el curso (*"Reajusta la ponderación de la Solemne 1 al 20%"*, *"Diseña un taller de ayudantía de 30 minutos sobre microservicios"*). El agente ejecuta las llamadas API a Canvas y actualiza la estructura sin que el docente deba buscar menús.
    - **SpeedGrader Copilot & Auto-Evaluation Engine**: El docente NO necesita entrar manualmente a SpeedGrader ni hacer decenas de clics por alumno. El agente de IA descarga las entregas (PDFs, código, informes), evalúa contra cada criterio de la rúbrica Canvas, genera el puntaje y redacta feedback constructivo personalizado. El docente revisa en un panel por lotes y aprueba en 1 clic para inyectar a Canvas vía API (`submission[posted_grade]` y `rubric_assessment`).
    - **Propagación Inteligente de Notas Grupales (Fix Fallo Canvas)**: Soluciona el fallo crítico de Canvas donde en tareas grupales solo el líder que subió el archivo queda con nota en Gradebook o se desincronizan los integrantes. Nuestra plataforma propaga automáticamente la evaluación y retroalimentación a cada miembro del grupo en Canvas API con opción de bonificación/penalización individual.
    - **Evaluación Formativa vs. Sumativa**:

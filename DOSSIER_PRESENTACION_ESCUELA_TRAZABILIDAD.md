@@ -83,11 +83,12 @@ Cuando presentes esta solución ante la Dirección de Escuela o Decanato, utiliz
 ### Diapositiva 2: La Solución: Suite de Automatización Docente con IA
 * **Título**: *"Un Centro de Mando Inteligente integrado directamente dentro de Canvas."*
 * **Mensaje**: No cambiamos de plataforma. Agregamos un botón en el menú de Canvas que automatiza todo el flujo docente:
-  1. **Generador de Rúbricas y Tareas en 1 Clic**: Rúbricas alineadas a Resultados de Aprendizaje publicadas vía API.
-  2. **SpeedGrader Copilot con IA (Sin trabajo manual)**: El docente ya no tiene que entrar alumno por alumno a SpeedGrader ni hacer 40 clics por rúbrica; la IA pre-evalúa los entregables y el profesor aprueba por lote con 1 clic.
-  3. **Propagación Automática a Grupos (Fix Fallo Canvas)**: Resuelve el error clásico de Canvas donde solo el líder queda con nota; el sistema califica y retroalimenta a todos los integrantes simultáneamente.
-  4. **Bolsa de Décimas y Cruce con Asistencia**: Bonificaciones de ayudantías aplicadas automáticamente a las solemnes oficiales.
-  5. **Sincronización Transparente con Canvas Gradebook**: Las notas y comentarios oficiales quedan publicados sin discrepancias.
+  1. **Agente Copiloto para el Profesor (Cero Fricción)**: El docente puede pedirle lo que necesita en lenguaje natural (*"Quiero que la Solemne 1 valga 20% y crea una rúbrica de 4 criterios"*) y el Agente ejecuta la configuración en Canvas automáticamente.
+  2. **Generador de Rúbricas y Tareas en 1 Clic**: Rúbricas alineadas a Resultados de Aprendizaje publicadas vía API.
+  3. **SpeedGrader Copilot con IA (Sin trabajo manual)**: El docente ya no tiene que entrar alumno por alumno a SpeedGrader ni hacer 40 clics por rúbrica; la IA pre-evalúa los entregables y el profesor aprueba por lote con 1 clic.
+  4. **Propagación Automática a Grupos (Fix Fallo Canvas)**: Resuelve el error clásico de Canvas donde solo el líder queda con nota; el sistema califica y retroalimenta a todos los integrantes simultáneamente.
+  5. **Bolsa de Décimas y Cruce con Asistencia**: Bonificaciones de ayudantías aplicadas automáticamente a las solemnes oficiales.
+  6. **Sincronización Transparente con Canvas Gradebook**: Las notas y comentarios oficiales quedan publicados sin discrepancias.
 
 ### Diapositiva 3: Formación Formativa vs. Sumativa (La Calidad Educativa)
 * **Título**: *"No esperamos a que el alumno repruebe la Solemne: Aseguramos el aprendizaje semana a semana."*
@@ -145,4 +146,25 @@ $$\text{Tramo } 0 \text{ a } 60\%: \quad \text{Nota} = \text{PuntoBase} + (4.0 -
 $$\text{Tramo } 60\% \text{ a } 100\%: \quad \text{Nota} = 4.0 + (7.0 - 4.0) \times \frac{\text{PuntajeObtenido} - \text{PuntajeCorte}}{\text{PuntajeMax} - \text{PuntajeCorte}}$$
 
 *(Incluye un panel de administración con simulador en tiempo real para ajustar el Punto Base si se licencia a otras instituciones).*
+
+---
+
+## 🤖 8. El Agente Copiloto para el Profesor: "Cero Curva de Aprendizaje"
+
+El factor más revolucionario para los profesores que no son tecnológicos o que no quieren perder tiempo en menús:
+
+```mermaid
+flowchart TD
+    Docente["Profesor: 'Quiero que el Hito 1 valga 20% y prepárame una rúbrica de 4 criterios'"] --> Copilot[Agente Copiloto Docente con Action Calling]
+    Copilot -->|Acción 1| C1[Reconfigura el Grupo de Tareas al 20% en Canvas]
+    Copilot -->|Acción 2| C2[Genera la Rúbrica Pedagógica Alineada a RAs]
+    Copilot -->|Acción 3| C3[Publica la Tarea en Canvas vía API]
+    Copilot -->|Respuesta al Profe| Result["'Listo profesor, el Hito 1 quedó configurado al 20% con su rúbrica publicada en Canvas. ¿Desea programar el anuncio de apertura?'"]
+```
+
+### Capacidades del Copiloto Docente:
+1. **Configuración por Lenguaje Natural**: El docente habla o chatea con su copiloto en lugar de buscar botones o navegar por 5 pantallas de Canvas.
+2. **Asesor Pedagógico y Didáctico**: Si el docente no sabe cómo evaluar una competencia, el agente le sugiere metodologías activas (estudio de casos, debates, proyectos por hitos).
+3. **Ejecutor Silencioso**: Realiza las llamadas a la API de Canvas, actualiza el cronograma, calcula décimas y prepara borradores de anuncios.
+
 
