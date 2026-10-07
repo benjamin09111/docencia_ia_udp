@@ -453,9 +453,9 @@ export function getSavedSessionOverrides(): Record<string, SessionOverride> {
   try {
     const raw = localStorage.getItem(SESSION_OVERRIDES_KEY) || localStorage.getItem("udp_session_overrides_v1");
     const parsed = raw ? JSON.parse(raw) : {};
-    // Garantizar que la fecha de hoy 2026-10-07 NUNCA quede arrastrada como cancelada por caché antiguo
+    // Garantizar que las fechas 2026-10-07 y 2026-09-23 NUNCA queden arrastradas como canceladas por caché antiguo
     Object.keys(parsed).forEach((k) => {
-      if (k.includes("2026-10-07") && parsed[k]?.estado === "cancelada") {
+      if ((k.includes("2026-10-07") || k.includes("2026-09-23")) && parsed[k]?.estado === "cancelada") {
         delete parsed[k];
       }
     });
@@ -499,6 +499,7 @@ export function saveSessionModalityOverride(
 }
 
 const ATTENDANCE_MAP_STORAGE_KEY = "udp_attendance_records_map_v2";
+const PURGE_OCT07_FLAG_KEY = "udp_purged_oct07_batch_v2";
 
 export function getSavedAttendanceMap(): Record<string, AttendanceValue> {
   if (typeof window === "undefined") return DEFAULT_ATTENDANCE_MAP;
@@ -506,6 +507,18 @@ export function getSavedAttendanceMap(): Record<string, AttendanceValue> {
     const raw = localStorage.getItem(ATTENDANCE_MAP_STORAGE_KEY);
     if (!raw) return DEFAULT_ATTENDANCE_MAP;
     const parsed = JSON.parse(raw);
+
+    // Si aún no se ha purgado el marcaje masivo de prueba del 07/10, limpiarlo del caché local
+    if (!localStorage.getItem(PURGE_OCT07_FLAG_KEY)) {
+      Object.keys(parsed).forEach((k) => {
+        if (k.includes("2026-10-07")) {
+          delete parsed[k];
+        }
+      });
+      localStorage.setItem(ATTENDANCE_MAP_STORAGE_KEY, JSON.stringify(parsed));
+      localStorage.setItem(PURGE_OCT07_FLAG_KEY, "true");
+    }
+
     return { ...parsed, ...DEFAULT_ATTENDANCE_MAP };
   } catch {
     return DEFAULT_ATTENDANCE_MAP;

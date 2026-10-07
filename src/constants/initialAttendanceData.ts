@@ -274,7 +274,37 @@ export const DEFAULT_ATTENDANCE_MAP: Record<string, 1 | 0> = {
   "sess_CIT3203_CA01_ayu_2026-09-09_42009": 1,
   "sess_sec_1_ayu_2026-09-09_42009": 1,
   "sess_CIT3203_CA03_ayu_2026-09-09_16170": 1,
-  "sess_sec_3_ayu_2026-09-09_16170": 1
+  "sess_sec_3_ayu_2026-09-09_16170": 1,
+  "sess_CIT3203_CA01_ayu_2026-09-23_10206": 1,
+  "sess_sec_1_ayu_2026-09-23_10206": 1,
+  "sess_CIT3203_CA01_ayu_2026-09-23_42009": 1,
+  "sess_sec_1_ayu_2026-09-23_42009": 1,
+  "sess_CIT3203_CA01_ayu_2026-09-23_41401": 1,
+  "sess_sec_1_ayu_2026-09-23_41401": 1,
+  "sess_CIT3203_CA01_ayu_2026-09-23_3151": 1,
+  "sess_sec_1_ayu_2026-09-23_3151": 1,
+  "sess_CIT3203_CA01_ayu_2026-09-23_29380": 1,
+  "sess_sec_1_ayu_2026-09-23_29380": 1,
+  "sess_CIT3203_CA01_ayu_2026-09-23_47765": 1,
+  "sess_sec_1_ayu_2026-09-23_47765": 1,
+  "sess_CIT3203_CA01_ayu_2026-09-23_12892": 1,
+  "sess_sec_1_ayu_2026-09-23_12892": 1,
+  "sess_CIT3203_CA01_ayu_2026-09-23_42253": 1,
+  "sess_sec_1_ayu_2026-09-23_42253": 1,
+  "sess_CIT3203_CA01_ayu_2026-09-23_41835": 1,
+  "sess_sec_1_ayu_2026-09-23_41835": 1,
+  "sess_CIT3203_CA01_ayu_2026-09-23_1281": 1,
+  "sess_sec_1_ayu_2026-09-23_1281": 1,
+  "sess_CIT3203_CA01_ayu_2026-09-23_42788": 1,
+  "sess_sec_1_ayu_2026-09-23_42788": 1,
+  "sess_CIT3203_CA01_ayu_2026-09-23_3188": 1,
+  "sess_sec_1_ayu_2026-09-23_3188": 1,
+  "sess_CIT3203_CA01_ayu_2026-09-23_42236": 1,
+  "sess_sec_1_ayu_2026-09-23_42236": 1,
+  "sess_CIT3203_CA01_ayu_2026-09-23_29266": 1,
+  "sess_sec_1_ayu_2026-09-23_29266": 1,
+  "sess_CIT3203_CA01_ayu_2026-09-23_41860": 1,
+  "sess_sec_1_ayu_2026-09-23_41860": 1
 };
 
 export const DEFAULT_WORK_RECORDS: Record<string, { decimas: number; trabajosRealizados: number }> = {
@@ -447,19 +477,11 @@ export const DEFAULT_SESSION_OVERRIDES: Record<string, { estado: "programada" | 
     "estado": "cancelada",
     "motivoCancelacion": "Sin clase"
   },
-  "sess_CIT3203_CA01_ayu_2026-09-23": {
-    "estado": "cancelada",
-    "motivoCancelacion": "Sin clase"
-  },
   "sess_CIT3203_CA01_ayu_2026-09-30": {
     "estado": "cancelada",
     "motivoCancelacion": "Sin clase"
   },
   "sess_sec_1_ayu_2026-08-12": {
-    "estado": "cancelada",
-    "motivoCancelacion": "Sin clase"
-  },
-  "sess_sec_1_ayu_2026-09-23": {
     "estado": "cancelada",
     "motivoCancelacion": "Sin clase"
   },
@@ -471,19 +493,11 @@ export const DEFAULT_SESSION_OVERRIDES: Record<string, { estado: "programada" | 
     "estado": "cancelada",
     "motivoCancelacion": "Sin clase"
   },
-  "sess_CIT3203_CA02_ayu_2026-09-23": {
-    "estado": "cancelada",
-    "motivoCancelacion": "Sin clase"
-  },
   "sess_CIT3203_CA02_ayu_2026-09-30": {
     "estado": "cancelada",
     "motivoCancelacion": "Sin clase"
   },
   "sess_sec_2_ayu_2026-08-12": {
-    "estado": "cancelada",
-    "motivoCancelacion": "Sin clase"
-  },
-  "sess_sec_2_ayu_2026-09-23": {
     "estado": "cancelada",
     "motivoCancelacion": "Sin clase"
   },
@@ -495,19 +509,11 @@ export const DEFAULT_SESSION_OVERRIDES: Record<string, { estado: "programada" | 
     "estado": "cancelada",
     "motivoCancelacion": "Sin clase"
   },
-  "sess_CIT3203_CA03_ayu_2026-09-23": {
-    "estado": "cancelada",
-    "motivoCancelacion": "Sin clase"
-  },
   "sess_CIT3203_CA03_ayu_2026-09-30": {
     "estado": "cancelada",
     "motivoCancelacion": "Sin clase"
   },
   "sess_sec_3_ayu_2026-08-12": {
-    "estado": "cancelada",
-    "motivoCancelacion": "Sin clase"
-  },
-  "sess_sec_3_ayu_2026-09-23": {
     "estado": "cancelada",
     "motivoCancelacion": "Sin clase"
   },
