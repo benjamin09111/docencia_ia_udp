@@ -103,3 +103,27 @@ Para evitar que con el avance del desarrollo las páginas diverjan visualmente, 
 - **Cero fugas de información interna**: Prohibido retornar al frontend `error.message`, stack traces, rutas internas de archivos o errores crudos de bases de datos/Canvas en ambientes de producción.
 - En bloques `catch`, registrar el detalle técnico en consola/telemetría del servidor (`console.error`) y responder al cliente con un mensaje genérico, claro y amigable (ej. `{ error: "No se pudo procesar la solicitud en este momento." }`).
 
+---
+
+## 🧭 5. Visión Arquitectural y Roadmap de Producto (Multi-Tenant & Modularidad)
+
+El objetivo a mediano plazo es transformar este ecosistema desde un piloto institucional hacia un **SaaS EdTech Multi-Cliente comercializable** ("Asistencia Automatizada" como producto de entrada y módulos de IA/Evaluación como extras):
+
+### 🎯 Principios del Roadmap:
+1. **Monolito Modular con Feature Flags**:
+   - Todo se construye en un único repositorio con arquitectura limpia.
+   - Los módulos (Asistencia, Grupos, Automatizaciones, Calificaciones, Mini-Yo) deben ser activables/desactivables por `institution_id` mediante flags.
+2. **Desacoplamiento Progresivo de Datos Institucionales**:
+   - Evitar hardcodear coordenadas GPS, salas, calendarios y nombres de universidades en componentes y servicios.
+   - Llevar paulatinamente estos parámetros a tablas de configuración por institución (`institutions`, `institution_settings`).
+3. **Capa de Adaptadores de Fuente de Datos (Data Adapters)**:
+   - Aislar la ingesta de estudiantes y cursos mediante interfaces (`IDataSourceAdapter`):
+     - Adaptador Canvas API / OAuth.
+     - Adaptador LTI 1.3 (estándar para Canvas, Moodle, Blackboard).
+     - Adaptador CSV / SIS escolar (Schoolnet, Syscol, Napsis).
+4. **Seguridad y Aislamiento Multi-Tenant**:
+   - Migración gradual hacia Supabase Auth con RBAC (Admin, Docente, Ayudante, Alumno).
+   - Inclusión obligatoria de `institution_id` en esquemas y políticas RLS de Supabase.
+   - Protección estricta de rutas API con tokens de sesión firmados.
+
+
