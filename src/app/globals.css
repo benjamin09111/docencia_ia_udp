@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,300;0,400;0,700;0,900;1,400;1,700&family=Inter:wght@400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -7,6 +9,7 @@
   --canvas-darker: #1E272E;
   --canvas-blue: #008EE2;
   --udp-red: #C8102E;
+  --canvas-red: #B71C1C;
   --canvas-bg: #F5F6F8;
   --canvas-border: #E0E3E6;
 }
@@ -14,7 +17,7 @@
 body {
   color: #2D3B45;
   background-color: #F5F6F8;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-family: "Lato", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   margin: 0;
   padding: 0;
   -webkit-font-smoothing: antialiased;

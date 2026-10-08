@@ -26,10 +26,12 @@ const config: Config = {
           "red-dark": "#A60D24",
           "red-light": "#FFEBEE",
           gold: "#D4AF37",
+          "canvas-red": "#B71C1C",
         }
       },
       fontFamily: {
         sans: [
+          "Lato",
           "Inter",
           "-apple-system",
           "BlinkMacSystemFont",
