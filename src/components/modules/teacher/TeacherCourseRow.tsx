@@ -50,7 +50,7 @@ export const TeacherCourseRow: React.FC<TeacherCourseRowProps> = ({
   onAutomateCourse,
   onMockNotice,
 }) => {
-  const isMockCourse = course.code?.includes("CIT1010") ?? false;
+  const isMockCourse = false;
   const sec = getSectionByCourseCode(course.code, sections);
   const sched = formatSectionSchedule(sec);
   const diff = getCourseDifficulty(course.code || "");

@@ -98,7 +98,7 @@ export const TeacherView: React.FC<TeacherViewProps> = ({
           course.code.includes("CIT3203") ||
           course.code.includes("CIT2206") ||
           course.code.includes("CIT3100") ||
-          course.code.includes("CIT1010")
+          course.code.includes("CIT3000")
         ))
       );
     });
@@ -111,7 +111,7 @@ export const TeacherView: React.FC<TeacherViewProps> = ({
       { id: 47552, name: "PROYECTO EN TICS II", code: "CIT3203_CA03", term: "2026-02 Semestre Primavera", students_count: 28, is_automated: true },
       { id: 47047, name: "GESTIÓN ORGANIZACIONAL", code: "CIT2206_CA01", term: "2026-02 Semestre Primavera", students_count: 44, is_automated: true },
       { id: 44988, name: "ARQUITECTURAS EMERGENTES", code: "CIT3100_CA02", term: "2026-02 Semestre Primavera", students_count: 23, is_automated: true },
-      { id: 41010, name: "PROGRAMACIÓN (Curso Sandbox / Mock)", code: "CIT1010_CA01", term: "2026-02 Semestre Primavera", students_count: 5, is_automated: false },
+      { id: 41210, name: "ARQUITECTURA DE SOFTWARE (Curso Sandbox / Testing)", code: "CIT3000_CA02", term: "2026-01 Semestre Otoño", students_count: 5, is_automated: true },
     ];
 
     fallbackTeacherCourses.forEach((fb) => {

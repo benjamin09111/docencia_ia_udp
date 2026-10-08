@@ -10,9 +10,9 @@ export async function GET(
   try {
     const { courseId } = await params;
 
-    // Mock Course fallback para Programación (CIT1010_CA01 / ID 41010)
+    // Mock Course fallback para Arquitectura de Software (CIT3000_CA02 / ID 41210)
     const upperId = (courseId || "").toUpperCase();
-    if (upperId === "41010" || upperId.includes("1010") || upperId.includes("PROG") || upperId.includes("SEC_PROG_1")) {
+    if (upperId === "41210" || upperId.includes("3000") || upperId.includes("ARQ_SOFT") || upperId.includes("SEC_ARQ_SOFT")) {
       return NextResponse.json([
         {
           canvas_id: 50001,

@@ -95,15 +95,15 @@ export const INITIAL_SECTIONS: CourseSection[] = [
     radioMetros: 500,
   },
   {
-    id: "sec_prog_1",
-    codigo: "CIT1010_CA01",
-    cursoNombre: "Programación",
-    nombre: "Sección 1",
-    profesor: "Cristián Andrés Muñoz",
-    ayudante: "Lucas Tomás Navarrete",
+    id: "sec_arq_soft",
+    codigo: "CIT3000_CA02",
+    cursoNombre: "Arquitectura de Software",
+    nombre: "Sección 2",
+    profesor: "Jorge Esteban Cruz León",
+    ayudante: "Benjamín Morales Pizarro",
     horarioCatedra: { dias: [1, 3], horaInicio: "08:30", horaFin: "10:00", sala: "LAB-COMP 2" },
     horarioAyudantia: { dias: [5], horaInicio: "14:30", horaFin: "16:00", sala: "LAB-COMP 2" },
-    pinActivo: "3310",
+    pinActivo: "4121",
     requierePin: true,
     requiereGeolocalizacion: true,
     ubicacionNombre: "Facultad de Ingeniería y Ciencias UDP (Av. Ejército Libertador 441)",
@@ -119,7 +119,7 @@ export function getCourseNameByCode(codigo?: string): string {
   if (upper.includes("CIT3203") || upper.includes("3203")) return "Proyecto en TICs II";
   if (upper.includes("CIT2206") || upper.includes("2206")) return "Gestión Organizacional";
   if (upper.includes("CIT3100") || upper.includes("3100")) return "Arquitecturas Emergentes de Software";
-  if (upper.includes("CIT1010") || upper.includes("1010") || upper.includes("PROG")) return "Programación";
+  if (upper.includes("CIT3000") || upper.includes("3000") || upper.includes("ARQ_SOFT")) return "Arquitectura de Software";
   return "Asignatura UDP";
 }
 
@@ -359,12 +359,12 @@ export const INITIAL_STUDENTS_ROSTER: StudentRosterItem[] = [
   { canvas_id: 42001, rut: "20.777.666-1", nombres: "Gabriel Alejandro", apellidos: "Reyes Fuentes", email: "gabriel.reyes@mail.udp.cl", seccionId: "sec_arq_emergentes" },
   { canvas_id: 42002, rut: "21.444.555-8", nombres: "Francisca Andrea", apellidos: "Muñoz Vera", email: "francisca.munoz@mail.udp.cl", seccionId: "sec_arq_emergentes" },
   { canvas_id: 42003, rut: "20.999.888-2", nombres: "Álvaro Nicolás", apellidos: "Donoso Soto", email: "alvaro.donoso@mail.udp.cl", seccionId: "sec_arq_emergentes" },
-  // Alumnos Programación (Curso Mock de Pruebas - CIT1010_CA01)
-  { canvas_id: 50001, rut: "21.501.001-1", nombres: "Mateo Ignacio", apellidos: "Silva Araya", email: "mateo.silva@mail.udp.cl", seccionId: "sec_prog_1" },
-  { canvas_id: 50002, rut: "21.502.002-2", nombres: "Valentina Paz", apellidos: "Vera Morales", email: "valentina.vera@mail.udp.cl", seccionId: "sec_prog_1" },
-  { canvas_id: 50003, rut: "20.503.003-3", nombres: "Tomás Andrés", apellidos: "Araya Castro", email: "tomas.araya@mail.udp.cl", seccionId: "sec_prog_1" },
-  { canvas_id: 50004, rut: "21.504.004-4", nombres: "Sofía Isabel", apellidos: "Castro Paredes", email: "sofia.castro@mail.udp.cl", seccionId: "sec_prog_1" },
-  { canvas_id: 50005, rut: "20.505.005-5", nombres: "Lucas Benjamín", apellidos: "Morales Rojas", email: "lucas.morales@mail.udp.cl", seccionId: "sec_prog_1" },
+  // Alumnos Arquitectura de Software (Curso Sandbox de Pruebas - CIT3000_CA02)
+  { canvas_id: 50001, rut: "21.501.001-1", nombres: "Mateo Ignacio", apellidos: "Silva Araya", email: "mateo.silva@mail.udp.cl", seccionId: "sec_arq_soft" },
+  { canvas_id: 50002, rut: "21.502.002-2", nombres: "Valentina Paz", apellidos: "Vera Morales", email: "valentina.vera@mail.udp.cl", seccionId: "sec_arq_soft" },
+  { canvas_id: 50003, rut: "20.503.003-3", nombres: "Tomás Andrés", apellidos: "Araya Castro", email: "tomas.araya@mail.udp.cl", seccionId: "sec_arq_soft" },
+  { canvas_id: 50004, rut: "21.504.004-4", nombres: "Sofía Isabel", apellidos: "Castro Paredes", email: "sofia.castro@mail.udp.cl", seccionId: "sec_arq_soft" },
+  { canvas_id: 50005, rut: "20.505.005-5", nombres: "Lucas Benjamín", apellidos: "Morales Rojas", email: "lucas.morales@mail.udp.cl", seccionId: "sec_arq_soft" },
 ];
 
 /**
@@ -760,8 +760,8 @@ export function getSectionByCourseCode(courseCode?: string, customSections?: Cou
     return sections.find((s) => s.codigo.includes("CIT3100") || s.id === "sec_arq_emergentes") || fallbackSec1;
   }
 
-  if (codeUpper.includes("CIT1010") || codeUpper.includes("1010") || codeUpper.includes("PROG")) {
-    return sections.find((s) => s.codigo.includes("CIT1010") || s.id === "sec_prog_1") || fallbackSec1;
+  if (codeUpper.includes("CIT3000") || codeUpper.includes("3000") || codeUpper.includes("SOFT")) {
+    return sections.find((s) => s.codigo.includes("CIT3000") || s.id === "sec_arq_soft") || fallbackSec1;
   }
 
   // 3. Coincidencia por ID de sección de Proyecto en TICs II por defecto
