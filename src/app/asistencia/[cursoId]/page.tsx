@@ -44,30 +44,30 @@ export default function PublicAttendancePage({
   } | null>(null);
 
   return (
-    <div className="min-h-screen bg-[#F5F6F8] flex flex-col justify-between p-4 sm:p-6 font-sans">
-      {/* Header Institucional Superior */}
-      <header className="max-w-md w-full mx-auto flex items-center justify-between border-b border-gray-200 pb-3 mb-6">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded bg-[#C8102E] text-white flex items-center justify-center font-bold">
+    <div className="min-h-screen bg-[#F5F6F8] flex flex-col justify-between p-3 sm:p-6 font-sans overflow-x-hidden">
+      {/* Header Institucional Superior - Optimizado para Móviles */}
+      <header className="max-w-md w-full mx-auto flex flex-row items-center justify-between border-b border-gray-200 pb-3 mb-4 sm:mb-6 gap-2">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <div className="w-8 h-8 rounded bg-[#C8102E] text-white flex items-center justify-center font-bold shrink-0">
             <GraduationCap size={18} />
           </div>
-          <div>
-            <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block">
+          <div className="min-w-0">
+            <span className="text-[9px] sm:text-[10px] font-bold text-gray-500 uppercase tracking-wider block truncate">
               Universidad Diego Portales
             </span>
-            <h1 className="text-xs font-bold text-[#2D3B45]">
+            <h1 className="text-[11px] sm:text-xs font-bold text-[#2D3B45] truncate">
               Escuela de Informática y Telecomunicaciones
             </h1>
           </div>
         </div>
 
-        <span className="text-[10px] text-emerald-800 bg-emerald-100 border border-emerald-200 px-2 py-0.5 rounded font-mono flex items-center gap-1">
+        <span className="text-[10px] text-emerald-800 bg-emerald-100 border border-emerald-200 px-2 py-0.5 rounded font-mono flex items-center gap-1 shrink-0">
           <ShieldCheck size={11} /> Seguro
         </span>
       </header>
 
       {/* Contenido Principal */}
-      <main className="flex-1 flex items-center justify-center">
+      <main className="flex-1 flex items-center justify-center w-full">
         {!confirmedData ? (
           <PublicAttendanceCheckin
             courseCode={resolvedParams.cursoId}
@@ -86,7 +86,7 @@ export default function PublicAttendancePage({
       </main>
 
       {/* Footer Mínimo */}
-      <footer className="text-center text-[11px] text-gray-500 mt-8 py-3 border-t border-gray-200">
+      <footer className="text-center text-[10px] sm:text-[11px] text-gray-500 mt-6 sm:mt-8 py-3 border-t border-gray-200">
         Portal de Marcaje Asistido • Plataforma Docente UDP © 2026
       </footer>
     </div>

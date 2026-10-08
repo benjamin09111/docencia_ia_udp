@@ -71,7 +71,7 @@ export const PublicAttendanceCheckin: React.FC<PublicAttendanceCheckinProps> = (
   const courseTitle = currentSection.cursoNombre || "PROYECTO EN TICS II";
 
   return (
-    <div className="bg-white border border-[#E0E3E6] rounded-[6px] shadow-canvas-card p-4 sm:p-6 max-w-md w-full mx-auto space-y-5 animate-fadeIn">
+    <div className="bg-white border border-[#E0E3E6] rounded-[6px] shadow-canvas-card p-3.5 sm:p-6 max-w-md w-full mx-auto space-y-4 sm:space-y-5 animate-fadeIn">
       <div className="border-b border-gray-200 pb-3">
         <div className="flex items-center justify-between">
           <span className="text-[10px] font-bold text-[#C8102E] uppercase tracking-wider block">
