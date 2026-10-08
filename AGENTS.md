@@ -144,6 +144,10 @@ El objetivo central es consolidar una **Suite Integral de Docencia Automatizada 
    - Migración gradual hacia Supabase Auth con RBAC (Admin, Docente, Ayudante, Alumno).
    - Inclusión obligatoria de `institution_id` en esquemas y políticas RLS de Supabase.
    - Protección estricta de rutas API con tokens de sesión firmados.
+6. **Plataforma Independiente Standalone & Web App Móvil PWA (Acciones Rápidas en 1-Clic)**:
+   - La plataforma **SIEMPRE funcionará también como una Web App / PWA independiente instalable en el celular** del docente y ayudante (acceso directo en pantalla de inicio iOS/Android).
+   - **Propósito & Caso de Uso Principal**: Permitir al profesor o ayudante ejecutar **acciones de alto impacto en 1 clic** desde su teléfono sin la fricción de ingresar a la interfaz pesada de Canvas Instructure (ej. *"Apretar 1 botón para suspender la clase de hoy y publicar automáticamente el anuncio de cancelación en Canvas"*, *"Regenerar el PIN del día"*, *"Aprobar apelaciones pendientes"*).
+   - **Desarrollo Progresivo**: La construcción de esta plataforma independiente y sus funcionalidades móviles rápidas se realizará paso a paso ("de a poco"), manteniendo la interoperabilidad bidireccional mediante Canvas API REST / OAuth.
 
 ---
 
