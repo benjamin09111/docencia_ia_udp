@@ -7,7 +7,7 @@ export function middleware(request: NextRequest) {
   // Toda la asistencia y portales visuales de cualquier curso (/asistencia, /[cursoId]/visual, etc.)
   if (
     pathname.startsWith("/asistencia") ||
-    pathname.endsWith("/visual") ||
+    pathname.includes("/visual") ||
     pathname.startsWith("/api/") ||
     pathname.startsWith("/_next/") ||
     pathname.includes(".") // favicon.ico, svgs, etc.
