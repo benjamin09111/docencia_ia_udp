@@ -509,7 +509,7 @@ export const AttendanceMatrixTable: React.FC<AttendanceMatrixTableProps> = ({
                       }
 
                       const key = `${s.id}_${sum.canvas_id}`;
-                      const val = attendanceMap[key] ?? 0;
+                      const val = attendanceMap[key] ?? attendanceMap[`${s.seccionId}_${sum.canvas_id}_${s.fecha}`] ?? 0;
 
                       return (
                         <td key={s.id} className="p-0.5 text-center border-l border-gray-100 w-[42px]">
@@ -612,24 +612,16 @@ export const AttendanceMatrixTable: React.FC<AttendanceMatrixTableProps> = ({
                 Total Presentes
               </td>
 
-              {/* Total Hoy */}
-              <td className="p-1 text-center font-mono text-[11px] border-r border-gray-300 bg-gray-200/40">
-                {hasSessionToday && todaySessionInfo?.todaySession ? (
-                  <span className="px-1.5 py-0.5 bg-white border border-gray-300 rounded text-emerald-800 font-bold">
-                    {summaries.filter((s) => attendanceMap[`${todaySessionInfo.todaySession!.id}_${s.canvas_id}`] === 1).length}
-                  </span>
-                ) : (
-                  <span className="text-[10px] text-gray-400">-</span>
-                )}
-              </td>
-
               {monthGroups.map((grp) => {
                 const isCollapsed = Boolean(collapsedMonths[grp.key]);
 
                 if (isCollapsed) {
                   // Promedio de presentes en el mes contraído
                   const totalPresentesMes = grp.sessions.reduce((acc, sess) => {
-                    return acc + summaries.filter((sum) => attendanceMap[`${sess.id}_${sum.canvas_id}`] === 1).length;
+                    return acc + summaries.filter((sum) => {
+                      const val = attendanceMap[`${sess.id}_${sum.canvas_id}`] ?? attendanceMap[`${sess.seccionId}_${sum.canvas_id}_${sess.fecha}`];
+                      return val === 1;
+                    }).length;
                   }, 0);
                   const promMes = grp.sessions.length > 0 ? Math.round(totalPresentesMes / grp.sessions.length) : 0;
 
@@ -647,7 +639,10 @@ export const AttendanceMatrixTable: React.FC<AttendanceMatrixTableProps> = ({
                 }
 
                 return grp.sessions.map((s) => {
-                  const count = summaries.filter((sum) => attendanceMap[`${s.id}_${sum.canvas_id}`] === 1).length;
+                  const count = summaries.filter((sum) => {
+                    const val = attendanceMap[`${s.id}_${sum.canvas_id}`] ?? attendanceMap[`${s.seccionId}_${sum.canvas_id}_${s.fecha}`];
+                    return val === 1;
+                  }).length;
                   return (
                     <td key={`tot_${s.id}`} className="p-1 text-center font-mono text-[11px] border-l border-gray-200">
                       <span className="px-1.5 py-0.5 bg-white border border-gray-300 rounded text-emerald-800 font-bold">

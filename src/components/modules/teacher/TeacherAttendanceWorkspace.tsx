@@ -575,7 +575,7 @@ export const TeacherAttendanceWorkspace: React.FC<TeacherAttendanceWorkspaceProp
       let catAsist = 0;
 
       validSessions.forEach((s) => {
-        const val = attendanceMap[`${s.id}_${st.canvas_id}`];
+        const val = attendanceMap[`${s.id}_${st.canvas_id}`] ?? attendanceMap[`${s.seccionId}_${st.canvas_id}_${s.fecha}`];
         if (val === 1) {
           if (s.tipo === "ayudantia") ayudAsist++;
           else catAsist++;

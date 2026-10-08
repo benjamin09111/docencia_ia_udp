@@ -288,12 +288,15 @@ export function usePublicAttendanceCheckin({
 
     const semesterSessions = generateSemesterSessions(currentSection);
     const targetSemesterSession =
-      semesterSessions.find((s) => s.fecha === todayStr && s.tipo === "ayudantia") ||
-      semesterSessions.find((s) => s.tipo === "ayudantia" && s.fecha <= todayStr) ||
+      semesterSessions.find((s) => s.fecha === todayStr) ||
+      semesterSessions.find((s) => s.fecha <= todayStr) ||
       semesterSessions[0];
 
     const map = getSavedAttendanceMap();
-    if (targetSemesterSession) map[`${targetSemesterSession.id}_${selectedStudent.canvas_id}`] = 1;
+    if (targetSemesterSession) {
+      map[`${targetSemesterSession.id}_${selectedStudent.canvas_id}`] = 1;
+    }
+    map[`${currentSection.id}_${selectedStudent.canvas_id}_${todayStr}`] = 1;
     map[`${activeSession.id}_${selectedStudent.canvas_id}`] = 1;
     saveAttendanceMap(map);
 
