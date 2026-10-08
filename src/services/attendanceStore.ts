@@ -577,19 +577,7 @@ export function getSavedAttendanceMap(): Record<string, AttendanceValue> {
     const raw = localStorage.getItem(ATTENDANCE_MAP_STORAGE_KEY);
     if (!raw) return DEFAULT_ATTENDANCE_MAP;
     const parsed = JSON.parse(raw);
-
-    // Si aún no se ha purgado el marcaje masivo de prueba del 07/10, limpiarlo del caché local
-    if (!localStorage.getItem(PURGE_OCT07_FLAG_KEY)) {
-      Object.keys(parsed).forEach((k) => {
-        if (k.includes("2026-10-07")) {
-          delete parsed[k];
-        }
-      });
-      localStorage.setItem(ATTENDANCE_MAP_STORAGE_KEY, JSON.stringify(parsed));
-      localStorage.setItem(PURGE_OCT07_FLAG_KEY, "true");
-    }
-
-    return { ...parsed, ...DEFAULT_ATTENDANCE_MAP };
+    return { ...DEFAULT_ATTENDANCE_MAP, ...parsed };
   } catch {
     return DEFAULT_ATTENDANCE_MAP;
   }
@@ -623,7 +611,7 @@ export function getSavedStudentWorkRecords(): Record<number, StudentWorkRecord> 
     const raw = localStorage.getItem(STUDENT_WORK_RECORDS_KEY);
     if (!raw) return DEFAULT_STUDENT_WORK_RECORDS;
     const parsed = JSON.parse(raw);
-    return { ...parsed, ...DEFAULT_STUDENT_WORK_RECORDS };
+    return { ...DEFAULT_STUDENT_WORK_RECORDS, ...parsed };
   } catch {
     return DEFAULT_STUDENT_WORK_RECORDS;
   }
