@@ -153,7 +153,8 @@ export function getSavedSections(): CourseSection[] {
       const catDias = catRaw.length > 0 ? catRaw : (matchInit?.horarioCatedra?.dias || [3]);
 
       const ayudRaw = (sec.horarioAyudantia?.dias || []).filter((d) => d >= 0 && d <= 6);
-      const ayudDias = ayudRaw.length > 0 ? ayudRaw : (matchInit?.horarioAyudantia?.dias || [3]);
+      // REGLA ESTRICTA INSTITUCIONAL: Las ayudantías tienen obligatoriamente 1 día oficial por semana
+      const ayudDias = ayudRaw.length > 0 ? [ayudRaw[0]] : (matchInit?.horarioAyudantia?.dias || [3]);
 
       let prof = sec.profesor || matchInit?.profesor;
       if (sec.codigo === "CIT3203_CA01") {
@@ -393,6 +394,14 @@ export function generateSemesterSessions(
   const end = new Date(ey, em - 1, ed, 12, 0, 0);
   let idCounter = 1;
 
+  // Rastreo estricto de semanas calendario para ayudantías (Lunes de cada semana)
+  // REGLA INSTITUCIONAL: Las ayudantías tienen obligatoriamente UNA SOLA clase por semana en la planilla
+  const seenAyudantiaWeeks = new Set<string>();
+  const getWeekKey = (dt: Date) => {
+    const monday = new Date(dt.getFullYear(), dt.getMonth(), dt.getDate() - ((dt.getDay() + 6) % 7));
+    return `${monday.getFullYear()}-${monday.getMonth() + 1}-${monday.getDate()}`;
+  };
+
   while (current <= end) {
     const dayOfWeek = current.getDay(); // 0=Dom, 1=Lun, 2=Mar, 3=Mie, 4=Jue, 5=Vie, 6=Sab
     // EXCLUSIÓN ESTRICTA: Ni sábados ni domingos jamás
@@ -408,10 +417,13 @@ export function generateSemesterSessions(
 
     const isCatedra = seccion.horarioCatedra?.dias?.includes(dayOfWeek);
     const isCatedra2 = seccion.horarioCatedra2?.dias?.includes(dayOfWeek);
-    const isAyudantia = seccion.horarioAyudantia?.dias?.includes(dayOfWeek);
-    const isAyudantia2 = seccion.horarioAyudantia2?.dias?.includes(dayOfWeek);
+    
+    // REGLA ESTRICTA: Ayudantías OBLIGATORIAMENTE 1 clase por semana en la planilla oficial.
+    // El Bloque 2 (horarioAyudantia2) es secundario/alternativo y NUNCA genera una segunda clase semanal.
+    const currentWeekKey = getWeekKey(current);
+    const isAyudantia = Boolean(seccion.horarioAyudantia?.dias?.includes(dayOfWeek) && !seenAyudantiaWeeks.has(currentWeekKey));
 
-    if (isCatedra || isCatedra2 || isAyudantia || isAyudantia2) {
+    if (isCatedra || isCatedra2 || isAyudantia) {
       const feriado = isDateUDPHoliday(dateStr);
 
       // Si es feriado o receso institucional, NO se crea sesión (solo clases reales efectivas)
@@ -450,6 +462,7 @@ export function generateSemesterSessions(
         }
 
         if (isAyudantia) {
+          seenAyudantiaWeeks.add(currentWeekKey);
           sessions.push({
             id: `sess_${secIdentifier}_ayu_${dateStr}`,
             seccionId: seccion.id,
@@ -458,25 +471,9 @@ export function generateSemesterSessions(
             tipo: "ayudantia",
             modalidad: "presencial",
             estado: "programada",
-            horaInicio: seccion.horarioAyudantia?.horaInicio || "14:30",
-            horaFin: seccion.horarioAyudantia?.horaFin || "16:00",
+            horaInicio: seccion.horarioAyudantia?.horaInicio || "16:00",
+            horaFin: seccion.horarioAyudantia?.horaFin || "17:20",
             sala: seccion.horarioAyudantia?.sala || "No definida",
-            pin: getSectionDailyPin(seccion, dateStr),
-          });
-        }
-
-        if (isAyudantia2 && seccion.horarioAyudantia2 && !isAyudantia) {
-          sessions.push({
-            id: `sess_${secIdentifier}_ayu2_${dateStr}`,
-            seccionId: seccion.id,
-            fecha: dateStr,
-            diaSemana: DIA_SEMANA_NOMBRES[dayOfWeek],
-            tipo: "ayudantia",
-            modalidad: "presencial",
-            estado: "programada",
-            horaInicio: seccion.horarioAyudantia2.horaInicio,
-            horaFin: seccion.horarioAyudantia2.horaFin,
-            sala: seccion.horarioAyudantia2.sala || "No definida",
             pin: getSectionDailyPin(seccion, dateStr),
           });
         }
@@ -523,8 +520,12 @@ export function getSavedSessionOverrides(): Record<string, SessionOverride> {
   try {
     const raw = localStorage.getItem(SESSION_OVERRIDES_KEY) || localStorage.getItem("udp_session_overrides_v1");
     const parsed = raw ? JSON.parse(raw) : {};
-    // Garantizar que las fechas 2026-10-07 y 2026-09-23 NUNCA queden arrastradas como canceladas por caché antiguo
+    // Garantizar que las fechas 2026-10-07 y 2026-09-23 NUNCA queden arrastradas como canceladas por caché antiguo,
+    // y purgar cualquier residuo de ayu2 o sesiones no oficiales de ayudantía del 2026-10-08
     Object.keys(parsed).forEach((k) => {
+      if (k.includes("_ayu2_") || (k.includes("ayu") && k.includes("2026-10-08"))) {
+        delete parsed[k];
+      }
       if ((k.includes("2026-10-07") || k.includes("2026-09-23")) && parsed[k]?.estado === "cancelada") {
         delete parsed[k];
       }
@@ -577,6 +578,11 @@ export function getSavedAttendanceMap(): Record<string, AttendanceValue> {
     const raw = localStorage.getItem(ATTENDANCE_MAP_STORAGE_KEY);
     if (!raw) return DEFAULT_ATTENDANCE_MAP;
     const parsed = JSON.parse(raw);
+    Object.keys(parsed).forEach((k) => {
+      if (k.includes("_ayu2_") || (k.includes("ayu") && k.includes("2026-10-08"))) {
+        delete parsed[k];
+      }
+    });
     return { ...DEFAULT_ATTENDANCE_MAP, ...parsed };
   } catch {
     return DEFAULT_ATTENDANCE_MAP;

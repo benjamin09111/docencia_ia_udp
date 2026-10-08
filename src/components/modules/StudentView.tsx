@@ -1,20 +1,18 @@
 "use client";
 
-import React, { useState } from "react";
-import { CourseDeliverable, StudentExcelRow, StudentStudyMetrics, StudentSubmission } from "@/types";
+import React, { useState, useEffect, useMemo } from "react";
+import { CourseDeliverable, StudentExcelRow, StudentSubmission, StudentStudyMetrics } from "@/types";
+import { CanvasCourseNav, CourseNavItem } from "@/components/canvas/CanvasCourseNav";
+import { StudentCourseHeader } from "./student/StudentCourseHeader";
+import { StudentHomeTab } from "./student/StudentHomeTab";
+import { StudentSumativasTab } from "./student/StudentSumativasTab";
+import { StudentActivitiesTab } from "./student/StudentActivitiesTab";
 import { StudentLearnChatTab } from "./student/StudentLearnChatTab";
 import { StudentPracticeLabTab } from "./student/StudentPracticeLabTab";
 import { StudentAttendanceGradesTab } from "./student/StudentAttendanceGradesTab";
-import { StudentActivitiesTab } from "./student/StudentActivitiesTab";
-import { CanvasTabs, CanvasTabItem } from "@/components/canvas/CanvasTabs";
-import {
-  GraduationCap,
-  Brain,
-  ListChecks,
-  CalendarCheck,
-  Sparkles,
-  Award,
-} from "lucide-react";
+import { Home, FileText, Sparkles, Brain, ListChecks, CalendarCheck } from "lucide-react";
+
+export type StudentWorkspaceTab = "inicio" | "sumativas" | "formativas" | "aprendizaje" | "practica" | "asistencia";
 
 interface StudentViewProps {
   entregables?: CourseDeliverable[];
@@ -22,6 +20,7 @@ interface StudentViewProps {
   estudiantesExcel?: StudentExcelRow[];
   onSubmitActivity?: (deliverableId: string, solutionText: string) => void;
   onSendAppeal?: (submissionId: string, appealText: string) => void;
+  onActiveCourseChange?: (info: { courseCode: string; tabTitle: string } | null) => void;
 }
 
 export const StudentView: React.FC<StudentViewProps> = ({
@@ -30,10 +29,9 @@ export const StudentView: React.FC<StudentViewProps> = ({
   estudiantesExcel = [],
   onSubmitActivity = () => {},
   onSendAppeal = () => {},
+  onActiveCourseChange,
 }) => {
-  const [activeTab, setActiveTab] = useState<string>("actividades");
-
-  // Métricas de estudio registradas
+  const [activeTab, setActiveTab] = useState<StudentWorkspaceTab>("inicio");
   const [studyMetrics, setStudyMetrics] = useState<StudentStudyMetrics>({
     preguntasRealizadas: 14,
     actividadesCompletadas: 3,
@@ -41,6 +39,27 @@ export const StudentView: React.FC<StudentViewProps> = ({
     casosResueltos: 1,
     puntosEstudio: 85,
   });
+
+  const courseCode = "CIT3000_CA02";
+
+  const navItems: CourseNavItem[] = useMemo(() => [
+    { id: "inicio", label: "Página de inicio", icon: <Home size={15} /> },
+    { id: "sumativas", label: "Evaluaciones sumativas", icon: <FileText size={15} /> },
+    { id: "formativas", label: "Evaluaciones formativas", icon: <Sparkles size={15} /> },
+    { id: "aprendizaje", label: "Tutor IA (Aprendizaje)", icon: <Brain size={15} /> },
+    { id: "practica", label: "Laboratorio de Práctica", icon: <ListChecks size={15} /> },
+    { id: "asistencia", label: "Calificaciones y Asistencia", icon: <CalendarCheck size={15} /> },
+  ], []);
+
+  useEffect(() => {
+    const activeLabel = navItems.find((n) => n.id === activeTab)?.label || "Módulos";
+    onActiveCourseChange?.({ courseCode, tabTitle: activeLabel });
+    return () => onActiveCourseChange?.(null);
+  }, [activeTab, navItems, onActiveCourseChange]);
+
+  const handleUpdateMetrics = (patch: Partial<StudentStudyMetrics>) => {
+    setStudyMetrics((prev) => ({ ...prev, ...patch }));
+  };
 
   const handleQuestionInChat = () => {
     setStudyMetrics((prev) => ({
@@ -50,107 +69,84 @@ export const StudentView: React.FC<StudentViewProps> = ({
     }));
   };
 
-  const handleUpdateMetrics = (patch: Partial<StudentStudyMetrics>) => {
-    setStudyMetrics((prev) => ({
-      ...prev,
-      ...patch,
-    }));
-  };
-
-  const actividadesAyudantia = entregables.filter((e) => e.tipo === "actividad_ayudantia");
-
-  const studentTabs: CanvasTabItem[] = [
-    {
-      id: "actividades",
-      label: "Actividades & Entregas (+Décimas)",
-      icon: <Award size={14} />,
-      badge: (
-        <span className="bg-purple-100 text-purple-800 text-[10px] px-1.5 py-0.2 rounded-full font-bold font-mono">
-          {actividadesAyudantia.length} activas
-        </span>
-      ),
-    },
-    {
-      id: "aprendizaje",
-      label: "Aprendizaje (Chat Tutor IA)",
-      icon: <Brain size={14} />,
-    },
-    {
-      id: "evaluaciones",
-      label: "Evaluaciones para Aprender",
-      icon: <ListChecks size={14} />,
-    },
-    {
-      id: "asistencia",
-      label: "Mi Asistencia y Notas",
-      icon: <CalendarCheck size={14} />,
-    },
-  ];
-
   return (
-    <div className="space-y-4 animate-fadeIn">
-      {/* Banner Principal del Estudiante UDP */}
-      <div className="bg-white border border-[#E0E3E6] rounded-[4px] p-5 shadow-canvas-card">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="text-[11px] font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 uppercase">
-                Portal del Estudiante UDP
-              </span>
-              <span className="text-xs text-[#6B7780]">
-                Asignatura Oficial • CIT3000 / CIT3203 • Semestre 2026-2
-              </span>
-            </div>
-            <h1 className="text-lg font-bold text-[#2D3B45] mt-1 flex items-center gap-2">
-              <GraduationCap size={20} className="text-[#C8102E]" />
-              ARQUITECTURA DE SOFTWARE & GESTIÓN TIC
-            </h1>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <div className="px-3 py-1.5 bg-blue-50 border border-blue-200 rounded-[4px] text-xs flex items-center gap-2">
-              <Sparkles size={14} className="text-[#008EE2]" />
-              <span className="text-[#008EE2] font-medium">Estudio Registrado:</span>
-              <span className="text-[#2D3B45] font-extrabold">{studyMetrics.preguntasRealizadas} preguntas</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Tabs Reutilizables Canvas */}
-      <CanvasTabs
-        tabs={studentTabs}
-        activeTab={activeTab}
-        onChange={setActiveTab}
+    <div className="flex flex-col md:flex-row gap-6 items-start w-full animate-fadeIn">
+      {/* Mini Sidebar Canvas (#section-tabs) */}
+      <CanvasCourseNav
+        termText="2026-2"
+        sectionText="CIT3000_CA02"
+        items={navItems}
+        activeId={activeTab}
+        onSelect={(id) => setActiveTab(id as StudentWorkspaceTab)}
       />
 
-      {/* Contenido de las Tabs */}
-      {activeTab === "actividades" && (
-        <StudentActivitiesTab
-          entregables={entregables}
-          entregasAlumnos={entregasAlumnos}
-          onSubmitActivity={onSubmitActivity}
-          onSendAppeal={onSendAppeal}
-        />
-      )}
+      {/* Selector Móvil */}
+      <div className="md:hidden w-full bg-white border border-[#E0E3E6] rounded-[4px] p-3 shadow-canvas-card mb-2">
+        <select
+          value={activeTab}
+          aria-label="Seleccionar módulo del estudiante"
+          onChange={(e) => setActiveTab(e.target.value as StudentWorkspaceTab)}
+          className="w-full border border-[#C7CDD1] rounded px-2.5 py-1.5 text-xs bg-white text-[#2D3B45] font-semibold"
+        >
+          {navItems.map((item) => (
+            <option key={item.id} value={item.id}>{item.label}</option>
+          ))}
+        </select>
+      </div>
 
-      {activeTab === "aprendizaje" && (
-        <StudentLearnChatTab
-          onQuestionAsked={handleQuestionInChat}
-          preguntasContador={studyMetrics.preguntasRealizadas}
+      {/* Área Principal de Contenido */}
+      <div className="flex-1 min-w-0 w-full">
+        <StudentCourseHeader
+          courseCode="CIT3000_CA02"
+          courseName="ARQUITECTURA DE SOFTWARE & GESTIÓN TIC"
+          profesor="Jorge Esteban Cruz León"
+          ayudante="Benjamín Morales Pizarro"
+          horario="Mié 16:00 - 17:20 | Bloque 2: Mié 20:10 - 21:30"
         />
-      )}
 
-      {activeTab === "evaluaciones" && (
-        <StudentPracticeLabTab
-          metrics={studyMetrics}
-          onUpdateMetrics={handleUpdateMetrics}
-        />
-      )}
+        {activeTab === "inicio" && (
+          <StudentHomeTab
+            entregables={entregables}
+            onNavigateTab={(tab) => setActiveTab(tab as StudentWorkspaceTab)}
+          />
+        )}
 
-      {activeTab === "asistencia" && (
-        <StudentAttendanceGradesTab estudiantesExcel={estudiantesExcel} />
-      )}
+        {activeTab === "sumativas" && (
+          <StudentSumativasTab
+            entregables={entregables}
+            entregasAlumnos={entregasAlumnos}
+          />
+        )}
+
+        {activeTab === "formativas" && (
+          <StudentActivitiesTab
+            entregables={entregables}
+            entregasAlumnos={entregasAlumnos}
+            onSubmitActivity={onSubmitActivity}
+            onSendAppeal={onSendAppeal}
+          />
+        )}
+
+        {activeTab === "aprendizaje" && (
+          <StudentLearnChatTab
+            onQuestionAsked={handleQuestionInChat}
+            preguntasContador={studyMetrics.preguntasRealizadas}
+          />
+        )}
+
+        {activeTab === "practica" && (
+          <StudentPracticeLabTab
+            metrics={studyMetrics}
+            onUpdateMetrics={handleUpdateMetrics}
+          />
+        )}
+
+        {activeTab === "asistencia" && (
+          <StudentAttendanceGradesTab
+            estudiantesExcel={estudiantesExcel}
+          />
+        )}
+      </div>
     </div>
   );
 };

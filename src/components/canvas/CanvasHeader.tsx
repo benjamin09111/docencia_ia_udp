@@ -1,158 +1,69 @@
 "use client";
 
-import React, { useState } from "react";
-import { UserRole } from "@/types";
-import { ShieldCheck, GraduationCap, School, CheckCircle2, Network, LogOut } from "lucide-react";
-import { FutureConnectionsModal } from "@/components/modules/common/FutureConnectionsModal";
+import React from "react";
+import { Menu, Glasses, ChevronRight } from "lucide-react";
 
 interface CanvasHeaderProps {
-  currentRole: UserRole;
-  onRoleChange: (role: UserRole) => void;
-  breadcrumbs?: string[];
-  userName?: string;
+  courseCode?: string;
+  currentPageTitle?: string;
+  isStudentView?: boolean;
+  onToggleStudentView?: () => void;
+  onToggleCourseNav?: () => void;
 }
 
 export const CanvasHeader: React.FC<CanvasHeaderProps> = ({
-  currentRole,
-  onRoleChange,
-  breadcrumbs = [
-    "Universidad Diego Portales",
-    "Facultad de Ingeniería",
-    "Ingeniería Civil en Informática y Telecomunicaciones",
-  ],
-  userName = "Benjamín Morales Pizarro",
+  courseCode = "CIT3203_CA01",
+  currentPageTitle = "Módulos",
+  isStudentView = false,
+  onToggleStudentView,
+  onToggleCourseNav,
 }) => {
-  const [showConnectionsModal, setShowConnectionsModal] = useState(false);
-
-  const handleLogout = async () => {
-    try {
-      await fetch("/api/auth/logout", { method: "POST" });
-    } catch {}
-    window.location.href = "/login";
-  };
-
   return (
-    <header className="h-16 bg-white border-b border-canvas-border-light px-3 sm:px-6 flex items-center justify-between shadow-canvas-card sticky top-0 z-20 gap-2">
-      {/* Breadcrumbs Canvas Style */}
-      <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-[13px] text-canvas-muted min-w-0 flex-1 overflow-x-auto no-scrollbar py-1">
-        {breadcrumbs.map((crumb, idx) => {
-          const isLast = idx === breadcrumbs.length - 1;
-          const isFirst = idx === 0;
-          const isMiddle = idx > 0 && !isLast;
-
-          return (
-            <React.Fragment key={idx}>
-              <span
-                className={`whitespace-nowrap transition-colors ${
-                  isLast
-                    ? "font-bold text-canvas-dark text-[13px] sm:text-[14px]"
-                    : "hover:underline cursor-pointer text-canvas-muted hover:text-[#008EE2]"
-                } ${isFirst ? "hidden md:inline" : ""} ${isMiddle ? "hidden xl:inline" : ""}`}
-              >
-                {crumb}
-              </span>
-              {!isLast && (
-                <span
-                  className={`text-gray-400 font-light select-none shrink-0 ${
-                    isFirst ? "hidden md:inline" : ""
-                  } ${isMiddle ? "hidden xl:inline" : ""}`}
-                >
-                  &gt;
-                </span>
-              )}
-            </React.Fragment>
-          );
-        })}
-      </div>
-
-      {/* Botón Futuras Conexiones & Role Switcher for Demo */}
-      <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
+    <header className="h-14 bg-white border-b border-[#E0E3E6] px-4 sm:px-6 flex items-center justify-between sticky top-0 z-20 select-none">
+      {/* Botón hamburguesa rojo UDP + Breadcrumbs Oficiales Canvas (#breadcrumbs) */}
+      <div className="flex items-center gap-3.5 min-w-0 flex-1">
         <button
           type="button"
-          onClick={() => setShowConnectionsModal(true)}
-          className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-[4px] text-xs font-semibold border border-purple-200 bg-purple-50 text-purple-900 hover:bg-purple-100 transition-colors shadow-2xs"
-          title="Ver visión de integración y futuras conexiones institucionales UDP"
+          onClick={onToggleCourseNav}
+          className="text-[#B71C1C] hover:text-[#7F1010] p-1.5 rounded hover:bg-red-50 transition-colors cursor-pointer"
+          aria-label="Alternar menú de navegación de cursos"
+          title="Ocultar/mostrar menú de navegación"
         >
-          <Network size={14} className="text-purple-700 shrink-0" />
-          <span className="hidden md:inline">Futuras conexiones</span>
-          <span className="text-[10px] bg-purple-200 text-purple-950 px-1.5 py-0.2 rounded font-bold">
-            Visión
-          </span>
+          <Menu size={22} className="stroke-[2.5]" />
         </button>
 
-        <div className="flex items-center bg-gray-100 p-0.5 sm:p-1 rounded-[6px] border border-gray-200">
-          <button
-            onClick={() => onRoleChange("admin")}
-            className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 rounded-[4px] text-xs font-medium transition-all ${
-              currentRole === "admin"
-                ? "bg-white text-udp-red shadow-sm border border-gray-200 font-semibold"
-                : "text-canvas-muted hover:text-canvas-dark"
-            }`}
-            title="Cambiar a vista Admin CREA"
-          >
-            <ShieldCheck size={13} className="sm:w-3.5 sm:h-3.5" />
-            <span className="hidden sm:inline">Admin CREA</span>
-            <span className="sm:hidden">Admin</span>
-          </button>
-
-          <button
-            onClick={() => onRoleChange("teacher")}
-            className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 rounded-[4px] text-xs font-medium transition-all ${
-              currentRole === "teacher"
-                ? "bg-white text-canvas-blue shadow-sm border border-gray-200 font-semibold"
-                : "text-canvas-muted hover:text-canvas-dark"
-            }`}
-            title="Cambiar a vista Docente / Ayudante"
-          >
-            <School size={13} className="sm:w-3.5 sm:h-3.5" />
-            <span className="hidden lg:inline">Docente / Ayudante</span>
-            <span className="lg:hidden">Docente</span>
-          </button>
-
-          <button
-            onClick={() => onRoleChange("student")}
-            className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 rounded-[4px] text-xs font-medium transition-all ${
-              currentRole === "student"
-                ? "bg-white text-emerald-700 shadow-sm border border-gray-200 font-semibold"
-                : "text-canvas-muted hover:text-canvas-dark"
-            }`}
-            title="Cambiar a vista Estudiante"
-          >
-            <GraduationCap size={13} className="sm:w-3.5 sm:h-3.5" />
-            <span className="hidden sm:inline">Estudiante</span>
-            <span className="sm:hidden">Alumno</span>
-          </button>
-        </div>
-
-        <div className="h-6 w-px bg-gray-200 mx-0.5 hidden xl:block" />
-
-        <div className="hidden xl:flex flex-col text-right">
-          <span className="text-xs font-semibold text-canvas-dark leading-tight">{userName}</span>
-          <span className="text-[11px] text-canvas-muted capitalize">
-            {currentRole === "admin"
-              ? "Líder CREA / Facultad"
-              : currentRole === "teacher"
-              ? "Ayudante / Profesor"
-              : "Estudiante UDP"}
+        {/* Breadcrumb Oficial Canvas LMS (#breadcrumbs) */}
+        <nav aria-label="Ruta de navegación" className="flex items-center gap-2 text-base sm:text-[17px] font-semibold truncate">
+          <span className="text-[#B71C1C] hover:underline cursor-pointer truncate">
+            {courseCode}
           </span>
-        </div>
-
-        <button
-          type="button"
-          onClick={handleLogout}
-          className="flex items-center gap-1.5 px-2 sm:px-2.5 py-1.5 rounded-[4px] text-xs font-semibold text-gray-500 hover:text-[#C8102E] hover:bg-red-50 border border-gray-200 hover:border-red-200 transition-colors cursor-pointer"
-          title="Cerrar sesión institucional y bloquear acceso"
-        >
-          <LogOut size={13} className="shrink-0" />
-          <span className="hidden sm:inline">Salir</span>
-        </button>
+          <ChevronRight size={16} className="text-[#6B7780] shrink-0" />
+          <span className="text-[#2D3B45] truncate font-bold" suppressHydrationWarning>
+            {currentPageTitle}
+          </span>
+        </nav>
       </div>
 
-      {/* Modal Futuras Conexiones */}
-      <FutureConnectionsModal
-        isOpen={showConnectionsModal}
-        onClose={() => setShowConnectionsModal(false)}
-      />
+      {/* Lado derecho: Botón Canvas "Ver como estudiante" */}
+      {onToggleStudentView && (
+        <div className="flex items-center gap-3 shrink-0">
+          <button
+            type="button"
+            onClick={onToggleStudentView}
+            className={`flex items-center gap-2 px-3.5 py-1.5 text-xs sm:text-sm font-medium rounded-[3px] border transition-colors cursor-pointer shadow-2xs ${
+              isStudentView
+                ? "bg-[#B71C1C] text-white border-[#A60D24]"
+                : "bg-[#F5F6F8] hover:bg-gray-100 text-[#2D3B45] border-[#C7CDD1]"
+            }`}
+            title="Alternar vista de estudiante"
+          >
+            <Glasses size={17} />
+            <span className="hidden sm:inline" suppressHydrationWarning>
+              {isStudentView ? "Salir de vista estudiante" : "Ver como estudiante"}
+            </span>
+          </button>
+        </div>
+      )}
     </header>
   );
 };

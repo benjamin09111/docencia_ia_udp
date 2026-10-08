@@ -116,6 +116,9 @@ export const AdminSectionScheduleEditor: React.FC<AdminSectionScheduleEditorProp
               <Trash2 size={12} /> Quitar 2do Horario
             </button>
           </div>
+          <p className="text-[10px] text-amber-900 bg-amber-100/70 p-2 rounded leading-relaxed">
+            <strong>Función clave del Horario Secundario:</strong> Habilita la apertura del enlace de asistencia y el check-in (PIN + GPS) en este bloque alternativo, acreditando la presencia a la sesión semanal de la planilla oficial sin generar columnas duplicadas.
+          </p>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
               <label className="text-[11px] font-bold text-gray-600 block mb-1">Día Semanal</label>

@@ -12,6 +12,7 @@ import { initialCourseData, getStoredCourseGrades, saveStoredCourseGrades } from
 export default function DashboardPage() {
   const [currentRole, setCurrentRole] = useState<UserRole>("admin");
   const [activeNav, setActiveNav] = useState("docencia_ia");
+  const [activeCourseBreadcrumb, setActiveCourseBreadcrumb] = useState<{ courseCode: string; tabTitle: string } | null>(null);
 
   // Canvas API state
   const [canvasUser, setCanvasUser] = useState<CanvasUser>({
@@ -32,19 +33,18 @@ export default function DashboardPage() {
   const [estudiantesExcel, setEstudiantesExcel] = useState<StudentExcelRow[]>([]);
   const [entregasAlumnos, setEntregasAlumnos] = useState(initialCourseData.entregas_alumnos);
 
-  useEffect(() => {
-    setEstudiantesExcel(getStoredCourseGrades("CIT3000_CA02"));
-  }, []);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const params = new URLSearchParams(window.location.search);
-      const roleParam = params.get("role") || params.get("rol");
-      if (roleParam === "student" || roleParam === "estudiante" || roleParam === "alumno") {
-        setCurrentRole("student");
-      } else if (roleParam === "teacher" || roleParam === "profesor" || roleParam === "docente" || roleParam === "ayudante") {
-        setCurrentRole("teacher");
-      }
+    setMounted(true);
+    setEstudiantesExcel(getStoredCourseGrades("CIT3000_CA02"));
+
+    const params = new URLSearchParams(window.location.search);
+    const roleParam = params.get("role") || params.get("rol");
+    if (roleParam === "student" || roleParam === "estudiante" || roleParam === "alumno") {
+      setCurrentRole("student");
+    } else if (roleParam === "teacher" || roleParam === "profesor" || roleParam === "docente" || roleParam === "ayudante") {
+      setCurrentRole("teacher");
     }
   }, []);
 
@@ -244,24 +244,32 @@ export default function DashboardPage() {
 
   return (
     <div className="flex min-h-screen bg-[#F5F6F8]">
-      {/* Sidebar estilo Canvas Global */}
+      {/* Sidebar estilo Canvas Global con los 3 iconos de vista */}
       <CanvasSidebar
+        currentRole={currentRole}
+        onRoleChange={(role) => {
+          setCurrentRole(role);
+          setActiveCourseBreadcrumb(null);
+        }}
         activeNav={activeNav}
         onNavClick={setActiveNav}
         userName={canvasUser.short_name}
         userAvatar={canvasUser.avatar_url}
       />
 
-      {/* Contenido Principal con Navbar Superior */}
+      {/* Contenido Principal */}
       <div className="flex-1 flex flex-col min-w-0">
-        <CanvasHeader
-          currentRole={currentRole}
-          onRoleChange={setCurrentRole}
-          breadcrumbs={getBreadcrumbs()}
-          userName={canvasUser.short_name}
-        />
+        {/* Barra Superior Canvas (#breadcrumbs): SOLO aparece cuando estamos dentro de un curso */}
+        {activeCourseBreadcrumb && (
+          <CanvasHeader
+            courseCode={activeCourseBreadcrumb.courseCode}
+            currentPageTitle={activeCourseBreadcrumb.tabTitle}
+            isStudentView={currentRole === "student"}
+            onToggleStudentView={() => setCurrentRole(currentRole === "student" ? "teacher" : "student")}
+          />
+        )}
 
-        <main className="p-3 sm:p-5 lg:p-6 max-w-7xl w-full mx-auto flex-1 min-w-0">
+        <main className="p-6 sm:p-8 lg:p-10 w-full flex-1 min-w-0 bg-white">
           {currentRole === "admin" && (
             <AdminView />
           )}
@@ -275,6 +283,7 @@ export default function DashboardPage() {
               onAddDeliverable={handleAddDeliverable}
               onUpdateGrade={handleUpdateGrade}
               onResolveAppeal={handleResolveAppeal}
+              onActiveCourseChange={setActiveCourseBreadcrumb}
             />
           )}
 
@@ -285,6 +294,7 @@ export default function DashboardPage() {
               estudiantesExcel={estudiantesExcel}
               onSubmitActivity={handleSubmitStudentActivity}
               onSendAppeal={handleSendAppeal}
+              onActiveCourseChange={setActiveCourseBreadcrumb}
             />
           )}
         </main>

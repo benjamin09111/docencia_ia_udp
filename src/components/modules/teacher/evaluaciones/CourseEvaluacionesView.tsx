@@ -169,7 +169,7 @@ export const CourseEvaluacionesView: React.FC<CourseEvaluacionesViewProps> = ({
           </div>
           <h2 className="text-base sm:text-lg font-bold text-[#2D3B45] mt-1 flex items-center gap-2">
             <FileText size={18} className="text-[#008EE2]" />
-            Módulo Oficial de Evaluaciones y Pruebas Colegiadas
+            Módulo Oficial de Evaluaciones Sumativas y Pruebas Colegiadas
           </h2>
           <p className="text-xs text-[#6B7780] mt-0.5 max-w-3xl leading-relaxed">
             Plataforma sistematizada para que los equipos docentes diseñen evaluaciones estándar con asistencia de creatividad IA (variaciones de pruebas anteriores), formato listo para imprimir y sincronización directa con Tareas de Canvas.

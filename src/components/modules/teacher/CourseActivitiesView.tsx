@@ -142,13 +142,13 @@ export const CourseActivitiesView: React.FC<CourseActivitiesViewProps> = ({
       <div className="bg-white border border-[#E0E3E6] rounded-[4px] p-4 sm:p-5 shadow-canvas-card flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <span className="px-2 py-0.5 bg-blue-50 text-[#008EE2] text-[11px] font-bold rounded uppercase border border-blue-200">
-            Actividades extra
+            Evaluaciones Formativas
           </span>
           <h2 className="text-base font-bold text-[#2D3B45] mt-1">
-            Actividades extra
+            Módulo de Evaluaciones Formativas & Actividades de Taller
           </h2>
           <p className="text-xs text-[#6B7780] mt-0.5">
-            Gestión de actividades formativas, entregas y apelaciones.
+            Gestión de actividades formativas, checkpoints de proyecto, décimas y apelaciones.
           </p>
         </div>
 

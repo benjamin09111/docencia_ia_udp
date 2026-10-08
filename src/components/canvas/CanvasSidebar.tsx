@@ -1,109 +1,124 @@
 "use client";
 
 import React from "react";
+import { UserRole } from "@/types";
 import {
   User,
-  LayoutDashboard,
-  BookOpen,
+  Sparkles,
+  School,
+  GraduationCap,
+  Gauge,
   Calendar,
   Inbox,
   HelpCircle,
-  Bot,
-  GraduationCap,
+  ChevronLeft,
 } from "lucide-react";
 
 interface CanvasSidebarProps {
-  activeNav: string;
-  onNavClick: (nav: string) => void;
+  currentRole: UserRole;
+  onRoleChange: (role: UserRole) => void;
+  activeNav?: string;
+  onNavClick?: (nav: string) => void;
   userName?: string;
   userAvatar?: string;
 }
 
 export const CanvasSidebar: React.FC<CanvasSidebarProps> = ({
+  currentRole,
+  onRoleChange,
   activeNav,
   onNavClick,
   userName = "Benjamín Morales",
   userAvatar,
 }) => {
-  const navItems = [
-    { id: "dashboard", label: "Tablero", icon: LayoutDashboard },
-    { id: "courses", label: "Cursos", icon: BookOpen },
-    { id: "docencia_ia", label: "Docencia IA", icon: Bot, isSpecial: true },
-    { id: "calendar", label: "Calendario", icon: Calendar },
-    { id: "inbox", label: "Bandeja", icon: Inbox },
+  const roleViews: { id: UserRole; label: string; icon: any; title: string }[] = [
+    { id: "admin", label: "UDP IA", icon: Sparkles, title: "Administración global & Gestión de agentes IA" },
+    { id: "teacher", label: "Docencia", icon: School, title: "Docencia: Profesores y Ayudantes" },
+    { id: "student", label: "Aprendizaje con IA", icon: GraduationCap, title: "Estudiantes: Aprendizaje guiado y retroalimentación IA" },
   ];
 
+  // Utilidades institucionales estándar de Canvas LMS
+  const institutionalTools = [
+    { id: "dashboard", label: "Tablero", icon: Gauge },
+    { id: "calendar", label: "Calendario", icon: Calendar },
+    { id: "inbox", label: "Bandeja", icon: Inbox, badge: "66" },
+    { id: "help", label: "Ayuda", icon: HelpCircle, badge: "1" },
+  ];
+
+  const handleRoleSelect = (role: UserRole) => {
+    onRoleChange(role);
+    onNavClick?.(role);
+  };
+
   return (
-    <aside className="w-14 sm:w-16 md:w-[84px] bg-canvas-dark text-white flex flex-col items-center py-2 shrink-0 select-none border-r border-[#1E272E] z-30 sticky top-0 h-screen overflow-y-auto no-scrollbar">
-      {/* UDP Logo / Shield */}
-      <div className="mb-2 text-center flex flex-col items-center cursor-pointer group" title="Universidad Diego Portales">
-        <div className="w-9 h-9 sm:w-10 sm:h-10 md:w-11 md:h-11 bg-udp-red rounded-[4px] flex items-center justify-center font-bold text-xs sm:text-sm md:text-base tracking-wider text-white shadow-sm border border-red-700">
-          UDP
+    <aside
+      aria-label="Navegación global"
+      className="w-16 sm:w-20 md:w-[84px] bg-[#424242] text-white flex flex-col items-center py-2 shrink-0 select-none border-r border-[#333333] z-30 sticky top-0 h-screen overflow-y-auto no-scrollbar"
+    >
+      {/* Logotipo UDP en blanco estilo Canvas (#header) */}
+      <div
+        className="mb-2 text-center flex flex-col items-center cursor-pointer group px-2"
+        onClick={() => handleRoleSelect("teacher")}
+        title="Universidad Diego Portales - Canvas LMS"
+      >
+        <div className="flex items-center gap-0.5 text-white font-bold text-sm tracking-tight hover:opacity-90">
+          <span className="text-white text-base font-black">@</span>
+          <span className="text-white text-sm font-extrabold tracking-wider">udp</span>
         </div>
-        <span className="text-[9px] md:text-[10px] text-gray-300 font-medium tracking-tight mt-1 opacity-90 group-hover:opacity-100 hidden sm:block">
-          Portal
-        </span>
       </div>
 
-      {/* User Account */}
+      {/* Cuenta del usuario */}
       <button
-        onClick={() => onNavClick("account")}
-        className={`w-full flex flex-col items-center py-1.5 sm:py-2 px-1 text-center transition-colors relative ${
-          activeNav === "account" ? "bg-canvas-darker text-white" : "text-gray-300 hover:bg-canvas-hover"
+        type="button"
+        onClick={() => onNavClick?.("account")}
+        className={`w-full flex flex-col items-center py-1.5 px-1 text-center transition-colors relative group cursor-pointer ${
+          activeNav === "account" ? "bg-white text-[#B71C1C]" : "text-gray-200 hover:bg-[#333333]"
         }`}
+        title={`Cuenta oficial: ${userName}`}
       >
-        <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-gray-400 overflow-hidden flex items-center justify-center bg-gray-700 mb-1">
-          {userAvatar ? (
-            <img src={userAvatar} alt={userName} className="w-full h-full object-cover" />
-          ) : (
-            <User size={16} className="text-gray-200" />
-          )}
+        <div className="relative">
+          <div className="w-8 h-8 rounded-full border border-gray-400 overflow-hidden flex items-center justify-center bg-gray-600">
+            {userAvatar ? (
+              <img src={userAvatar} alt={userName} className="w-full h-full object-cover" />
+            ) : (
+              <User size={18} className="text-white" />
+            )}
+          </div>
+          <span className="absolute -top-1 -right-1 bg-[#B71C1C] text-white text-[9px] font-bold rounded-full w-4 h-4 flex items-center justify-center border border-white">
+            1
+          </span>
         </div>
-        <span className="text-[10px] md:text-[11px] font-normal leading-tight truncate max-w-[48px] sm:max-w-[58px] md:max-w-[76px] hidden sm:block">
+        <span className="text-[10px] md:text-[11px] font-medium leading-tight truncate mt-1">
           Cuenta
         </span>
       </button>
 
-      {/* Navigation items */}
-      <nav className="w-full flex flex-col gap-1 mt-1 flex-1">
-        {navItems.map((item) => {
+      {/* SECCIÓN PRINCIPAL: 3 VISTAS DEL ECOSISTEMA */}
+      <nav className="w-full flex flex-col mt-1 space-y-0.5" aria-label="Vistas del sistema">
+        {roleViews.map((item) => {
           const Icon = item.icon;
-          const isActive = activeNav === item.id;
+          const isActive = currentRole === item.id;
           return (
             <button
               key={item.id}
-              onClick={() => onNavClick(item.id)}
-              className={`w-full flex flex-col items-center py-2 sm:py-2.5 px-1 transition-all relative group ${
+              type="button"
+              onClick={() => handleRoleSelect(item.id)}
+              className={`w-full flex flex-col items-center py-2 px-1 transition-all relative group cursor-pointer ${
                 isActive
-                  ? "bg-canvas-darker text-white"
-                  : "text-gray-300 hover:bg-canvas-hover hover:text-white"
+                  ? "bg-white text-[#B71C1C] shadow-xs font-semibold"
+                  : "text-gray-200 hover:bg-[#333333] hover:text-white"
               }`}
-              title={item.label}
+              title={item.title}
             >
-              {isActive && (
-                <div className="absolute left-0 top-0 bottom-0 w-1 bg-udp-red" />
-              )}
               <div className="relative">
                 <Icon
-                  size={20}
-                  className={`md:w-[22px] md:h-[22px] ${
-                    item.isSpecial
-                      ? "text-udp-red group-hover:scale-105 transition-transform"
-                      : isActive
-                      ? "text-white"
-                      : "text-gray-300 group-hover:text-white"
-                  }`}
+                  size={22}
+                  className={isActive ? "text-[#B71C1C]" : "text-gray-300 group-hover:text-white"}
                 />
-                {item.isSpecial && (
-                  <span className="absolute -top-1 -right-1 flex h-2 w-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-udp-red"></span>
-                  </span>
-                )}
               </div>
               <span
-                className={`text-[9px] md:text-[11px] font-medium leading-tight mt-1 text-center truncate max-w-[48px] sm:max-w-[58px] md:max-w-[76px] hidden sm:block ${
-                  item.isSpecial ? "text-red-300 font-semibold" : ""
+                className={`text-[10px] md:text-[11px] font-normal leading-tight mt-1 text-center truncate max-w-[76px] ${
+                  isActive ? "text-[#B71C1C] font-semibold" : "text-gray-200"
                 }`}
               >
                 {item.label}
@@ -113,14 +128,53 @@ export const CanvasSidebar: React.FC<CanvasSidebarProps> = ({
         })}
       </nav>
 
-      {/* Footer / Help */}
-      <div className="w-full flex flex-col items-center mt-auto py-2">
+      {/* Separador sutil */}
+      <div className="w-8 h-[1px] bg-white/20 my-2" />
+
+      {/* Utilidades de Canvas LMS */}
+      <div className="w-full flex flex-col space-y-0.5">
+        {institutionalTools.map((item) => {
+          const Icon = item.icon;
+          const isActive = activeNav === item.id;
+          return (
+            <button
+              key={item.id}
+              type="button"
+              onClick={() => onNavClick?.(item.id)}
+              className={`w-full flex flex-col items-center py-2 px-1 transition-all relative group cursor-pointer ${
+                isActive
+                  ? "bg-white text-[#B71C1C] shadow-xs font-semibold"
+                  : "text-gray-200 hover:bg-[#333333] hover:text-white"
+              }`}
+              title={item.label}
+            >
+              <div className="relative">
+                <Icon
+                  size={20}
+                  className={isActive ? "text-[#B71C1C]" : "text-gray-400 group-hover:text-white"}
+                />
+                {item.badge && (
+                  <span className="absolute -top-1.5 -right-2 bg-[#B71C1C] text-white text-[9px] font-bold rounded-full px-1 min-w-[14px] h-[14px] flex items-center justify-center border border-[#424242]">
+                    {item.badge}
+                  </span>
+                )}
+              </div>
+              <span className="text-[10px] font-normal leading-tight mt-1 text-center truncate max-w-[76px] text-gray-300">
+                {item.label}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Flecha colapsar al fondo */}
+      <div className="w-full flex flex-col items-center mt-auto pt-2 pb-1 border-t border-[#555555]/50">
         <button
-          className="w-full flex flex-col items-center py-1.5 sm:py-2 text-gray-400 hover:text-white hover:bg-canvas-hover transition-colors"
-          title="Ayuda CREA UDP"
+          type="button"
+          className="text-gray-400 hover:text-white p-1 rounded hover:bg-[#333333] transition-colors"
+          title="Minimizar navegación global"
         >
-          <HelpCircle size={18} className="md:w-5 md:h-5" />
-          <span className="text-[9px] md:text-[10px] mt-1 hidden sm:block">Ayuda</span>
+          <ChevronLeft size={18} />
         </button>
       </div>
     </aside>

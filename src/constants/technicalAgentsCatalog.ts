@@ -1,0 +1,66 @@
+import { TechnicalAgentItem } from "@/components/modules/admin/AgentHistoryModal";
+
+export const INITIAL_TECHNICAL_AGENTS: TechnicalAgentItem[] = [
+  {
+    id: "agent_rubrics",
+    codigo: "worker-rubric-engine:v1",
+    nombre: "Agente de Rúbricas y Pautas",
+    especialidad: "Taxonomía de Bloom & Criterios Objetivos",
+    descripcion: "Genera rúbricas con indicadores medibles (Excelente, Aceptable, Insuficiente), desglosa puntajes y exige citas textuales obligatorias para evitar sesgos humanos.",
+    ambito: "Transversal UDP",
+    modelo: "claude-3-5-sonnet",
+    temperatura: 0.1,
+    systemPrompt: "Eres el Agente Oficial de Rúbricas de la Facultad de Ingeniería UDP. Genera rúbricas con descriptores observables y criterios objetivos alineados con la taxonomía de Bloom.",
+    historial: [
+      { id: "h1", timestamp: "Hoy, 10:45", curso: "CIT3203", accion: "Generación de rúbrica Avance 1 (WBS y Riesgos)", tokens: 1420, duracionMs: 820, estado: "completado" },
+      { id: "h2", timestamp: "Ayer, 16:30", curso: "CIT2206", accion: "Validación de criterios de evaluación de caso Harvard", tokens: 980, duracionMs: 640, estado: "completado" },
+      { id: "h3", timestamp: "28 Sep, 11:15", curso: "CIT3100", accion: "Estructuración de pauta para microservicios cloud", tokens: 1650, duracionMs: 910, estado: "completado" },
+    ],
+  },
+  {
+    id: "agent_excel",
+    codigo: "worker-excel-sync:v1",
+    nombre: "Agente de Excel y Actas Oficiales",
+    especialidad: "Cálculo Matricial & Fórmulas Institucionales",
+    descripcion: "Mantiene la plantilla oficial de la Escuela de Informática. Aplica automáticamente las décimas acumuladas en ayudantías y fiscaliza el 75% de asistencia mínima (alerta RI).",
+    ambito: "Escuela de Informática",
+    modelo: "gpt-4o",
+    temperatura: 0.0,
+    systemPrompt: "Eres el Motor de Cálculos y Auditoría de Actas UDP. Aplica fórmulas matriciales sin redondeos distorsivos y respeta la política de 75% de asistencia.",
+    historial: [
+      { id: "h4", timestamp: "Hoy, 11:02", curso: "CIT3203 Sección 1", accion: "Cálculo y auditoría de asistencia acumulada", tokens: 620, duracionMs: 310, estado: "completado" },
+      { id: "h5", timestamp: "Hoy, 09:14", curso: "CIT3203 Sección 2", accion: "Recálculo de décimas de talleres (8 décimas)", tokens: 740, duracionMs: 340, estado: "completado" },
+      { id: "h6", timestamp: "Ayer, 18:20", curso: "CIT2206", accion: "Verificación de alumnos bajo el 75% reglamentario", tokens: 530, duracionMs: 290, estado: "completado" },
+    ],
+  },
+  {
+    id: "agent_pedagogy",
+    codigo: "worker-crea-pedagogy:v1",
+    nombre: "Agente Docente y Pedagógico (CREA)",
+    especialidad: "Metodologías Activas & Psicología del Aprendizaje",
+    descripcion: "Modelado con las directrices del Centro CREA UDP. Asegura andamiaje cognitivo progresivo, clima de aula seguro, trato empático y constructivo, y retroalimentación formativa.",
+    ambito: "Centro CREA UDP",
+    modelo: "gpt-4o",
+    temperatura: 0.3,
+    systemPrompt: "Especialista pedagógico del Centro CREA UDP. Modela el aprendizaje con andamiaje progresivo, reduce la ansiedad ante evaluaciones y promueve autoeficacia.",
+    historial: [
+      { id: "h7", timestamp: "Hoy, 08:30", curso: "CIT3203", accion: "Revisión de carga cognitiva en taller de Scrum", tokens: 1120, duracionMs: 780, estado: "completado" },
+      { id: "h8", timestamp: "Ayer, 15:40", curso: "CIT3100", accion: "Propuesta de dinámica activa de arquitectura por pares", tokens: 1340, duracionMs: 820, estado: "completado" },
+    ],
+  },
+  {
+    id: "agent_equity",
+    codigo: "worker-gender-equity:v1",
+    nombre: "Agente de Género e Inclusión",
+    especialidad: "Auditoría de Sesgos & Equidad en Ingeniería",
+    descripcion: "Fiscaliza que las actividades no reproduzcan estereotipos de género, garantice lenguaje no sexista y promueva liderazgo técnico equitativo en la UDP.",
+    ambito: "Dirección de Género UDP",
+    modelo: "claude-3-5-sonnet",
+    temperatura: 0.2,
+    systemPrompt: "Auditor institucional de perspectiva de género e inclusión de la UDP. Certifica paridad de roles técnicos y lenguaje accesible no excluyente.",
+    historial: [
+      { id: "h9", timestamp: "Hoy, 10:10", curso: "CIT3203", accion: "Certificación de paridad en asignación de roles Scrum", tokens: 890, duracionMs: 510, estado: "completado" },
+      { id: "h10", timestamp: "Ayer, 12:00", curso: "CIT2206", accion: "Auditoría de lenguaje en enunciados de evaluación", tokens: 1050, duracionMs: 610, estado: "completado" },
+    ],
+  },
+];

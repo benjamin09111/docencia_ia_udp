@@ -288,8 +288,19 @@ export function usePublicAttendanceCheckin({
     } catch {}
 
     const semesterSessions = generateSemesterSessions(currentSection);
+    // Vincular la marcación: si se toma en horario secundario (Bloque 2), se acredita a la sesión semanal oficial
+    const getWeekKey = (dt: Date) => {
+      const mon = new Date(dt.getFullYear(), dt.getMonth(), dt.getDate() - ((dt.getDay() + 6) % 7));
+      return `${mon.getFullYear()}-${mon.getMonth() + 1}-${mon.getDate()}`;
+    };
+    const currentWeekKey = getWeekKey(new Date());
+
     const targetSemesterSession =
       semesterSessions.find((s) => s.fecha === todayStr) ||
+      semesterSessions.find((s) => {
+        const [sy, sm, sd] = s.fecha.split("-").map(Number);
+        return getWeekKey(new Date(sy, sm - 1, sd, 12, 0, 0)) === currentWeekKey;
+      }) ||
       semesterSessions.find((s) => s.fecha <= todayStr) ||
       semesterSessions[0];
 
