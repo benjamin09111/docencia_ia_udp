@@ -142,10 +142,28 @@ El objetivo central es consolidar una **Suite Integral de Docencia Automatizada 
 
 ## 🔒 6. MÓDULO CONGELADO: Módulo de Asistencia & Apelaciones (GPS + QR + Rules)
 
-> [!IMPORTANT]
-> **ESTADO OFICIAL: CONCLUIDO, VALIDADO Y CONGELADO (STRICTLY FROZEN)**
-> - Queda **estrictamente prohibido** modificar la arquitectura, esquemas de datos, flujos de marcaje GPS/PIN, reglas de quórum grupal, sincronización con Supabase o componentes del **Módulo de Asistencia** (`src/components/modules/public-attendance/`, `src/components/modules/teacher/attendance/`, `usePublicAttendanceCheckin.ts`, `attendanceStore.ts`, `udpRoomsService.ts`, etc.), salvo instrucción o autorización explícita por escrito del usuario.
-> - Todo el desarrollo futuro debe enfocarse exclusivamente en los módulos restantes del ecosistema (Rúbricas e IA, Agente Copiloto Docente, Evaluaciones Formativas/Sumativas, Cronograma y Métricas), preservando al 100% la estabilidad y datos del módulo de Asistencia.
+> [!CAUTION]
+> **ESTADO OFICIAL: DEFINITIVAMENTE CONCLUIDO, VALIDADO Y CONGELADO (ABSOLUTE FREEZE)**
+> - Queda **estrictamente prohibido** volver a tocar o modificar nada referente a asistencia: arquitectura, esquemas de datos, planillas, archivos de constantes (`initialAttendanceData.ts`, `asistencias.txt`), flujos de marcaje GPS/PIN, reglas de quórum grupal, sincronización con Supabase o componentes del **Módulo de Asistencia** (`src/components/modules/public-attendance/`, `src/components/modules/teacher/attendance/`, `usePublicAttendanceCheckin.ts`, `attendanceStore.ts`, etc.).
+> - Todo el desarrollo futuro se enfoca al 100% en los módulos restantes del ecosistema (Rúbricas e IA, Agente Copiloto Docente, Evaluaciones Formativas/Sumativas, Cronograma, Anuncios y Métricas).
+
+---
+
+## 🗄️ 7. Política Estricta de Doble Base de Datos (PROD vs DEV)
+
+Para proteger de forma inquebrantable los datos reales de los alumnos y la estabilidad institucional:
+1. **Base de Datos de Producción (`PROD`)**:
+   - Variables: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_PASSWORD`.
+   - Contiene la nómina oficial, configuraciones validadas y registros de asistencia auditables.
+   - **Intocable durante el desarrollo diario**: no se ejecutan experimentos, seeds de prueba ni migraciones destructivas sobre esta base.
+2. **Base de Datos de Desarrollo (`DEV`)**:
+   - Variables: `NEXT_PUBLIC_SUPABASE_URL_DEV`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY_DEV`, `SUPABASE_PASSWORD_DEV`.
+   - Entorno espejo donde clonamos la estructura y datos actuales.
+   - **Todo nuevo desarrollo, nuevas tablas y pruebas de agentes o módulos corren exclusivamente aquí**.
+3. **Flujo de Promoción y Migraciones Controladas**:
+   - Nuevos modelos, tablas y funciones SQL se diseñan y prueban primero en la DB DEV.
+   - Cuando una funcionalidad esté terminada y aprobada por el usuario, se genera un script de migración SQL limpio y versionado (`supabase/migrations/`) para aplicarse de forma controlada a la DB PROD.
+
 
 
 

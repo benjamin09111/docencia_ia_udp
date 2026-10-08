@@ -19,6 +19,10 @@ export const AdminView: React.FC = () => {
           setSelectedFaculty(fac);
           setSelectedCareer(null);
         }}
+        onQuickSelect={(faculty, career) => {
+          setSelectedFaculty(faculty);
+          setSelectedCareer(career);
+        }}
       />
     );
   }

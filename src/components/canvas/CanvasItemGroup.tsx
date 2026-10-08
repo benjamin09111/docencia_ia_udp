@@ -101,6 +101,8 @@ export interface CanvasItemGroupProps {
   countBadge?: React.ReactNode;
   weightBadge?: string;
   defaultExpanded?: boolean;
+  isExpanded?: boolean;
+  onToggleExpanded?: () => void;
   onAddClick?: () => void;
   headerActions?: ActionMenuItem[];
   children?: React.ReactNode;
@@ -112,12 +114,23 @@ export const CanvasItemGroup: React.FC<CanvasItemGroupProps> = ({
   countBadge,
   weightBadge,
   defaultExpanded = true,
+  isExpanded: controlledExpanded,
+  onToggleExpanded,
   onAddClick,
   headerActions,
   children,
   className = "",
 }) => {
-  const [isExpanded, setIsExpanded] = useState(defaultExpanded);
+  const [internalExpanded, setInternalExpanded] = useState(defaultExpanded);
+  const isExpanded = controlledExpanded !== undefined ? controlledExpanded : internalExpanded;
+
+  const handleToggle = () => {
+    if (onToggleExpanded) {
+      onToggleExpanded();
+    } else {
+      setInternalExpanded((prev) => !prev);
+    }
+  };
 
   return (
     <div className={`border border-[#C7CDD1] rounded-[3px] bg-white overflow-hidden shadow-2xs mb-6 ${className}`}>
@@ -130,7 +143,7 @@ export const CanvasItemGroup: React.FC<CanvasItemGroupProps> = ({
 
           <button
             type="button"
-            onClick={() => setIsExpanded(!isExpanded)}
+            onClick={handleToggle}
             className="flex items-center gap-2 text-left text-sm sm:text-[15px] font-bold text-[#2D3B45] hover:text-[#008EE2] transition-colors cursor-pointer"
           >
             {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}

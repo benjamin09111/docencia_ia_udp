@@ -211,7 +211,7 @@ export function usePublicAttendanceCheckin({
 
   const sectionStudents = canvasStudents.length > 0
     ? canvasStudents
-    : INITIAL_STUDENTS_ROSTER.filter((s) => s.seccionId === selectedSectionId);
+    : INITIAL_STUDENTS_ROSTER.filter((s) => s.seccionId === selectedSectionId || s.codigo === selectedSectionId || s.seccionId === currentSection.codigo || s.codigo === currentSection.codigo);
 
   const studentOptions: CanvasSearchOption[] = useMemo(() => {
     return sectionStudents.map((st) => ({
@@ -307,9 +307,8 @@ export function usePublicAttendanceCheckin({
     const map = getSavedAttendanceMap();
     if (targetSemesterSession) {
       map[`${targetSemesterSession.id}_${selectedStudent.canvas_id}`] = 1;
+      map[`${currentSection.id}_${selectedStudent.canvas_id}_${targetSemesterSession.fecha}`] = 1;
     }
-    map[`${currentSection.id}_${selectedStudent.canvas_id}_${todayStr}`] = 1;
-    map[`${activeSession.id}_${selectedStudent.canvas_id}`] = 1;
     saveAttendanceMap(map);
 
     // Guardar log auditable inalterable en la bitácora

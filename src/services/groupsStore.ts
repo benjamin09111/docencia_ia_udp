@@ -119,34 +119,6 @@ const DEFAULT_GROUPS: CourseGroup[] = [
       { canvas_id: 42001, nombres: "Martín Gabriel", apellidos: "Ramos Molina" },
     ],
   },
-  // Grupos Mock para Arquitectura de Software (CIT3000_CA02)
-  {
-    id: "grp_arqsoft_101",
-    courseCode: "CIT3000_CA02",
-    sectionId: "sec_arq_soft",
-    name: "Grupo 1 - Microservicios & Event-Driven",
-    categoryName: "Equipos Arquitectura 2026",
-    color: "#008EE2",
-    createdAt: new Date().toISOString(),
-    members: [
-      { canvas_id: 50001, nombres: "Mateo Ignacio", apellidos: "Silva Araya" },
-      { canvas_id: 50002, nombres: "Valentina Paz", apellidos: "Vera Morales" },
-    ],
-  },
-  {
-    id: "grp_arqsoft_102",
-    courseCode: "CIT3000_CA02",
-    sectionId: "sec_arq_soft",
-    name: "Grupo 2 - Atributos de Calidad & Tácticas",
-    categoryName: "Equipos Arquitectura 2026",
-    color: "#C8102E",
-    createdAt: new Date().toISOString(),
-    members: [
-      { canvas_id: 50003, nombres: "Tomás Andrés", apellidos: "Araya Castro" },
-      { canvas_id: 50004, nombres: "Sofía Isabel", apellidos: "Castro Paredes" },
-      { canvas_id: 50005, nombres: "Lucas Benjamín", apellidos: "Morales Rojas" },
-    ],
-  },
 ];
 
 export function getSavedGroups(courseCode?: string, sectionId?: string): CourseGroup[] {

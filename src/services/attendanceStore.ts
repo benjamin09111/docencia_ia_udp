@@ -94,23 +94,6 @@ export const INITIAL_SECTIONS: CourseSection[] = [
     ubicacionLng: -70.6622,
     radioMetros: 500,
   },
-  {
-    id: "sec_arq_soft",
-    codigo: "CIT3000_CA02",
-    cursoNombre: "Arquitectura de Software",
-    nombre: "Sección 2",
-    profesor: "Jorge Esteban Cruz León",
-    ayudante: "Benjamín Morales Pizarro",
-    horarioCatedra: { dias: [1, 3], horaInicio: "08:30", horaFin: "10:00", sala: "LAB-COMP 2" },
-    horarioAyudantia: { dias: [5], horaInicio: "14:30", horaFin: "16:00", sala: "LAB-COMP 2" },
-    pinActivo: "4121",
-    requierePin: true,
-    requiereGeolocalizacion: true,
-    ubicacionNombre: "Facultad de Ingeniería y Ciencias UDP (Av. Ejército Libertador 441)",
-    ubicacionLat: -33.4501,
-    ubicacionLng: -70.6622,
-    radioMetros: 500,
-  },
 ];
 
 export function getCourseNameByCode(codigo?: string): string {
@@ -306,67 +289,9 @@ export function regenerateSectionPin(sectionIdOrCode: string, dateStr?: string):
   return newPin;
 }
 
-export interface StudentRosterItem {
-  canvas_id: number;
-  rut: string;
-  nombres: string;
-  apellidos: string;
-  email: string;
-  seccionId: string;
-}
-
-export const INITIAL_STUDENTS_ROSTER: StudentRosterItem[] = [
-  // Alumnos Sección 1 - TICs II (28 alumnos matriculados)
-  { canvas_id: 29248, rut: "20.481.932-8", nombres: "Benjamín", apellidos: "Morales Pizarro", email: "benjamin.morales3@mail.udp.cl", seccionId: "sec_1" },
-  { canvas_id: 31021, rut: "21.109.845-K", nombres: "Víctor Vicente", apellidos: "Barrera Jorquera", email: "victor.barrera@mail.udp.cl", seccionId: "sec_1" },
-  { canvas_id: 32415, rut: "20.912.433-4", nombres: "Laura Francisca", apellidos: "Salinas Herrera", email: "laura.salinas1@mail.udp.cl", seccionId: "sec_1" },
-  { canvas_id: 33890, rut: "20.765.231-1", nombres: "Francisco", apellidos: "Alvarado Vivanco", email: "francisco.alvarado1@mail.udp.cl", seccionId: "sec_1" },
-  { canvas_id: 34112, rut: "21.345.678-9", nombres: "Camila Ignacia", apellidos: "Tapia González", email: "camila.tapia@mail.udp.cl", seccionId: "sec_1" },
-  { canvas_id: 35190, rut: "20.887.112-5", nombres: "Matías Ignacio", apellidos: "Fuenzalida Castro", email: "matias.fuenzalida@mail.udp.cl", seccionId: "sec_1" },
-  { canvas_id: 36201, rut: "21.002.443-1", nombres: "Valentina Paz", apellidos: "Rojas Vergara", email: "valentina.rojas4@mail.udp.cl", seccionId: "sec_1" },
-  { canvas_id: 37402, rut: "20.654.890-3", nombres: "Joaquín Andrés", apellidos: "Navarro Soto", email: "joaquin.navarro@mail.udp.cl", seccionId: "sec_1" },
-  { canvas_id: 37403, rut: "20.781.234-5", nombres: "Ignacio Alonso", apellidos: "Cordero Méndez", email: "ignacio.cordero@mail.udp.cl", seccionId: "sec_1" },
-  { canvas_id: 37404, rut: "21.234.567-8", nombres: "Sofía Belén", apellidos: "Espinoza Valenzuela", email: "sofia.espinoza@mail.udp.cl", seccionId: "sec_1" },
-  { canvas_id: 37405, rut: "20.912.876-1", nombres: "Tomás Alejandro", apellidos: "Fuentes Silva", email: "tomas.fuentes@mail.udp.cl", seccionId: "sec_1" },
-  { canvas_id: 37406, rut: "21.098.765-4", nombres: "Antonia Isidora", apellidos: "Castillo Lagos", email: "antonia.castillo@mail.udp.cl", seccionId: "sec_1" },
-  { canvas_id: 37407, rut: "20.654.321-9", nombres: "Lucas Gabriel", apellidos: "Paredes Urzúa", email: "lucas.paredes@mail.udp.cl", seccionId: "sec_1" },
-  { canvas_id: 37408, rut: "21.432.987-0", nombres: "Javiera Francisca", apellidos: "Núñez Araya", email: "javiera.nunez@mail.udp.cl", seccionId: "sec_1" },
-  { canvas_id: 37409, rut: "20.876.543-2", nombres: "Martín Eduardo", apellidos: "Reyes Contreras", email: "martin.reyes@mail.udp.cl", seccionId: "sec_1" },
-  { canvas_id: 37410, rut: "21.123.456-7", nombres: "Florencia Paz", apellidos: "Henríquez Carrasco", email: "florencia.henriquez@mail.udp.cl", seccionId: "sec_1" },
-  { canvas_id: 37411, rut: "20.543.210-8", nombres: "Cristóbal Emilio", apellidos: "Vera Bustamante", email: "cristobal.vera@mail.udp.cl", seccionId: "sec_1" },
-  { canvas_id: 37412, rut: "21.321.654-3", nombres: "Isidora Ignacia", apellidos: "Pizarro Bravo", email: "isidora.pizarro@mail.udp.cl", seccionId: "sec_1" },
-  { canvas_id: 37413, rut: "20.987.654-K", nombres: "Maximiliano José", apellidos: "Sepúlveda Díaz", email: "maximiliano.sepulveda@mail.udp.cl", seccionId: "sec_1" },
-  { canvas_id: 37414, rut: "21.210.987-6", nombres: "Catalina Andrea", apellidos: "Olivares Flores", email: "catalina.olivares@mail.udp.cl", seccionId: "sec_1" },
-  { canvas_id: 37415, rut: "20.765.432-1", nombres: "Nicolás Andrés", apellidos: "Garrido Mena", email: "nicolas.garrido@mail.udp.cl", seccionId: "sec_1" },
-  { canvas_id: 37416, rut: "21.012.345-9", nombres: "Fernanda Daniela", apellidos: "Pinto Godoy", email: "fernanda.pinto@mail.udp.cl", seccionId: "sec_1" },
-  { canvas_id: 37417, rut: "20.890.123-4", nombres: "Felipe Esteban", apellidos: "Zamorano Ruiz", email: "felipe.zamorano@mail.udp.cl", seccionId: "sec_1" },
-  { canvas_id: 37418, rut: "21.345.098-7", nombres: "Constanza Nicole", apellidos: "Cárdenas Leiva", email: "constanza.cardenas@mail.udp.cl", seccionId: "sec_1" },
-  { canvas_id: 37419, rut: "20.678.901-2", nombres: "Vicente Javier", apellidos: "Orellana Figueroa", email: "vicente.orellana@mail.udp.cl", seccionId: "sec_1" },
-  { canvas_id: 37420, rut: "21.198.765-3", nombres: "Emilia Javiera", apellidos: "Miranda Toro", email: "emilia.miranda@mail.udp.cl", seccionId: "sec_1" },
-  { canvas_id: 37421, rut: "20.934.567-8", nombres: "Sebastián Ignacio", apellidos: "Riveros Poblete", email: "sebastian.riveros@mail.udp.cl", seccionId: "sec_1" },
-  { canvas_id: 37422, rut: "21.287.654-0", nombres: "Daniela Paz", apellidos: "Saavedra Guzmán", email: "daniela.saavedra@mail.udp.cl", seccionId: "sec_1" },
-  // Alumnos Sección 2 - TICs II
-  { canvas_id: 38101, rut: "20.991.222-6", nombres: "Diego Esteban", apellidos: "Cáceres Muñoz", email: "diego.caceres@mail.udp.cl", seccionId: "sec_2" },
-  { canvas_id: 38102, rut: "21.223.456-7", nombres: "Constanza Belén", apellidos: "Pino Leiva", email: "constanza.pino@mail.udp.cl", seccionId: "sec_2" },
-  { canvas_id: 38103, rut: "20.554.881-2", nombres: "Sebastián Ariel", apellidos: "Bravo Orellana", email: "sebastian.bravo@mail.udp.cl", seccionId: "sec_2" },
-  // Alumnos Sección 3 - TICs II
-  { canvas_id: 39101, rut: "20.123.987-4", nombres: "Martina Andrea", apellidos: "Guzmán Silva", email: "martina.guzman@mail.udp.cl", seccionId: "sec_3" },
-  { canvas_id: 39102, rut: "21.432.109-8", nombres: "Felipe Ignacio", apellidos: "Mella Carvajal", email: "felipe.mella@mail.udp.cl", seccionId: "sec_3" },
-  // Alumnos Gestión Organizacional
-  { canvas_id: 41001, rut: "21.111.222-3", nombres: "Daniela Paz", apellidos: "Valenzuela Castro", email: "daniela.valenzuela@mail.udp.cl", seccionId: "sec_gestion_org" },
-  { canvas_id: 41002, rut: "20.888.777-6", nombres: "Tomás Ignacio", apellidos: "Herrera Morales", email: "tomas.herrera@mail.udp.cl", seccionId: "sec_gestion_org" },
-  { canvas_id: 41003, rut: "21.333.444-5", nombres: "Javiera Ignacia", apellidos: "Silva Paredes", email: "javiera.silva@mail.udp.cl", seccionId: "sec_gestion_org" },
-  // Alumnos Arquitecturas Emergentes
-  { canvas_id: 42001, rut: "20.777.666-1", nombres: "Gabriel Alejandro", apellidos: "Reyes Fuentes", email: "gabriel.reyes@mail.udp.cl", seccionId: "sec_arq_emergentes" },
-  { canvas_id: 42002, rut: "21.444.555-8", nombres: "Francisca Andrea", apellidos: "Muñoz Vera", email: "francisca.munoz@mail.udp.cl", seccionId: "sec_arq_emergentes" },
-  { canvas_id: 42003, rut: "20.999.888-2", nombres: "Álvaro Nicolás", apellidos: "Donoso Soto", email: "alvaro.donoso@mail.udp.cl", seccionId: "sec_arq_emergentes" },
-  // Alumnos Arquitectura de Software (Curso Sandbox de Pruebas - CIT3000_CA02)
-  { canvas_id: 50001, rut: "21.501.001-1", nombres: "Mateo Ignacio", apellidos: "Silva Araya", email: "mateo.silva@mail.udp.cl", seccionId: "sec_arq_soft" },
-  { canvas_id: 50002, rut: "21.502.002-2", nombres: "Valentina Paz", apellidos: "Vera Morales", email: "valentina.vera@mail.udp.cl", seccionId: "sec_arq_soft" },
-  { canvas_id: 50003, rut: "20.503.003-3", nombres: "Tomás Andrés", apellidos: "Araya Castro", email: "tomas.araya@mail.udp.cl", seccionId: "sec_arq_soft" },
-  { canvas_id: 50004, rut: "21.504.004-4", nombres: "Sofía Isabel", apellidos: "Castro Paredes", email: "sofia.castro@mail.udp.cl", seccionId: "sec_arq_soft" },
-  { canvas_id: 50005, rut: "20.505.005-5", nombres: "Lucas Benjamín", apellidos: "Morales Rojas", email: "lucas.morales@mail.udp.cl", seccionId: "sec_arq_soft" },
-];
+import { INITIAL_STUDENTS_ROSTER, StudentRosterItem } from "@/constants/initialStudentRoster";
+export type { StudentRosterItem };
+export { INITIAL_STUDENTS_ROSTER };
 
 /**
  * Obtiene la fecha actual en formato local YYYY-MM-DD
@@ -523,7 +448,7 @@ export function getSavedSessionOverrides(): Record<string, SessionOverride> {
     // Garantizar que las fechas 2026-10-07 y 2026-09-23 NUNCA queden arrastradas como canceladas por caché antiguo,
     // y purgar cualquier residuo de ayu2 o sesiones no oficiales de ayudantía del 2026-10-08
     Object.keys(parsed).forEach((k) => {
-      if (k.includes("_ayu2_") || (k.includes("ayu") && k.includes("2026-10-08"))) {
+      if (k.includes("_ayu2_") || (k.includes("ayu") && k.includes("2026-10-08") && !k.includes("CIT2206"))) {
         delete parsed[k];
       }
       if ((k.includes("2026-10-07") || k.includes("2026-09-23")) && parsed[k]?.estado === "cancelada") {
@@ -569,21 +494,80 @@ export function saveSessionModalityOverride(
   }
 }
 
-const ATTENDANCE_MAP_STORAGE_KEY = "udp_attendance_records_map_v2";
-const PURGE_OCT07_FLAG_KEY = "udp_purged_oct07_batch_v2";
+/**
+ * Obtiene el valor canónico de asistencia (1 o 0) para una sesión y estudiante.
+ * Normaliza y busca por clave directa y por variantes semánticas (código vs friendly).
+ */
+export function getAttendanceValue(
+  attendanceMap: Record<string, AttendanceValue>,
+  sessionId: string,
+  studentId: number
+): AttendanceValue {
+  const primaryKey = `${sessionId}_${studentId}`;
+  if (attendanceMap[primaryKey] !== undefined) {
+    return attendanceMap[primaryKey];
+  }
+
+  const friendlyMap: Record<string, string> = {
+    CIT3203_CA01: "sec_1",
+    CIT3203_CA02: "sec_2",
+    CIT3203_CA03: "sec_3",
+    CIT3100_CA02: "sec_arq_emergentes",
+  };
+  const reverseMap: Record<string, string> = {
+    sec_1: "CIT3203_CA01",
+    sec_2: "CIT3203_CA02",
+    sec_3: "CIT3203_CA03",
+    sec_arq_emergentes: "CIT3100_CA02",
+  };
+
+  for (const [code, fr] of Object.entries(friendlyMap)) {
+    if (sessionId.includes(code)) {
+      const alt = `${sessionId.replace(code, fr)}_${studentId}`;
+      if (attendanceMap[alt] !== undefined) return attendanceMap[alt];
+    }
+  }
+  for (const [fr, code] of Object.entries(reverseMap)) {
+    if (sessionId.includes(fr)) {
+      const alt = `${sessionId.replace(fr, code)}_${studentId}`;
+      if (attendanceMap[alt] !== undefined) return attendanceMap[alt];
+    }
+  }
+
+  return 0;
+}
+
+const ATTENDANCE_MAP_STORAGE_KEY = "udp_attendance_records_map_v4";
+const FULL_RESET_FLAG_KEY = "udp_attendance_full_reset_asistencias_txt_v4_oct07";
 
 export function getSavedAttendanceMap(): Record<string, AttendanceValue> {
   if (typeof window === "undefined") return DEFAULT_ATTENDANCE_MAP;
   try {
+    const alreadyReset = localStorage.getItem(FULL_RESET_FLAG_KEY) === "true";
+    if (!alreadyReset) {
+      // Limpiar versiones obsoletas y establecer el mapa oficial consolidado con 07/10 en 0
+      localStorage.removeItem("udp_attendance_records_map_v2");
+      localStorage.removeItem("udp_attendance_records_map_v3");
+      localStorage.removeItem("udp_attendance_records_map_v4");
+      localStorage.setItem(ATTENDANCE_MAP_STORAGE_KEY, JSON.stringify(DEFAULT_ATTENDANCE_MAP));
+      localStorage.setItem(FULL_RESET_FLAG_KEY, "true");
+      return DEFAULT_ATTENDANCE_MAP;
+    }
+
     const raw = localStorage.getItem(ATTENDANCE_MAP_STORAGE_KEY);
     if (!raw) return DEFAULT_ATTENDANCE_MAP;
     const parsed = JSON.parse(raw);
+    const cleaned: Record<string, AttendanceValue> = {};
+
     Object.keys(parsed).forEach((k) => {
-      if (k.includes("_ayu2_") || (k.includes("ayu") && k.includes("2026-10-08"))) {
-        delete parsed[k];
+      // Descartar de raíz sesiones espurias
+      if (k.includes("_ayu2_") || (k.includes("2026-10-08") && !k.includes("CIT2206"))) {
+        return;
       }
+      cleaned[k] = parsed[k];
     });
-    return { ...DEFAULT_ATTENDANCE_MAP, ...parsed };
+
+    return { ...DEFAULT_ATTENDANCE_MAP, ...cleaned };
   } catch {
     return DEFAULT_ATTENDANCE_MAP;
   }

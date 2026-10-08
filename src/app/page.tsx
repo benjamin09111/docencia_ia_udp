@@ -37,7 +37,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     setMounted(true);
-    setEstudiantesExcel(getStoredCourseGrades("CIT3000_CA02"));
+    setEstudiantesExcel(getStoredCourseGrades("CIT3203_CA01"));
 
     const params = new URLSearchParams(window.location.search);
     const roleParam = params.get("role") || params.get("rol");
@@ -50,7 +50,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (estudiantesExcel.length > 0) {
-      saveStoredCourseGrades("CIT3000_CA02", estudiantesExcel);
+      saveStoredCourseGrades("CIT3203_CA01", estudiantesExcel);
     }
   }, [estudiantesExcel]);
 

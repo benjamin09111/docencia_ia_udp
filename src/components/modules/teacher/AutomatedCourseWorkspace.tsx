@@ -12,6 +12,7 @@ import {
   getSavedSections,
   generateSemesterSessions,
   StudentRosterItem,
+  INITIAL_STUDENTS_ROSTER,
 } from "@/services/attendanceStore";
 import { fetchSectionsFromSupabase, isSupabaseConfigured } from "@/services/attendanceDbService";
 
@@ -63,6 +64,15 @@ export const AutomatedCourseWorkspace: React.FC<AutomatedCourseWorkspaceProps> =
   const scheduleInfo = useMemo(() => formatSectionSchedule(section), [section]);
 
   const rosterStudents: StudentRosterItem[] = useMemo(() => {
+    const fromRoster = INITIAL_STUDENTS_ROSTER.filter(
+      (s) =>
+        s.seccionId === section.id ||
+        s.seccionId === section.codigo ||
+        s.codigo === section.codigo ||
+        s.codigo === section.id
+    );
+    if (fromRoster.length > 0) return fromRoster;
+
     return estudiantesExcel.map((st) => ({
       canvas_id: st.canvas_id,
       nombres: st.nombres,
@@ -71,7 +81,7 @@ export const AutomatedCourseWorkspace: React.FC<AutomatedCourseWorkspaceProps> =
       email: st.email || "",
       seccionId: section.id,
     }));
-  }, [estudiantesExcel, section.id]);
+  }, [estudiantesExcel, section.id, section.codigo]);
 
   const courseSessions: ClassSession[] = useMemo(() => {
     return generateSemesterSessions(section);

@@ -5,6 +5,7 @@ import {
   StudentExcelRow,
   StudentSubmission,
 } from "@/types";
+import { INITIAL_STUDENTS_ROSTER } from "@/constants/initialStudentRoster";
 
 export interface CourseData {
   id: number;
@@ -160,83 +161,21 @@ export const initialCourseData: CourseData = {
       ],
     },
   ],
-  estudiantes_excel: [
-    {
-      canvas_id: 29248,
-      rut: "20.481.932-8",
-      apellidos: "Morales Pizarro",
-      nombres: "Benjamín",
-      email: "benjamin.morales3@mail.udp.cl",
-      solemne_1: 5.7,
-      decimas_act1: 0.3,
-      solemne_1_final: 6.0,
-      solemne_2: 5.9,
-      taller_proyecto: 6.5,
-      asistencia_pct: 92,
-      nota_final: 6.2,
-      estado_curso: "Aprobado",
-    },
-    {
-      canvas_id: 31021,
-      rut: "21.109.845-K",
-      apellidos: "Barrera Jorquera",
-      nombres: "Víctor Vicente",
-      email: "victor.barrera@mail.udp.cl",
-      solemne_1: 5.4,
-      decimas_act1: 0.3,
-      solemne_1_final: 5.7,
-      solemne_2: 5.8,
-      taller_proyecto: 6.3,
-      asistencia_pct: 88,
-      nota_final: 5.9,
-      estado_curso: "Aprobado",
-    },
-    {
-      canvas_id: 32415,
-      rut: "20.912.433-4",
-      apellidos: "Salinas Herrera",
-      nombres: "Laura Francisca",
-      email: "laura.salinas1@mail.udp.cl",
-      solemne_1: 6.2,
-      decimas_act1: 0.3,
-      solemne_1_final: 6.5,
-      solemne_2: 6.0,
-      taller_proyecto: 6.8,
-      asistencia_pct: 95,
-      nota_final: 6.5,
-      estado_curso: "Aprobado",
-    },
-    {
-      canvas_id: 33890,
-      rut: "20.765.231-1",
-      apellidos: "Alvarado Vivanco",
-      nombres: "Francisco",
-      email: "francisco.alvarado1@mail.udp.cl",
-      solemne_1: 4.8,
-      decimas_act1: 0.3,
-      solemne_1_final: 5.1,
-      solemne_2: 5.2,
-      taller_proyecto: 5.8,
-      asistencia_pct: 84,
-      nota_final: 5.3,
-      estado_curso: "Aprobado",
-    },
-    {
-      canvas_id: 34112,
-      rut: "21.345.678-9",
-      apellidos: "Tapia González",
-      nombres: "Camila Ignacia",
-      email: "camila.tapia@mail.udp.cl",
-      solemne_1: 3.8,
-      decimas_act1: 0.0,
-      solemne_1_final: 3.8,
-      solemne_2: 4.2,
-      taller_proyecto: 4.5,
-      asistencia_pct: 78,
-      nota_final: 4.1,
-      estado_curso: "Aprobado",
-    },
-  ],
+  estudiantes_excel: INITIAL_STUDENTS_ROSTER.filter((s) => s.seccionId === "sec_1").map((st) => ({
+    canvas_id: st.canvas_id,
+    rut: st.rut,
+    apellidos: st.apellidos,
+    nombres: st.nombres,
+    email: st.email,
+    solemne_1: Number((5.0 + ((st.canvas_id % 20) / 10)).toFixed(1)),
+    decimas_act1: (st.canvas_id % 3 === 0) ? 0.3 : 0.0,
+    solemne_1_final: Number((5.0 + ((st.canvas_id % 20) / 10)).toFixed(1)),
+    solemne_2: Number((5.2 + ((st.canvas_id % 15) / 10)).toFixed(1)),
+    taller_proyecto: Number((5.8 + ((st.canvas_id % 12) / 10)).toFixed(1)),
+    asistencia_pct: 85 + (st.canvas_id % 15),
+    nota_final: 5.7,
+    estado_curso: "Aprobado",
+  })),
   entregas_alumnos: [
     {
       id: "sub_1",
@@ -285,30 +224,46 @@ const GRADES_STORAGE_PREFIX = "udp_course_grades_";
  * Obtiene las notas anonimizadas del curso desde localStorage o retorna las notas base.
  */
 export function getStoredCourseGrades(courseCode: string): StudentExcelRow[] {
-  const codeUpper = (courseCode || "").toUpperCase();
-  const isArqSoft = codeUpper.includes("CIT3000") || codeUpper.includes("3000") || codeUpper === "41210" || codeUpper.includes("ARQ_SOFT");
-
-  const mockArqSoftStudents: StudentExcelRow[] = [
-    { canvas_id: 50001, rut: "21.501.001-1", apellidos: "Silva Araya", nombres: "Mateo Ignacio", email: "mateo.silva@mail.udp.cl", solemne_1: 5.8, decimas_act1: 0.4, solemne_1_final: 6.2, solemne_2: 6.0, taller_proyecto: 6.5, asistencia_pct: 90, nota_final: 6.3, estado_curso: "Aprobado" },
-    { canvas_id: 50002, rut: "21.502.002-2", apellidos: "Vera Morales", nombres: "Valentina Paz", email: "valentina.vera@mail.udp.cl", solemne_1: 6.2, decimas_act1: 0.2, solemne_1_final: 6.4, solemne_2: 6.5, taller_proyecto: 6.8, asistencia_pct: 100, nota_final: 6.6, estado_curso: "Aprobado" },
-    { canvas_id: 50003, rut: "20.503.003-3", apellidos: "Araya Castro", nombres: "Tomás Andrés", email: "tomas.araya@mail.udp.cl", solemne_1: 3.5, decimas_act1: 0.0, solemne_1_final: 3.5, solemne_2: 3.8, taller_proyecto: 4.2, asistencia_pct: 60, nota_final: 3.8, estado_curso: "Reprobado" },
-    { canvas_id: 50004, rut: "21.504.004-4", apellidos: "Castro Paredes", nombres: "Sofía Isabel", email: "sofia.castro@mail.udp.cl", solemne_1: 5.0, decimas_act1: 0.6, solemne_1_final: 5.6, solemne_2: 5.4, taller_proyecto: 5.9, asistencia_pct: 85, nota_final: 5.6, estado_curso: "Aprobado" },
-    { canvas_id: 50005, rut: "20.505.005-5", apellidos: "Morales Rojas", nombres: "Lucas Benjamín", email: "lucas.morales@mail.udp.cl", solemne_1: 4.2, decimas_act1: 0.2, solemne_1_final: 4.4, solemne_2: 4.8, taller_proyecto: 5.0, asistencia_pct: 80, nota_final: 4.7, estado_curso: "Aprobado" },
-  ];
-
-  if (typeof window === "undefined") {
-    return isArqSoft ? mockArqSoftStudents : initialCourseData.estudiantes_excel;
-  }
-  try {
-    const raw = localStorage.getItem(`${GRADES_STORAGE_PREFIX}${courseCode}`);
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+  if (typeof window !== "undefined") {
+    try {
+      const raw = localStorage.getItem(`${GRADES_STORAGE_PREFIX}${courseCode}`);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch (e) {
+      console.error("Error loading course grades", e);
     }
-  } catch (e) {
-    console.error("Error loading course grades", e);
   }
-  return isArqSoft ? mockArqSoftStudents : initialCourseData.estudiantes_excel;
+
+  const codeUpper = (courseCode || "").toUpperCase();
+  const matched = INITIAL_STUDENTS_ROSTER.filter(
+    (s) =>
+      s.codigo === courseCode ||
+      s.seccionId === courseCode ||
+      (codeUpper.includes("CA01") && s.seccionId === "sec_1") ||
+      (codeUpper.includes("CA02") && s.seccionId === "sec_2") ||
+      (codeUpper.includes("CA03") && s.seccionId === "sec_3") ||
+      (codeUpper.includes("3100") && s.seccionId === "sec_arq_emergentes")
+  );
+
+  const baseList = matched.length > 0 ? matched : INITIAL_STUDENTS_ROSTER.filter((s) => s.seccionId === "sec_1");
+
+  return baseList.map((st) => ({
+    canvas_id: st.canvas_id,
+    rut: st.rut,
+    apellidos: st.apellidos,
+    nombres: st.nombres,
+    email: st.email,
+    solemne_1: Number((5.0 + ((st.canvas_id % 20) / 10)).toFixed(1)),
+    decimas_act1: (st.canvas_id % 3 === 0) ? 0.3 : 0.0,
+    solemne_1_final: Number((5.0 + ((st.canvas_id % 20) / 10)).toFixed(1)),
+    solemne_2: Number((5.2 + ((st.canvas_id % 15) / 10)).toFixed(1)),
+    taller_proyecto: Number((5.8 + ((st.canvas_id % 12) / 10)).toFixed(1)),
+    asistencia_pct: 85 + (st.canvas_id % 15),
+    nota_final: 5.7,
+    estado_curso: "Aprobado",
+  }));
 }
 
 /**

@@ -21,6 +21,27 @@ export const AdminCourseAgentsTab: React.FC<AdminCourseAgentsTabProps> = ({
 }) => {
   const [searchQuery, setSearchQuery] = useState("");
 
+  // Solo el primer curso aparece expandido por defecto siempre; los demás cerrados
+  const [expandedCourseCodes, setExpandedCourseCodes] = useState<Set<string>>(() => {
+    const firstCode = COURSE_AGENTS_METADATA[0]?.courseCode;
+    return new Set(firstCode ? [firstCode] : []);
+  });
+
+  const toggleCourseExpand = (courseCode: string) => {
+    setExpandedCourseCodes((prev) => {
+      const next = new Set(prev);
+      if (next.has(courseCode)) {
+        next.delete(courseCode);
+      } else {
+        next.add(courseCode);
+      }
+      return next;
+    });
+  };
+
+  const collapseAll = () => setExpandedCourseCodes(new Set());
+  const expandAll = () => setExpandedCourseCodes(new Set(filteredCourses.map((c) => c.courseCode)));
+
   const dynamicCourses = useMemo(() => {
     return COURSE_AGENTS_METADATA.map((c) => {
       const resolvedSections = c.sectionCodes.map((sc) => {
@@ -78,8 +99,8 @@ export const AdminCourseAgentsTab: React.FC<AdminCourseAgentsTabProps> = ({
         secondaryButtonLabel="+ Curso"
         onSecondaryClick={onOpenCreateSection}
         menuItems={[
-          { label: "Colapsar todos los grupos", onClick: () => {} },
-          { label: "Expandir todos los grupos", onClick: () => {} },
+          { label: "Colapsar todos los grupos", onClick: collapseAll },
+          { label: "Expandir todos los grupos", onClick: expandAll },
         ]}
       />
 
@@ -90,6 +111,8 @@ export const AdminCourseAgentsTab: React.FC<AdminCourseAgentsTabProps> = ({
             key={course.courseCode}
             title={`${course.courseCode} — ${course.courseName}`}
             weightBadge={`${course.sections.length} secciones activas`}
+            isExpanded={expandedCourseCodes.has(course.courseCode)}
+            onToggleExpanded={() => toggleCourseExpand(course.courseCode)}
             onAddClick={onOpenCreateSection}
             headerActions={[
               {

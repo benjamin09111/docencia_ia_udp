@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo, useEffect } from "react";
 import { ClassSession, StudentAttendanceSummary, AttendanceValue, TodaySessionInfo, StudentWorkRecord } from "@/types/attendance";
+import { getAttendanceValue } from "@/services/attendanceStore";
 import { Check, X, AlertTriangle, ChevronDown, ChevronRight, ChevronsRight, ChevronsLeft, Calendar, Zap, Award, CalendarX, Ban } from "lucide-react";
 
 interface AttendanceMatrixTableProps {
@@ -19,7 +20,7 @@ interface AttendanceMatrixTableProps {
   decimasPorTrabajo?: number;
   onUpdateDecimasPorTrabajo?: (val: number) => void;
   onUpdateWorkRecord?: (studentId: number, decimas: number, trabajosRealizados: number) => void;
-  onToggleAttendance: (sessionId: string, studentId: number) => void;
+  onToggleAttendance: (sessionId: string, studentId: number, currentVal?: AttendanceValue) => void;
   onOpenCancelModal: (session: ClassSession) => void;
   onReactivateSession?: (sessionId: string) => void;
   onToggleModality?: (sessionId: string) => void;
@@ -79,6 +80,10 @@ export const AttendanceMatrixTable: React.FC<AttendanceMatrixTableProps> = ({
     const seenDates = new Set<string>();
 
     sessions.forEach((s) => {
+      // REGLA INSTITUCIONAL ESTRICTA: Ayudantías tienen 1 sola clase por semana. Omitir residuos espurios como 2026-10-08 o _ayu2_
+      if (s.tipo === "ayudantia" && !s.seccionId?.includes("CIT2206") && (s.fecha === "2026-10-08" || s.id.includes("2026-10-08") || s.id.includes("_ayu2_"))) {
+        return;
+      }
       if (!seenDates.has(s.fecha)) {
         seenDates.add(s.fecha);
         uniqueSessionsByDate.push(s);
@@ -453,7 +458,7 @@ export const AttendanceMatrixTable: React.FC<AttendanceMatrixTableProps> = ({
                     if (isCollapsed) {
                       const activeSessionsInGrp = grp.sessions.filter((s) => s.estado !== "cancelada");
                       const mesAsistidas = activeSessionsInGrp.filter(
-                        (s) => attendanceMap[`${s.id}_${sum.canvas_id}`] === 1
+                        (s) => getAttendanceValue(attendanceMap, s.id, sum.canvas_id) === 1
                       ).length;
                       const mesTotal = activeSessionsInGrp.length;
                       const mesPct = mesTotal > 0 ? Math.round((mesAsistidas / mesTotal) * 100) : 0;
@@ -508,15 +513,14 @@ export const AttendanceMatrixTable: React.FC<AttendanceMatrixTableProps> = ({
                         );
                       }
 
-                      const key = `${s.id}_${sum.canvas_id}`;
-                      const val = attendanceMap[key] ?? attendanceMap[`${s.seccionId}_${sum.canvas_id}_${s.fecha}`] ?? 0;
+                      const val = getAttendanceValue(attendanceMap, s.id, sum.canvas_id);
 
                       return (
                         <td key={s.id} className="p-0.5 text-center border-l border-gray-100 w-[42px]">
                           <button
                             type="button"
-                            onClick={() => onToggleAttendance(s.id, sum.canvas_id)}
-                            className={`w-6 h-6 rounded-[2px] font-bold text-[11px] transition-all active:scale-90 inline-flex items-center justify-center ${
+                            onClick={() => onToggleAttendance(s.id, sum.canvas_id, val)}
+                            className={`w-6 h-6 rounded-[2px] font-bold text-[11px] transition-all active:scale-90 inline-flex items-center justify-center cursor-pointer ${
                               val === 1
                                 ? "bg-emerald-100 text-emerald-800 border border-emerald-300 hover:bg-emerald-200"
                                 : "bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100"
@@ -640,8 +644,7 @@ export const AttendanceMatrixTable: React.FC<AttendanceMatrixTableProps> = ({
 
                 return grp.sessions.map((s) => {
                   const count = summaries.filter((sum) => {
-                    const val = attendanceMap[`${s.id}_${sum.canvas_id}`] ?? attendanceMap[`${s.seccionId}_${sum.canvas_id}_${s.fecha}`];
-                    return val === 1;
+                    return getAttendanceValue(attendanceMap, s.id, sum.canvas_id) === 1;
                   }).length;
                   return (
                     <td key={`tot_${s.id}`} className="p-1 text-center font-mono text-[11px] border-l border-gray-200">

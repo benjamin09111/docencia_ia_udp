@@ -20,6 +20,7 @@ import {
   generateInitialRecords,
   getSavedAttendanceMap,
   saveAttendanceMap,
+  getAttendanceValue,
   getSavedStudentWorkRecords,
   saveStudentWorkRecords,
   getSavedTotalTrabajos,
@@ -213,7 +214,22 @@ export const TeacherAttendanceWorkspace: React.FC<TeacherAttendanceWorkspaceProp
   }, [sections]);
 
   // Alumnos reales de Canvas para la sección seleccionada
-  const [canvasStudentsBySection, setCanvasStudentsBySection] = useState<Record<string, StudentRosterItem[]>>({});
+  const [canvasStudentsBySection, setCanvasStudentsBySection] = useState<Record<string, StudentRosterItem[]>>(() => {
+    if (typeof window === "undefined") return {};
+    const map: Record<string, StudentRosterItem[]> = {};
+    try {
+      ["sec_1", "sec_2", "sec_3", "sec_arq_emergentes", "CIT3203_CA01", "CIT3203_CA02", "CIT3203_CA03", "CIT3100_CA02"].forEach((key) => {
+        const raw = localStorage.getItem(`udp_canvas_students_${key}`);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            map[key] = parsed;
+          }
+        }
+      });
+    } catch {}
+    return map;
+  });
   const [isLoadingStudents, setIsLoadingStudents] = useState<boolean>(false);
 
   // Mapear el ID numérico de Canvas según la sección
@@ -412,8 +428,16 @@ export const TeacherAttendanceWorkspace: React.FC<TeacherAttendanceWorkspaceProp
     };
   }, [selectedSectionId, sections]);
 
-  // Sesiones de la sección actual
-  const activeSessions = sessionsBySection[selectedSectionId] || [];
+  // Sesiones de la sección actual (purgando estrictamente sesiones espurias no semanales como 2026-10-08 o _ayu2_)
+  const rawActiveSessions = sessionsBySection[selectedSectionId] || [];
+  const activeSessions = useMemo(() => {
+    return rawActiveSessions.filter((s) => {
+      if (courseCode !== "CIT2206" && s.tipo === "ayudantia" && (s.fecha === "2026-10-08" || s.id.includes("2026-10-08") || s.id.includes("_ayu2_"))) {
+        return false;
+      }
+      return true;
+    });
+  }, [rawActiveSessions]);
 
   // Filtrar sesiones según la pestaña activa (Cátedras vs Ayudantías) y corte hasta la fecha actual
   const filteredSessions = useMemo(() => {
@@ -428,11 +452,19 @@ export const TeacherAttendanceWorkspace: React.FC<TeacherAttendanceWorkspaceProp
 
   // Alumnos activos de la sección (Memorizado para evitar renders y bucles infinitos)
   const currentRoster = useMemo(() => {
-    return (
+    const fromApi =
       canvasStudentsBySection[selectedSectionId] ||
-      INITIAL_STUDENTS_ROSTER.filter((s) => s.seccionId === selectedSectionId)
+      canvasStudentsBySection[selectedSection?.codigo || ""];
+    if (fromApi && fromApi.length > 0) return fromApi;
+
+    return INITIAL_STUDENTS_ROSTER.filter(
+      (s) =>
+        s.seccionId === selectedSectionId ||
+        s.seccionId === selectedSection?.codigo ||
+        s.codigo === selectedSectionId ||
+        s.codigo === selectedSection?.codigo
     );
-  }, [canvasStudentsBySection, selectedSectionId]);
+  }, [canvasStudentsBySection, selectedSectionId, selectedSection?.codigo]);
 
   const sectionStudents = useMemo(() => {
     return currentRoster.filter((s) => {
@@ -511,6 +543,10 @@ export const TeacherAttendanceWorkspace: React.FC<TeacherAttendanceWorkspaceProp
             currentList.forEach((s) => map.set(s.id, s));
             let added = false;
             histSessions.forEach((hs) => {
+              // REGLA ESTRICTA: Las ayudantías tienen obligatoriamente 1 sola clase por semana en el día configurado.
+              if (courseCode !== "CIT2206" && hs.tipo === "ayudantia" && (hs.fecha === "2026-10-08" || hs.id.includes("2026-10-08") || hs.id.includes("_ayu2_"))) {
+                return;
+              }
               if (!map.has(hs.id)) {
                 const dateExists = currentList.some((s) => s.fecha === hs.fecha && s.tipo === hs.tipo);
                 if (!dateExists) {
@@ -578,7 +614,7 @@ export const TeacherAttendanceWorkspace: React.FC<TeacherAttendanceWorkspaceProp
       let catAsist = 0;
 
       validSessions.forEach((s) => {
-        const val = attendanceMap[`${s.id}_${st.canvas_id}`] ?? attendanceMap[`${s.seccionId}_${st.canvas_id}_${s.fecha}`];
+        const val = getAttendanceValue(attendanceMap, s.id, st.canvas_id);
         if (val === 1) {
           if (s.tipo === "ayudantia") ayudAsist++;
           else catAsist++;
@@ -633,14 +669,18 @@ export const TeacherAttendanceWorkspace: React.FC<TeacherAttendanceWorkspaceProp
     const ayudDias = selectedSection.horarioAyudantia?.dias || [3];
     const isScheduledDay = ayudDias.includes(dayOfWeek);
 
-    // Buscar sesión de ayudantía de hoy en las sesiones de la sección
-    const todaySession = activeSessions.find(
-      (s) => s.fecha === todayDateStr && s.tipo === "ayudantia" && s.estado !== "cancelada"
-    );
+    // Buscar sesión de ayudantía de hoy en las sesiones de la sección (solo si hoy es día oficial)
+    const todaySession = isScheduledDay
+      ? activeSessions.find(
+          (s) => s.fecha === todayDateStr && s.tipo === "ayudantia" && s.estado !== "cancelada"
+        )
+      : null;
 
     // Próxima sesión cronológica de ayudantía
     const nextSession =
-      activeSessions.find((s) => s.tipo === "ayudantia" && s.fecha >= todayDateStr && s.estado !== "cancelada") ||
+      activeSessions.find(
+        (s) => s.tipo === "ayudantia" && (isScheduledDay ? s.fecha >= todayDateStr : s.fecha > todayDateStr) && s.estado !== "cancelada"
+      ) ||
       activeSessions.find((s) => s.tipo === "ayudantia" && s.estado !== "cancelada") ||
       null;
 
@@ -667,7 +707,7 @@ export const TeacherAttendanceWorkspace: React.FC<TeacherAttendanceWorkspaceProp
       activeSessions.find((s) => s.fecha === todayStr && s.tipo === "ayudantia") ||
       todaySessionInfo.todaySession;
     if (!todaySess) return 0;
-    return sectionStudents.filter((st) => attendanceMap[`${todaySess.id}_${st.canvas_id}`] === 1).length;
+    return sectionStudents.filter((st) => getAttendanceValue(attendanceMap, todaySess.id, st.canvas_id) === 1).length;
   }, [activeSessions, todaySessionInfo.todaySession, sectionStudents, attendanceMap]);
 
   // Manejar regeneración de PIN para la sección activa
@@ -740,13 +780,41 @@ export const TeacherAttendanceWorkspace: React.FC<TeacherAttendanceWorkspaceProp
   };
 
   // Toggle de celda binaria 1 <-> 0 y persistencia local + Supabase
-  const handleToggleAttendance = (sessionId: string, studentId: number) => {
-    const key = `${sessionId}_${studentId}`;
-    const current = attendanceMap[key] ?? 0;
-    const nextVal: AttendanceValue = current === 1 ? 0 : 1;
+  const handleToggleAttendance = (sessionId: string, studentId: number, currentExplicitVal?: AttendanceValue) => {
+    const friendlyMap: Record<string, string> = {
+      CIT3203_CA01: "sec_1",
+      CIT3203_CA02: "sec_2",
+      CIT3203_CA03: "sec_3",
+      CIT3100_CA02: "sec_arq_emergentes",
+    };
+    const reverseMap: Record<string, string> = {
+      sec_1: "CIT3203_CA01",
+      sec_2: "CIT3203_CA02",
+      sec_3: "CIT3203_CA03",
+      sec_arq_emergentes: "CIT3100_CA02",
+    };
+
+    const currentVal = currentExplicitVal !== undefined
+      ? currentExplicitVal
+      : getAttendanceValue(attendanceMap, sessionId, studentId);
+
+    const nextVal: AttendanceValue = currentVal === 1 ? 0 : 1;
     lastLocalEditTimeRef.current = Date.now();
+
+    const key = `${sessionId}_${studentId}`;
+
     setAttendanceMap((prev) => {
       const next = { ...prev, [key]: nextVal };
+      for (const [code, fr] of Object.entries(friendlyMap)) {
+        if (sessionId.includes(code)) {
+          next[`${sessionId.replace(code, fr)}_${studentId}`] = nextVal;
+        }
+      }
+      for (const [fr, code] of Object.entries(reverseMap)) {
+        if (sessionId.includes(fr)) {
+          next[`${sessionId.replace(fr, code)}_${studentId}`] = nextVal;
+        }
+      }
       saveAttendanceMap(next);
       return next;
     });
@@ -755,6 +823,11 @@ export const TeacherAttendanceWorkspace: React.FC<TeacherAttendanceWorkspaceProp
     saveAttendanceMarkToSupabase(sessionId, studentId, nextVal).catch((err) =>
       console.warn("Error guardando en Supabase:", err)
     );
+    for (const [fr, code] of Object.entries(reverseMap)) {
+      if (sessionId.includes(fr)) {
+        saveAttendanceMarkToSupabase(sessionId.replace(fr, code), studentId, nextVal).catch(() => {});
+      }
+    }
   };
 
   // Reiniciar todas las asistencias de la sección a 0

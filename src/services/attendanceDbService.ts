@@ -244,8 +244,29 @@ export async function fetchAttendanceMapFromSupabase(
     }
 
     const map: Record<string, AttendanceValue> = {};
+    const friendlyMap: Record<string, string> = {
+      CIT3203_CA01: "sec_1",
+      CIT3203_CA02: "sec_2",
+      CIT3203_CA03: "sec_3",
+      CIT3100_CA02: "sec_arq_emergentes",
+    };
+
     data.forEach((r: { session_code: string; student_canvas_id: number; value: number }) => {
-      map[`${r.session_code}_${r.student_canvas_id}`] = (r.value === 1 ? 1 : 0) as AttendanceValue;
+      const code = r.session_code;
+      // Descartar de raíz sesiones secundarias o espurias como 2026-10-08 en ramos de los miércoles
+      if (!code || code.includes("_ayu2_") || (code.includes("CIT3203") && code.includes("2026-10-08"))) {
+        return;
+      }
+      const val = (r.value === 1 ? 1 : 0) as AttendanceValue;
+      map[`${code}_${r.student_canvas_id}`] = val;
+
+      // Mapear también variantes friendly (sec_1, sec_2, sec_3, sec_arq_emergentes)
+      for (const [realCode, friendly] of Object.entries(friendlyMap)) {
+        if (code.includes(realCode)) {
+          const friendlyCode = code.replace(realCode, friendly);
+          map[`${friendlyCode}_${r.student_canvas_id}`] = val;
+        }
+      }
     });
 
     return map;
@@ -558,6 +579,10 @@ export async function fetchHistoricalRecordedSessionsFromSupabase(
     recs.forEach((r: any) => {
       const s = r.class_sessions;
       if (s && !map.has(s.session_code)) {
+        // Excluir de raíz sesiones espurias como 2026-10-08 o bloques secundarios que no son clase semanal
+        if (s.date === "2026-10-08" || s.session_code?.includes("2026-10-08") || s.session_code?.includes("_ayu2_")) {
+          return;
+        }
         map.set(s.session_code, {
           id: s.session_code,
           seccionId: sectionCode,

@@ -41,10 +41,14 @@ export const AdminCourseScheduleManagement: React.FC = () => {
   const [saveSuccess, setSaveSuccess] = useState<string | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  // Estado del acordeón: qué cursos tienen sus secciones expandidas
-  const [expandedCourses, setExpandedCourses] = useState<Set<string>>(
-    () => new Set(["CIT3203"]) // Expandido por defecto para visualización inmediata
-  );
+  // Estado del acordeón: solo el primer curso expandido por defecto, los demás cerrados
+  const [expandedCourses, setExpandedCourses] = useState<Set<string>>(() => {
+    const initialSections = getSavedSections();
+    const firstCode = initialSections[0]?.codigo?.includes("_")
+      ? initialSections[0].codigo.split("_")[0]
+      : initialSections[0]?.codigo || "CIT3203";
+    return new Set([firstCode]);
+  });
 
   // Sincronización reactiva ante cambios en cualquier vista
   useEffect(() => {
