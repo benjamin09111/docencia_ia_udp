@@ -145,6 +145,15 @@ El objetivo central es consolidar una **Suite Integral de Docencia Automatizada 
    - Inclusión obligatoria de `institution_id` en esquemas y políticas RLS de Supabase.
    - Protección estricta de rutas API con tokens de sesión firmados.
 
+---
+
+## 🔒 6. MÓDULO CONGELADO: Módulo de Asistencia & Apelaciones (GPS + QR + Rules)
+
+> [!IMPORTANT]
+> **ESTADO OFICIAL: CONCLUIDO, VALIDADO Y CONGELADO (STRICTLY FROZEN)**
+> - Queda **estrictamente prohibido** modificar la arquitectura, esquemas de datos, flujos de marcaje GPS/PIN, reglas de quórum grupal, sincronización con Supabase o componentes del **Módulo de Asistencia** (`src/components/modules/public-attendance/`, `src/components/modules/teacher/attendance/`, `usePublicAttendanceCheckin.ts`, `attendanceStore.ts`, `udpRoomsService.ts`, etc.), salvo instrucción o autorización explícita por escrito del usuario.
+> - Todo el desarrollo futuro debe enfocarse exclusivamente en los módulos restantes del ecosistema (Rúbricas e IA, Agente Copiloto Docente, Evaluaciones Formativas/Sumativas, Cronograma y Métricas), preservando al 100% la estabilidad y datos del módulo de Asistencia.
+
 
 
 
