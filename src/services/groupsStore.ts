@@ -119,6 +119,34 @@ const DEFAULT_GROUPS: CourseGroup[] = [
       { canvas_id: 42001, nombres: "Martín Gabriel", apellidos: "Ramos Molina" },
     ],
   },
+  // Grupos Mock para Programación (CIT1010_CA01)
+  {
+    id: "grp_prog_101",
+    courseCode: "CIT1010_CA01",
+    sectionId: "sec_prog_1",
+    name: "Grupo 1 - Algoritmos (Mock)",
+    categoryName: "Equipos Programación 2026",
+    color: "#008EE2",
+    createdAt: new Date().toISOString(),
+    members: [
+      { canvas_id: 50001, nombres: "Mateo Ignacio", apellidos: "Silva Araya" },
+      { canvas_id: 50002, nombres: "Valentina Paz", apellidos: "Vera Morales" },
+    ],
+  },
+  {
+    id: "grp_prog_102",
+    courseCode: "CIT1010_CA01",
+    sectionId: "sec_prog_1",
+    name: "Grupo 2 - Estructuras de Datos (Mock)",
+    categoryName: "Equipos Programación 2026",
+    color: "#C8102E",
+    createdAt: new Date().toISOString(),
+    members: [
+      { canvas_id: 50003, nombres: "Tomás Andrés", apellidos: "Araya Castro" },
+      { canvas_id: 50004, nombres: "Sofía Isabel", apellidos: "Castro Paredes" },
+      { canvas_id: 50005, nombres: "Lucas Benjamín", apellidos: "Morales Rojas" },
+    ],
+  },
 ];
 
 export function getSavedGroups(courseCode?: string, sectionId?: string): CourseGroup[] {

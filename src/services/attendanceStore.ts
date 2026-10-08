@@ -359,6 +359,12 @@ export const INITIAL_STUDENTS_ROSTER: StudentRosterItem[] = [
   { canvas_id: 42001, rut: "20.777.666-1", nombres: "Gabriel Alejandro", apellidos: "Reyes Fuentes", email: "gabriel.reyes@mail.udp.cl", seccionId: "sec_arq_emergentes" },
   { canvas_id: 42002, rut: "21.444.555-8", nombres: "Francisca Andrea", apellidos: "Muñoz Vera", email: "francisca.munoz@mail.udp.cl", seccionId: "sec_arq_emergentes" },
   { canvas_id: 42003, rut: "20.999.888-2", nombres: "Álvaro Nicolás", apellidos: "Donoso Soto", email: "alvaro.donoso@mail.udp.cl", seccionId: "sec_arq_emergentes" },
+  // Alumnos Programación (Curso Mock de Pruebas - CIT1010_CA01)
+  { canvas_id: 50001, rut: "21.501.001-1", nombres: "Mateo Ignacio", apellidos: "Silva Araya", email: "mateo.silva@mail.udp.cl", seccionId: "sec_prog_1" },
+  { canvas_id: 50002, rut: "21.502.002-2", nombres: "Valentina Paz", apellidos: "Vera Morales", email: "valentina.vera@mail.udp.cl", seccionId: "sec_prog_1" },
+  { canvas_id: 50003, rut: "20.503.003-3", nombres: "Tomás Andrés", apellidos: "Araya Castro", email: "tomas.araya@mail.udp.cl", seccionId: "sec_prog_1" },
+  { canvas_id: 50004, rut: "21.504.004-4", nombres: "Sofía Isabel", apellidos: "Castro Paredes", email: "sofia.castro@mail.udp.cl", seccionId: "sec_prog_1" },
+  { canvas_id: 50005, rut: "20.505.005-5", nombres: "Lucas Benjamín", apellidos: "Morales Rojas", email: "lucas.morales@mail.udp.cl", seccionId: "sec_prog_1" },
 ];
 
 /**

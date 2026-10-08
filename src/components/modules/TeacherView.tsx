@@ -111,7 +111,7 @@ export const TeacherView: React.FC<TeacherViewProps> = ({
       { id: 47552, name: "PROYECTO EN TICS II", code: "CIT3203_CA03", term: "2026-02 Semestre Primavera", students_count: 28, is_automated: true },
       { id: 47047, name: "GESTIÓN ORGANIZACIONAL", code: "CIT2206_CA01", term: "2026-02 Semestre Primavera", students_count: 44, is_automated: true },
       { id: 44988, name: "ARQUITECTURAS EMERGENTES", code: "CIT3100_CA02", term: "2026-02 Semestre Primavera", students_count: 23, is_automated: true },
-      { id: 41010, name: "PROGRAMACIÓN", code: "CIT1010_CA01", term: "2026-02 Semestre Primavera", students_count: 42, is_automated: false },
+      { id: 41010, name: "PROGRAMACIÓN (Curso Sandbox / Mock)", code: "CIT1010_CA01", term: "2026-02 Semestre Primavera", students_count: 5, is_automated: false },
     ];
 
     fallbackTeacherCourses.forEach((fb) => {

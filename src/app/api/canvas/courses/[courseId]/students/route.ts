@@ -10,6 +10,88 @@ export async function GET(
   try {
     const { courseId } = await params;
 
+    // Mock Course fallback para Programación (CIT1010_CA01 / ID 41010)
+    const upperId = (courseId || "").toUpperCase();
+    if (upperId === "41010" || upperId.includes("1010") || upperId.includes("PROG") || upperId.includes("SEC_PROG_1")) {
+      return NextResponse.json([
+        {
+          canvas_id: 50001,
+          rut: "21.501.001-1",
+          nombres: "Mateo Ignacio",
+          apellidos: "Silva Araya",
+          email: "mateo.silva@mail.udp.cl",
+          solemne_1: 5.8,
+          decimas_act1: 0.4,
+          solemne_1_final: 6.2,
+          solemne_2: 6.0,
+          taller_proyecto: 6.5,
+          asistencia_pct: 90,
+          nota_final: 6.3,
+          estado_curso: "Aprobado",
+        },
+        {
+          canvas_id: 50002,
+          rut: "21.502.002-2",
+          nombres: "Valentina Paz",
+          apellidos: "Vera Morales",
+          email: "valentina.vera@mail.udp.cl",
+          solemne_1: 6.2,
+          decimas_act1: 0.2,
+          solemne_1_final: 6.4,
+          solemne_2: 6.5,
+          taller_proyecto: 6.8,
+          asistencia_pct: 100,
+          nota_final: 6.6,
+          estado_curso: "Aprobado",
+        },
+        {
+          canvas_id: 50003,
+          rut: "20.503.003-3",
+          nombres: "Tomás Andrés",
+          apellidos: "Araya Castro",
+          email: "tomas.araya@mail.udp.cl",
+          solemne_1: 3.5,
+          decimas_act1: 0.0,
+          solemne_1_final: 3.5,
+          solemne_2: 3.8,
+          taller_proyecto: 4.2,
+          asistencia_pct: 60,
+          nota_final: 3.8,
+          estado_curso: "Reprobado RI",
+        },
+        {
+          canvas_id: 50004,
+          rut: "21.504.004-4",
+          nombres: "Sofía Isabel",
+          apellidos: "Castro Paredes",
+          email: "sofia.castro@mail.udp.cl",
+          solemne_1: 5.0,
+          decimas_act1: 0.6,
+          solemne_1_final: 5.6,
+          solemne_2: 5.4,
+          taller_proyecto: 5.9,
+          asistencia_pct: 85,
+          nota_final: 5.6,
+          estado_curso: "Aprobado",
+        },
+        {
+          canvas_id: 50005,
+          rut: "20.505.005-5",
+          nombres: "Lucas Benjamín",
+          apellidos: "Morales Rojas",
+          email: "lucas.morales@mail.udp.cl",
+          solemne_1: 4.2,
+          decimas_act1: 0.2,
+          solemne_1_final: 4.4,
+          solemne_2: 4.8,
+          taller_proyecto: 5.0,
+          asistencia_pct: 80,
+          nota_final: 4.7,
+          estado_curso: "Aprobado",
+        },
+      ]);
+    }
+
     if (!CANVAS_TOKEN) {
       return NextResponse.json({ error: "No CANVAS_API_TOKEN configured" }, { status: 401 });
     }

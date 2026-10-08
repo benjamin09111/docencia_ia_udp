@@ -285,7 +285,20 @@ const GRADES_STORAGE_PREFIX = "udp_course_grades_";
  * Obtiene las notas anonimizadas del curso desde localStorage o retorna las notas base.
  */
 export function getStoredCourseGrades(courseCode: string): StudentExcelRow[] {
-  if (typeof window === "undefined") return initialCourseData.estudiantes_excel;
+  const codeUpper = (courseCode || "").toUpperCase();
+  const isProg = codeUpper.includes("CIT1010") || codeUpper.includes("1010") || codeUpper === "41010" || codeUpper.includes("PROG");
+
+  const mockProgStudents: StudentExcelRow[] = [
+    { canvas_id: 50001, rut: "21.501.001-1", apellidos: "Silva Araya", nombres: "Mateo Ignacio", email: "mateo.silva@mail.udp.cl", solemne_1: 5.8, decimas_act1: 0.4, solemne_1_final: 6.2, solemne_2: 6.0, taller_proyecto: 6.5, asistencia_pct: 90, nota_final: 6.3, estado_curso: "Aprobado" },
+    { canvas_id: 50002, rut: "21.502.002-2", apellidos: "Vera Morales", nombres: "Valentina Paz", email: "valentina.vera@mail.udp.cl", solemne_1: 6.2, decimas_act1: 0.2, solemne_1_final: 6.4, solemne_2: 6.5, taller_proyecto: 6.8, asistencia_pct: 100, nota_final: 6.6, estado_curso: "Aprobado" },
+    { canvas_id: 50003, rut: "20.503.003-3", apellidos: "Araya Castro", nombres: "Tomás Andrés", email: "tomas.araya@mail.udp.cl", solemne_1: 3.5, decimas_act1: 0.0, solemne_1_final: 3.5, solemne_2: 3.8, taller_proyecto: 4.2, asistencia_pct: 60, nota_final: 3.8, estado_curso: "Reprobado RI" },
+    { canvas_id: 50004, rut: "21.504.004-4", apellidos: "Castro Paredes", nombres: "Sofía Isabel", email: "sofia.castro@mail.udp.cl", solemne_1: 5.0, decimas_act1: 0.6, solemne_1_final: 5.6, solemne_2: 5.4, taller_proyecto: 5.9, asistencia_pct: 85, nota_final: 5.6, estado_curso: "Aprobado" },
+    { canvas_id: 50005, rut: "20.505.005-5", apellidos: "Morales Rojas", nombres: "Lucas Benjamín", email: "lucas.morales@mail.udp.cl", solemne_1: 4.2, decimas_act1: 0.2, solemne_1_final: 4.4, solemne_2: 4.8, taller_proyecto: 5.0, asistencia_pct: 80, nota_final: 4.7, estado_curso: "Aprobado" },
+  ];
+
+  if (typeof window === "undefined") {
+    return isProg ? mockProgStudents : initialCourseData.estudiantes_excel;
+  }
   try {
     const raw = localStorage.getItem(`${GRADES_STORAGE_PREFIX}${courseCode}`);
     if (raw) {
@@ -295,7 +308,7 @@ export function getStoredCourseGrades(courseCode: string): StudentExcelRow[] {
   } catch (e) {
     console.error("Error loading course grades", e);
   }
-  return initialCourseData.estudiantes_excel;
+  return isProg ? mockProgStudents : initialCourseData.estudiantes_excel;
 }
 
 /**
