@@ -12,6 +12,7 @@ import {
   saveSections,
   getSectionDailyPin,
 } from "@/services/attendanceStore";
+import { addAttendanceLog } from "@/services/attendanceLogsStore";
 import { ClassSession, CourseSection } from "@/types/attendance";
 import {
   UDP_CAMPUS_LOCATION,
@@ -299,6 +300,20 @@ export function usePublicAttendanceCheckin({
     map[`${currentSection.id}_${selectedStudent.canvas_id}_${todayStr}`] = 1;
     map[`${activeSession.id}_${selectedStudent.canvas_id}`] = 1;
     saveAttendanceMap(map);
+
+    // Guardar log auditable inalterable en la bitácora
+    addAttendanceLog({
+      sectionId: currentSection.id,
+      sectionCode: currentSection.codigo || currentSection.id,
+      studentCanvasId: selectedStudent.canvas_id,
+      studentName: `${selectedStudent.nombres} ${selectedStudent.apellidos}`,
+      studentRut: selectedStudent.rut,
+      studentEmail: selectedStudent.email,
+      date: todayStr,
+      time: timestamp,
+      method: currentSection.requiereGeolocalizacion ? "PIN + GPS" : "PIN",
+      distanciaMetros: distancia,
+    });
 
     if (targetSemesterSession) {
       saveAttendanceMarkToSupabase(

@@ -57,6 +57,8 @@ import {
 import { AttendanceMatrixTable } from "./attendance/AttendanceMatrixTable";
 import { AttendanceCancelClassModal } from "./attendance/AttendanceCancelClassModal";
 import { TeacherAppealsWorkspace } from "./TeacherAppealsWorkspace";
+import { TeacherAttendanceLogsWorkspace } from "./attendance/TeacherAttendanceLogsWorkspace";
+import { addAttendanceLog } from "@/services/attendanceLogsStore";
 import {
   GraduationCap,
   KeyRound,
@@ -71,6 +73,7 @@ import {
   Clock,
   FileSpreadsheet,
   Zap,
+  History,
 } from "lucide-react";
 import { getPublicCheckinUrl, getPublicVisualUrl } from "@/utils/urlHelper";
 import { StudentExcelRow } from "@/types";
@@ -133,7 +136,7 @@ export const TeacherAttendanceWorkspace: React.FC<TeacherAttendanceWorkspaceProp
   }, [courseCode, sections]);
 
   const [selectedSectionId, setSelectedSectionId] = useState<string>(matchedSectionId);
-  const [attendanceSubTab, setAttendanceSubTab] = useState<"matriz" | "apelaciones">("matriz");
+  const [attendanceSubTab, setAttendanceSubTab] = useState<"matriz" | "apelaciones" | "historial">("matriz");
   const [filterType, setFilterType] = useState<"catedras" | "ayudantias">("ayudantias");
   const [incluirAyudantiasEnFinal, setIncluirAyudantiasEnFinal] = useState<boolean>(true);
   const [searchTerm, setSearchTerm] = useState<string>("");
@@ -1312,6 +1315,18 @@ export const TeacherAttendanceWorkspace: React.FC<TeacherAttendanceWorkspaceProp
               </span>
             )}
           </button>
+          <button
+            type="button"
+            onClick={() => setAttendanceSubTab("historial")}
+            className={`pb-2 px-2 text-xs font-bold border-b-2 flex items-center gap-1.5 transition-colors cursor-pointer ${
+              attendanceSubTab === "historial"
+                ? "border-emerald-600 text-emerald-700"
+                : "border-transparent text-[#6B7780] hover:text-[#2D3B45]"
+            }`}
+          >
+            <History size={13} />
+            <span>Historial de Registros</span>
+          </button>
         </div>
 
         {attendanceSubTab === "matriz" && (
@@ -1327,7 +1342,9 @@ export const TeacherAttendanceWorkspace: React.FC<TeacherAttendanceWorkspaceProp
         )}
       </div>
 
-      {attendanceSubTab === "apelaciones" ? (
+      {attendanceSubTab === "historial" ? (
+        <TeacherAttendanceLogsWorkspace section={selectedSection} />
+      ) : attendanceSubTab === "apelaciones" ? (
         <TeacherAppealsWorkspace
           section={selectedSection}
           onResolveAllAttendance={handleResolveAllAttendanceAppeals}
