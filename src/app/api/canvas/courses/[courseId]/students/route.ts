@@ -57,7 +57,7 @@ export async function GET(
           taller_proyecto: 4.2,
           asistencia_pct: 60,
           nota_final: 3.8,
-          estado_curso: "Reprobado RI",
+          estado_curso: "Reprobado",
         },
         {
           canvas_id: 50004,
