@@ -14,6 +14,7 @@ import {
 import { CreateActivityWorkspace } from "./CreateActivityWorkspace";
 import { ActivityEditModal } from "./activities/ActivityEditModal";
 import { ActivityDeleteConfirmModal } from "./activities/ActivityDeleteConfirmModal";
+import { CatalogoActividadesModal } from "./activities/CatalogoActividadesModal";
 import { CanvasOfficialRubricTable } from "@/components/canvas/CanvasOfficialRubricTable";
 import { convertRubricCriteriaToMatrix } from "@/services/officialRubricsService";
 import {
@@ -27,6 +28,7 @@ import {
   Globe,
   EyeOff,
   Award,
+  BookOpen,
 } from "lucide-react";
 
 interface CourseActivitiesViewProps {
@@ -56,6 +58,8 @@ export const CourseActivitiesView: React.FC<CourseActivitiesViewProps> = ({
   const [viewingPautaActivity, setViewingPautaActivity] = useState<CourseDeliverable | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [appealMessage, setAppealMessage] = useState<string | null>(null);
+  const [isCatalogModalOpen, setIsCatalogModalOpen] = useState(false);
+  const [selectedCatalogActivityId, setSelectedCatalogActivityId] = useState<string | undefined>(undefined);
 
   // Sincronizar si se añade un entregable desde el creador
   useEffect(() => {
@@ -75,6 +79,7 @@ export const CourseActivitiesView: React.FC<CourseActivitiesViewProps> = ({
     return (
       <CreateActivityWorkspace
         courseId={courseId}
+        initialActivityId={selectedCatalogActivityId}
         onBack={() => setIsCreatingWorkspace(false)}
         onPublish={(activity) => {
           onAddDeliverable(activity);
@@ -152,15 +157,30 @@ export const CourseActivitiesView: React.FC<CourseActivitiesViewProps> = ({
           </p>
         </div>
 
-        <CanvasButton
-          variant="primary-udp"
-          size="sm"
-          onClick={() => setIsCreatingWorkspace(true)}
-          icon={<Plus size={15} />}
-          title="Crear nueva actividad pedagógica con agentes"
-        >
-          Nueva actividad
-        </CanvasButton>
+        <div className="flex flex-wrap items-center gap-2">
+          <CanvasButton
+            variant="secondary"
+            size="sm"
+            onClick={() => setIsCatalogModalOpen(true)}
+            icon={<BookOpen size={14} />}
+            title="Explorar el catálogo pedagógico de 21 actividades formativas"
+          >
+            Catálogo formativas (21)
+          </CanvasButton>
+
+          <CanvasButton
+            variant="primary-udp"
+            size="sm"
+            onClick={() => {
+              setSelectedCatalogActivityId(undefined);
+              setIsCreatingWorkspace(true);
+            }}
+            icon={<Plus size={15} />}
+            title="Crear nueva actividad pedagógica con agentes"
+          >
+            Nueva actividad
+          </CanvasButton>
+        </div>
       </div>
 
       {/* Toast Notification */}
@@ -502,6 +522,16 @@ export const CourseActivitiesView: React.FC<CourseActivitiesViewProps> = ({
           </div>
         </div>
       )}
+
+      {/* Modal de Catálogo Pedagógico de Actividades Formativas (21 Dinámicas) */}
+      <CatalogoActividadesModal
+        isOpen={isCatalogModalOpen}
+        onClose={() => setIsCatalogModalOpen(false)}
+        onSelectForCreation={(id) => {
+          setSelectedCatalogActivityId(id);
+          setIsCreatingWorkspace(true);
+        }}
+      />
     </div>
   );
 };

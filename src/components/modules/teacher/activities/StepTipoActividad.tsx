@@ -1,12 +1,16 @@
 "use client";
 
-import React from "react";
-import { GraduationCap, Clock, CheckCircle2, ChevronRight } from "lucide-react";
+import React, { useState, useMemo } from "react";
+import { GraduationCap, ChevronRight, Layers, HelpCircle } from "lucide-react";
 import { CanvasButton } from "@/components/canvas/CanvasButton";
+import { MetodologiaDocente } from "@/constants/metodologiasDocentes";
 import {
-  MetodologiaDocente,
-  catalogoMetodologiasDocentes,
-} from "@/constants/metodologiasDocentes";
+  ACTIVIDADES_FORMATIVAS,
+  actividadFormativaToMetodologiaDocente,
+  CATEGORIAS_ACTIVIDADES_FORMATIVAS,
+  getActividadFormativaById,
+} from "@/constants/actividadesFormativasCatalog";
+import { ActividadPedagogicaDetalleCard } from "./ActividadPedagogicaDetalleCard";
 
 interface StepTipoActividadProps {
   selectedMetodologia: MetodologiaDocente;
@@ -19,67 +23,109 @@ export const StepTipoActividad: React.FC<StepTipoActividadProps> = ({
   onSelectMetodologia,
   onNext,
 }) => {
+  const [filtroCategoria, setFiltroCategoria] = useState<string>("Todas");
+
+  // Actividad formativa actual seleccionada en el catálogo
+  const actividadActual = useMemo(() => {
+    return (
+      getActividadFormativaById(selectedMetodologia.id) ||
+      ACTIVIDADES_FORMATIVAS.find((a) => a.nombre === selectedMetodologia.nombreCorto) ||
+      ACTIVIDADES_FORMATIVAS[0]
+    );
+  }, [selectedMetodologia]);
+
+  // Lista filtrada para el select
+  const actividadesFiltradas = useMemo(() => {
+    if (filtroCategoria === "Todas") return ACTIVIDADES_FORMATIVAS;
+    return ACTIVIDADES_FORMATIVAS.filter((a) => a.faseClase === filtroCategoria);
+  }, [filtroCategoria]);
+
+  const handleChangeSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const found = ACTIVIDADES_FORMATIVAS.find((a) => a.id === e.target.value);
+    if (found) {
+      const met = actividadFormativaToMetodologiaDocente(found);
+      onSelectMetodologia(met);
+    }
+  };
+
   return (
     <div className="space-y-4">
+      {/* Header Canvas con contexto pedagógico */}
       <div>
         <h2 className="text-sm font-bold text-[#2D3B45] flex items-center gap-2">
-          <GraduationCap size={16} className="text-[#008EE2]" />
-          Paso 1: Catálogo de Tipos de Actividad
+          <GraduationCap size={16} className="text-[#B71C1C]" />
+          Paso 1: Catálogo de Actividades Formativas
         </h2>
         <p className="text-xs text-[#6B7780] mt-0.5">
-          Selecciona la metodología pedagógica que deseas implementar. Cada opción incluye sus ventajas y formato recomendado.
+          Selecciona una de las 21 actividades formativas pedagógicas. Conoce en detalle qué hace y cómo funciona antes de aplicarla.
         </p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        {catalogoMetodologiasDocentes.map((m) => {
-          const isSelected = m.id === selectedMetodologia.id;
+      {/* Barra de Filtro Rápido por Fase de Clase */}
+      <div className="bg-white p-3 rounded-[4px] border border-[#E0E3E6] shadow-xs space-y-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <label htmlFor="select-actividad-formativa" className="text-xs font-bold text-[#2D3B45] flex items-center gap-1.5">
+            <Layers size={14} className="text-[#008EE2]" />
+            Selecciona la actividad formativa:
+          </label>
+          <span className="text-[11px] text-[#6B7780]">
+            21 dinámicas pedagógicas oficiales
+          </span>
+        </div>
 
-          return (
-            <div
-              key={m.id}
-              onClick={() => onSelectMetodologia(m)}
-              className={`p-3.5 rounded-[4px] border-2 cursor-pointer transition-all flex flex-col justify-between space-y-2.5 ${
-                isSelected
-                  ? "border-[#008EE2] bg-[#F0F8FF] ring-2 ring-[#008EE2] shadow-xs"
-                  : "border-[#E0E3E6] bg-white hover:border-gray-400 hover:bg-gray-50/60"
+        {/* SELECT PRINCIPAL CON LAS 21 ACTIVIDADES */}
+        <div className="relative">
+          <select
+            id="select-actividad-formativa"
+            value={actividadActual.id}
+            onChange={handleChangeSelect}
+            className="w-full bg-white border-2 border-[#C7CDD1] hover:border-[#008EE2] focus:border-[#B71C1C] rounded-[4px] py-2.5 px-3 text-xs md:text-sm font-semibold text-[#2D3B45] transition-all cursor-pointer shadow-xs outline-none"
+          >
+            {CATEGORIAS_ACTIVIDADES_FORMATIVAS.filter((c) => c !== "Todas").map((cat) => {
+              const items = ACTIVIDADES_FORMATIVAS.filter((a) => a.faseClase === cat);
+              if (items.length === 0) return null;
+              return (
+                <optgroup key={cat} label={`─── ${cat.toUpperCase()} ───`}>
+                  {items.map((act) => (
+                    <option key={act.id} value={act.id}>
+                      {act.nombre} — ({act.duracionSugerida} | {act.agrupacion})
+                    </option>
+                  ))}
+                </optgroup>
+              );
+            })}
+          </select>
+        </div>
+
+        {/* Filtros rápidos por chip */}
+        <div className="flex flex-wrap items-center gap-1.5 pt-1">
+          <span className="text-[11px] text-[#6B7780] font-medium mr-1">Filtrar por momento:</span>
+          {CATEGORIAS_ACTIVIDADES_FORMATIVAS.map((cat) => (
+            <button
+              key={cat}
+              type="button"
+              onClick={() => setFiltroCategoria(cat)}
+              className={`px-2 py-0.5 rounded text-[10.5px] font-semibold transition-all ${
+                filtroCategoria === cat
+                  ? "bg-[#2D3B45] text-white shadow-xs"
+                  : "bg-gray-100 text-[#55636E] hover:bg-gray-200"
               }`}
             >
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <span className={`text-xs font-bold ${isSelected ? "text-[#008EE2]" : "text-[#2D3B45]"}`}>
-                    {m.nombreCorto}
-                  </span>
-                  <span className="text-[10px] text-gray-500 font-medium bg-gray-100 px-1.5 py-0.5 rounded flex items-center gap-1">
-                    <Clock size={10} /> {m.duracionSugerida}
-                  </span>
-                </div>
-                <p className="text-[11px] text-[#55636E] line-clamp-2 leading-relaxed">
-                  {m.descripcionDefecto}
-                </p>
-              </div>
-
-              <div className="space-y-1.5 pt-2 border-t border-gray-100">
-                <div className="text-[10.5px] text-[#2D3B45] bg-white p-1.5 rounded border border-gray-200">
-                  <strong className="text-[#008EE2]">Ventaja:</strong> {m.ventajas}
-                </div>
-                <div className="flex items-center justify-between text-[10px]">
-                  <span className="text-gray-500 truncate max-w-[170px]">
-                    {m.contenidoSugerido.split(":")[0]}
-                  </span>
-                  {isSelected && (
-                    <span className="text-[#008EE2] font-bold flex items-center gap-0.5">
-                      <CheckCircle2 size={11} /> Seleccionada
-                    </span>
-                  )}
-                </div>
-              </div>
-            </div>
-          );
-        })}
+              {cat}
+            </button>
+          ))}
+        </div>
       </div>
 
-      <div className="pt-3 border-t flex justify-end">
+      {/* FICHA DETALLADA: ¿Qué hace? y ¿Cómo funciona? */}
+      <ActividadPedagogicaDetalleCard actividad={actividadActual} />
+
+      {/* Botón de acción Canvas */}
+      <div className="pt-3 border-t border-[#E0E3E6] flex items-center justify-between">
+        <div className="text-[11px] text-[#6B7780] flex items-center gap-1">
+          <HelpCircle size={13} className="text-[#008EE2]" />
+          <span>Actividad seleccionada: <strong className="text-[#2D3B45]">{actividadActual.nombre}</strong></span>
+        </div>
         <CanvasButton
           variant="primary-udp"
           size="sm"

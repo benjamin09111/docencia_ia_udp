@@ -1,4 +1,5 @@
 import { RubricMatrixRubro } from "@/components/canvas/CanvasOfficialRubricTable";
+import { catalogoActividadesFormativasDocentes } from "./actividadesFormativasCatalog";
 
 export interface MetodologiaDocente {
   id: string;
@@ -430,6 +431,7 @@ export const matricesOficialesPorMetodologia: Record<string, RubricMatrixRubro[]
 };
 
 export const catalogoMetodologiasDocentes: MetodologiaDocente[] = [
+  ...catalogoActividadesFormativasDocentes,
   {
     id: "rol_crisis",
     tipo: "Juego de Roles (Simulación de Crisis y Negociación)",

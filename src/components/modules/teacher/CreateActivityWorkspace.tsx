@@ -27,31 +27,37 @@ export {
 
 interface CreateActivityWorkspaceProps {
   courseId: number;
+  initialActivityId?: string;
   onBack: () => void;
   onPublish: (activity: CourseDeliverable) => void;
 }
 
 export const CreateActivityWorkspace: React.FC<CreateActivityWorkspaceProps> = ({
   courseId,
+  initialActivityId,
   onBack,
   onPublish,
 }) => {
+  const initialMet =
+    catalogoMetodologiasDocentes.find((m) => m.id === initialActivityId) ||
+    catalogoMetodologiasDocentes[0];
+
   const [pasoActual, setPasoActual] = useState<number>(1);
-  const [metodologia, setMetodologia] = useState<MetodologiaDocente>(catalogoMetodologiasDocentes[0]);
+  const [metodologia, setMetodologia] = useState<MetodologiaDocente>(initialMet);
 
   // Form State
-  const [titulo, setTitulo] = useState(catalogoMetodologiasDocentes[0].tituloDefecto);
-  const [descripcion, setDescripcion] = useState(catalogoMetodologiasDocentes[0].descripcionDefecto);
-  const [contenidoSeleccionado, setContenidoSeleccionado] = useState(catalogoMetodologiasDocentes[0].contenidoSugerido);
+  const [titulo, setTitulo] = useState(initialMet.tituloDefecto);
+  const [descripcion, setDescripcion] = useState(initialMet.descripcionDefecto);
+  const [contenidoSeleccionado, setContenidoSeleccionado] = useState(initialMet.contenidoSugerido);
   const [contenidoManual, setContenidoManual] = useState("");
-  const [fecha, setFecha] = useState(catalogoMetodologiasDocentes[0].fechaDefecto);
-  const [instrucciones, setInstrucciones] = useState(catalogoMetodologiasDocentes[0].instruccionesDefecto);
+  const [fecha, setFecha] = useState(initialMet.fechaDefecto);
+  const [instrucciones, setInstrucciones] = useState(initialMet.instruccionesDefecto);
 
   // Modalidad de evaluación
-  const [modalidad, setModalidad] = useState<"decimas" | "nota">("decimas");
-  const [decimas, setDecimas] = useState("0.3");
-  const [targetEvaluacion, setTargetEvaluacion] = useState("Reporte de Avance 1");
-  const [matrizRubros, setMatrizRubros] = useState<RubricMatrixRubro[]>(catalogoMetodologiasDocentes[0].matrizOficial);
+  const [modalidad, setModalidad] = useState<"decimas" | "nota">(initialMet.modalidadDefecto);
+  const [decimas, setDecimas] = useState(initialMet.valorDefecto);
+  const [targetEvaluacion, setTargetEvaluacion] = useState(initialMet.targetDefecto);
+  const [matrizRubros, setMatrizRubros] = useState<RubricMatrixRubro[]>(initialMet.matrizOficial);
 
   // Chat State
   const [chatMessages, setChatMessages] = useState<ChatMessageItem[]>([
