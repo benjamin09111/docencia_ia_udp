@@ -4,6 +4,7 @@ export type AnnouncementCategory =
   | "notas"
   | "entrega"
   | "ayudantia"
+  | "online"
   | "general";
 
 export interface CanvasAnnouncement {
@@ -36,6 +37,38 @@ export interface AnnouncementTemplate {
 }
 
 export const ANNOUNCEMENT_TEMPLATES: AnnouncementTemplate[] = [
+  {
+    id: "tpl_clase_online",
+    categoria: "online",
+    tituloSugerido: "Avisar de clase online",
+    descripcionCorta: "Envía el enlace de Zoom/Meet y horario para la sesión online sincrónica.",
+    icono: "Video",
+    color: "#008EE2",
+    generarMensaje: ({
+      cursoNombre,
+      cursoCodigo,
+      profesor,
+      fecha = "la sesión de hoy",
+      sala = "https://udp-cl.zoom.us/j/98452109823",
+      motivo = "sesión remota programada",
+    }) => ({
+      titulo: `[CLASE ONLINE] Aviso de clase online - ${cursoCodigo}`,
+      mensaje: `Estimadas y estimados estudiantes del curso ${cursoNombre}:
+
+Les informo que la clase de ${fecha} se realizará de manera virtual online debido a ${motivo}.
+
+🔗 Enlace de Conexión: ${sala}
+📌 Plataforma: Zoom UDP / Google Meet
+🔑 Código de acceso: UDP2026
+⏰ Horario de inicio: 08:30 hrs
+
+Por favor ingresar puntualmente con su correo institucional. La sesión quedará grabada en Canvas para su posterior consulta.
+
+Saludos cordiales,
+${profesor}
+Escuela de Informática y Telecomunicaciones UDP`,
+    }),
+  },
   {
     id: "tpl_cancelacion",
     categoria: "cancelacion",
@@ -172,33 +205,60 @@ ${profesor}`,
   },
 ];
 
-export const INITIAL_ANNOUNCEMENTS: CanvasAnnouncement[] = [
-  {
-    id: "ann_1",
-    courseCode: "CIT3000_CA02",
-    titulo: "[CALIFICACIONES] Planilla oficial publicada por RUT - CIT3000_CA02",
-    mensaje: "Ya se encuentra disponible la planilla final consolidada por RUT conforme a la normativa de privacidad UDP.",
-    categoria: "notas",
-    fechaPublicacion: "30 Sep 2026, 17:45",
-    autor: "Jorge Esteban Cruz León",
-    estado: "publicado",
-  },
-  {
-    id: "ann_2",
-    courseCode: "CIT3000_CA02",
-    titulo: "[SOLEMNE 1] Contenidos y Sala de Evaluación - CIT3000_CA02",
-    mensaje: "La solemne 1 se realizará este jueves en el Auditorio 102. Entra desde PPT 1 a PPT 6.",
-    categoria: "entrega",
-    fechaPublicacion: "18 Sep 2026, 11:30",
-    autor: "Jorge Esteban Cruz León",
-    estado: "publicado",
-  },
-];
+export function getInitialAnnouncementsForCourse(courseCode: string): CanvasAnnouncement[] {
+  return [
+    {
+      id: `ann_online_${courseCode}`,
+      courseCode,
+      titulo: `Avisar de clase online — Enlace y detalles de conexión`,
+      mensaje: `Estimadas y estimados estudiantes:
+
+Les informo que la sesión de hoy se llevará a cabo de forma virtual online.
+
+🔗 Enlace directo a la sala: https://udp-cl.zoom.us/j/98452109823
+📌 Plataforma: Zoom UDP
+⏰ Horario: 08:30 - 11:20 hrs
+🔑 Clave de acceso: UDP2026
+
+Por favor ingresar con su cuenta institucional UDP con el micrófono silenciado. La sesión será grabada para su posterior consulta en Canvas.
+
+Atentamente,
+Jorge Esteban Cruz León
+Equipo Docente UDP`,
+      categoria: "online",
+      fechaPublicacion: "Hoy, 08:15",
+      autor: "Jorge Esteban Cruz León",
+      estado: "publicado",
+    },
+    {
+      id: `ann_1_${courseCode}`,
+      courseCode,
+      titulo: `[CALIFICACIONES] Planilla oficial publicada por RUT - ${courseCode}`,
+      mensaje: "Ya se encuentra disponible la planilla final consolidada por RUT conforme a la normativa de privacidad UDP.",
+      categoria: "notas",
+      fechaPublicacion: "30 Sep 2026, 17:45",
+      autor: "Jorge Esteban Cruz León",
+      estado: "publicado",
+    },
+    {
+      id: `ann_2_${courseCode}`,
+      courseCode,
+      titulo: `[SOLEMNE 1] Contenidos y Sala de Evaluación - ${courseCode}`,
+      mensaje: "La solemne 1 se realizará este jueves en el Auditorio 102. Entra desde PPT 1 a PPT 6.",
+      categoria: "entrega",
+      fechaPublicacion: "18 Sep 2026, 11:30",
+      autor: "Jorge Esteban Cruz León",
+      estado: "publicado",
+    },
+  ];
+}
+
+export const INITIAL_ANNOUNCEMENTS: CanvasAnnouncement[] = getInitialAnnouncementsForCourse("CIT3000_CA02");
 
 const ANNOUNCEMENTS_STORAGE_KEY = "udp_course_announcements_history_v1";
 
 export function getStoredAnnouncements(courseCode: string): CanvasAnnouncement[] {
-  if (typeof window === "undefined") return INITIAL_ANNOUNCEMENTS;
+  if (typeof window === "undefined") return getInitialAnnouncementsForCourse(courseCode);
   try {
     const raw = localStorage.getItem(`${ANNOUNCEMENTS_STORAGE_KEY}_${courseCode}`);
     if (raw) {
@@ -208,7 +268,7 @@ export function getStoredAnnouncements(courseCode: string): CanvasAnnouncement[]
   } catch (e) {
     console.error("Error loading announcements", e);
   }
-  return INITIAL_ANNOUNCEMENTS;
+  return getInitialAnnouncementsForCourse(courseCode);
 }
 
 export function saveStoredAnnouncements(courseCode: string, list: CanvasAnnouncement[]): void {
