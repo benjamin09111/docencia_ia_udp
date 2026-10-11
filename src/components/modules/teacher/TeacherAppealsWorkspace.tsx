@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { CheckCheck, CheckCircle2, Clock, XCircle, AlertCircle, FileText, Filter, RotateCcw } from "lucide-react";
 import { CourseSection, AttendanceAppeal } from "@/types/attendance";
-import { getSavedAppeals, resolveAllPendingAppeals, resolveSingleAppeal, rejectSingleAppeal } from "@/services/appealsStore";
+import { getSavedAppeals, resolveAppeals, rejectAppeal } from "@/services/appealsStore";
 
 interface TeacherAppealsWorkspaceProps {
   section: CourseSection;
@@ -20,43 +20,55 @@ export const TeacherAppealsWorkspace: React.FC<TeacherAppealsWorkspaceProps> = (
   const [activeTab, setActiveTab] = useState<"pendientes" | "resueltas">("pendientes");
   const [notification, setNotification] = useState<string | null>(null);
 
-  const refreshAppeals = () => setAppeals(getSavedAppeals(section.codigo));
+  const refreshAppeals = () => {
+    getSavedAppeals(section.codigo).then(setAppeals);
+  };
 
+  // Las apelaciones llegan desde los celulares de los alumnos vía Supabase: recargar periódicamente
   useEffect(() => {
     refreshAppeals();
-    const handleUpdate = () => refreshAppeals();
-    window.addEventListener("udp_appeals_updated", handleUpdate);
-    return () => window.removeEventListener("udp_appeals_updated", handleUpdate);
+    const interval = setInterval(refreshAppeals, 15000);
+    return () => clearInterval(interval);
   }, [section.codigo]);
 
   const pendingList = appeals.filter((a) => a.status === "pendiente");
   const resolvedList = appeals.filter((a) => a.status === "resuelta" || a.status === "rechazada");
   const displayList = activeTab === "pendientes" ? pendingList : resolvedList;
 
-  const handleResolveAll = () => {
-    if (pendingList.length === 0) return;
-    const { resolvedAppeals } = resolveAllPendingAppeals(section.codigo);
-    refreshAppeals();
-    onResolveAllAttendance(resolvedAppeals);
-    setNotification(`✓ Se resolvieron ${resolvedAppeals.length} apelaciones y se marcaron PRESENTES en la planilla.`);
+  const notify = (msg: string) => {
+    setNotification(msg);
     setTimeout(() => setNotification(null), 4000);
   };
 
-  const handleResolveSingle = (app: AttendanceAppeal) => {
-    const updated = resolveSingleAppeal(app.id);
-    if (updated) {
-      refreshAppeals();
-      onResolveSingleAttendance?.(updated);
-      setNotification(`✓ Apelación de ${app.studentName} resuelta como PRESENTE.`);
-      setTimeout(() => setNotification(null), 3000);
+  const handleResolveAll = async () => {
+    if (pendingList.length === 0) return;
+    const toResolve = [...pendingList];
+    if (!(await resolveAppeals(toResolve, "Docente (Resolución Masiva)"))) {
+      notify("No se pudieron resolver las apelaciones. Revisa tu conexión.");
+      return;
     }
+    refreshAppeals();
+    onResolveAllAttendance(toResolve);
+    notify(`✓ Se resolvieron ${toResolve.length} apelaciones y se marcaron PRESENTES en la planilla.`);
   };
 
-  const handleRejectSingle = (app: AttendanceAppeal) => {
-    rejectSingleAppeal(app.id);
+  const handleResolveSingle = async (app: AttendanceAppeal) => {
+    if (!(await resolveAppeals([app]))) {
+      notify("No se pudo resolver la apelación. Revisa tu conexión.");
+      return;
+    }
     refreshAppeals();
-    setNotification(`Apelación de ${app.studentName} rechazada.`);
-    setTimeout(() => setNotification(null), 3000);
+    onResolveSingleAttendance?.(app);
+    notify(`✓ Apelación de ${app.studentName} resuelta como PRESENTE.`);
+  };
+
+  const handleRejectSingle = async (app: AttendanceAppeal) => {
+    if (!(await rejectAppeal(app))) {
+      notify("No se pudo rechazar la apelación. Revisa tu conexión.");
+      return;
+    }
+    refreshAppeals();
+    notify(`Apelación de ${app.studentName} rechazada.`);
   };
 
   return (

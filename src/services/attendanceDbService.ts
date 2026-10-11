@@ -128,9 +128,9 @@ export async function syncStudentsAndSessionsToSupabase(
         date: sess.fecha,
         dia_semana: sess.diaSemana,
         type: sess.tipo,
-        modality: sess.modalidad,
-        status: sess.estado,
-        motivo_cancelacion: sess.motivoCancelacion || null,
+        // status / modality / motivo NO se sincronizan aquí: solo cambian con acciones explícitas
+        // del docente (updateSessionStatusInSupabase), para que un dispositivo con caché antigua
+        // no revierta una clase suspendida.
         start_time: sess.horaInicio || null,
         end_time: sess.horaFin || null,
         room: sess.sala || null,
@@ -310,6 +310,19 @@ export async function updateSectionScheduleInSupabase(
 
     if (error) throw error;
 
+    // Segundo horario de ayudantía (Bloque 2) en un update aparte: si la columna aún no existe
+    // en la base, solo se avisa y no se pierde el guardado del horario principal.
+    const bloque2 = section.horarioAyudantia2 && (section.horarioAyudantia2.dias?.length ?? 0) > 0
+      ? section.horarioAyudantia2
+      : null;
+    const { error: bloque2Err } = await supabase
+      .from("sections")
+      .update({ horario_ayudantia2: bloque2 })
+      .eq("code", section.codigo);
+    if (bloque2Err) {
+      console.warn("Aviso guardando Bloque 2 de ayudantía en Supabase:", bloque2Err.message);
+    }
+
     // Sincronizar sesiones semestrales en la tabla class_sessions
     const sectionUuid = updatedSection?.[0]?.id;
     if (sectionUuid) {
@@ -321,9 +334,6 @@ export async function updateSectionScheduleInSupabase(
           date: sess.fecha,
           dia_semana: sess.diaSemana,
           type: sess.tipo,
-          modality: sess.modalidad,
-          status: sess.estado,
-          motivo_cancelacion: sess.motivoCancelacion || null,
           start_time: sess.horaInicio ? `${sess.horaInicio}:00` : null,
           end_time: sess.horaFin ? `${sess.horaFin}:00` : null,
           room: sess.sala || null,

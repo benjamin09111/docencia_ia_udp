@@ -241,52 +241,11 @@ export function getSectionVisualPin(section: CourseSection): string {
 }
 
 /**
- * Obtiene el PIN activo para una sección en una fecha dada (por defecto, hoy).
- * Si el docente regeneró el PIN manualmente para ese día, devuelve la sobreescritura.
- * De lo contrario, calcula el PIN diario automático único para ese día de ayudantía.
+ * PIN del día para una sección: determinístico por sección y fecha, idéntico en el
+ * dispositivo del docente y en el celular del alumno (sin reemplazos locales).
  */
 export function getSectionDailyPin(section: CourseSection, dateStr?: string): string {
-  const targetDate = dateStr || getTodayDateStr();
-  if (typeof window !== "undefined") {
-    const override =
-      localStorage.getItem(`udp_pin_override_${section.id}_${targetDate}`) ||
-      localStorage.getItem(`udp_pin_override_${section.codigo}_${targetDate}`);
-    if (override) return override;
-  }
-  return generateDailyPin(section.codigo, targetDate);
-}
-
-/**
- * Guarda una regeneración de PIN para una fecha específica
- */
-export function setSectionDailyPin(sectionIdOrCode: string, newPin: string, dateStr?: string): void {
-  const targetDate = dateStr || getTodayDateStr();
-  if (typeof window !== "undefined") {
-    localStorage.setItem(`udp_pin_override_${sectionIdOrCode}_${targetDate}`, newPin);
-    window.dispatchEvent(
-      new CustomEvent("udp_pin_updated", { detail: { sectionIdOrCode, targetDate, newPin } })
-    );
-  }
-}
-
-/**
- * Regenera y guarda un nuevo PIN aleatorio de 4 dígitos para una sección en una fecha específica
- */
-export function regenerateSectionPin(sectionIdOrCode: string, dateStr?: string): string {
-  const targetDate = dateStr || getTodayDateStr();
-  const newPin = Math.floor(1000 + Math.random() * 9000).toString();
-  setSectionDailyPin(sectionIdOrCode, newPin, targetDate);
-
-  const currentSections = getSavedSections();
-  const updated = currentSections.map((sec) => {
-    if (sec.id === sectionIdOrCode || sec.codigo === sectionIdOrCode) {
-      return { ...sec, pinActivo: newPin };
-    }
-    return sec;
-  });
-
-  saveSections(updated);
-  return newPin;
+  return generateDailyPin(section.codigo, dateStr || getTodayDateStr());
 }
 
 import { INITIAL_STUDENTS_ROSTER, StudentRosterItem } from "@/constants/initialStudentRoster";
@@ -491,6 +450,44 @@ export function saveSessionModalityOverride(
     window.dispatchEvent(new CustomEvent("udp_sessions_overrides_updated", { detail: current }));
   } catch (e) {
     console.error("Error saving session modality to localStorage", e);
+  }
+}
+
+/**
+ * Aplica sobre la caché local los estados de sesión guardados en la nube (cancelación y modalidad),
+ * para que todos los dispositivos del docente vean las mismas clases suspendidas.
+ * Conservador: solo AGREGA cancelaciones y modalidad online; nunca reactiva una clase cancelada
+ * localmente (eso la haría contar como inasistencia para todo el curso).
+ * Devuelve true si hubo cambios.
+ */
+export function mergeRemoteSessionOverrides(remote: Record<string, SessionOverride>): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    const current = getSavedSessionOverrides();
+    let changed = false;
+    Object.entries(remote).forEach(([sessionId, ov]) => {
+      const local = current[sessionId];
+      if (ov.estado === "cancelada" && local?.estado !== "cancelada") {
+        current[sessionId] = { ...local, estado: "cancelada", motivoCancelacion: ov.motivoCancelacion };
+        changed = true;
+      }
+      if (ov.modalidad === "online" && local?.modalidad !== "online") {
+        current[sessionId] = {
+          ...current[sessionId],
+          estado: current[sessionId]?.estado || "programada",
+          modalidad: "online",
+        };
+        changed = true;
+      }
+    });
+    if (changed) {
+      localStorage.setItem(SESSION_OVERRIDES_KEY, JSON.stringify(current));
+      window.dispatchEvent(new CustomEvent("udp_sessions_overrides_updated", { detail: current }));
+    }
+    return changed;
+  } catch (e) {
+    console.error("Error aplicando estados de sesión remotos:", e);
+    return false;
   }
 }
 

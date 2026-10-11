@@ -11,7 +11,6 @@ import { CourseCronogramaView } from "./CourseCronogramaView";
 import { CourseAnnouncementsView } from "./CourseAnnouncementsView";
 import { TeacherAttendanceWorkspace } from "./TeacherAttendanceWorkspace";
 import { CourseGroupsWorkspace } from "./groups/CourseGroupsWorkspace";
-import { CourseAutomationsWorkspace } from "./automations/CourseAutomationsWorkspace";
 import { CourseExcelFinalTab } from "./gradebook/CourseExcelFinalTab";
 import { CourseMetricsView } from "./CourseMetricsView";
 import { CourseLearningTraceabilityView } from "./learning/CourseLearningTraceabilityView";
@@ -25,7 +24,6 @@ export type CourseWorkspaceTab =
   | "anuncios"
   | "asistencia"
   | "grupos"
-  | "automatizaciones"
   | "excel"
   | "metricas"
   | "aprendizaje"
@@ -106,14 +104,6 @@ export const CourseWorkspaceContent: React.FC<CourseWorkspaceContentProps> = ({
           canvasCourseId={course.id}
           students={rosterStudents}
           sectionId={section.id}
-        />
-      );
-    case "automatizaciones":
-      return (
-        <CourseAutomationsWorkspace
-          courseCode={course.code}
-          courseName={course.name}
-          sessions={courseSessions}
         />
       );
     case "excel":

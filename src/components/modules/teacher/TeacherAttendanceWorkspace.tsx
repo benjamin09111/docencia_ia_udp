@@ -31,14 +31,11 @@ import {
   getSectionByCourseCode,
   saveSessionOverride,
   saveSessionModalityOverride,
-  regenerateSectionPin,
+  mergeRemoteSessionOverrides,
   getSectionDailyPin,
   getSectionVisualPin,
 } from "@/services/attendanceStore";
 import { getSavedAppeals } from "@/services/appealsStore";
-import { getSavedRules } from "@/services/automationsStore";
-import { getSavedGroups } from "@/services/groupsStore";
-import { evaluateSharedAttendanceRule } from "@/utils/rulesEngine";
 import { exportAttendanceToExcel, AttendanceExportScope } from "@/services/excelExportService";
 import {
   syncCourseAndSectionToSupabase,
@@ -59,7 +56,12 @@ import { AttendanceMatrixTable } from "./attendance/AttendanceMatrixTable";
 import { AttendanceCancelClassModal } from "./attendance/AttendanceCancelClassModal";
 import { TeacherAppealsWorkspace } from "./TeacherAppealsWorkspace";
 import { TeacherAttendanceLogsWorkspace } from "./attendance/TeacherAttendanceLogsWorkspace";
-import { addAttendanceLog } from "@/services/attendanceLogsStore";
+import {
+  insertCheckinLog,
+  fetchSectionSessionStates,
+  fetchSectionWorkSettings,
+  saveSectionWorkSettings,
+} from "@/services/attendanceCloudService";
 import {
   GraduationCap,
   KeyRound,
@@ -73,7 +75,6 @@ import {
   MapPin,
   Clock,
   FileSpreadsheet,
-  Zap,
   History,
 } from "lucide-react";
 import { getPublicCheckinUrl, getPublicVisualUrl } from "@/utils/urlHelper";
@@ -150,16 +151,23 @@ export const TeacherAttendanceWorkspace: React.FC<TeacherAttendanceWorkspaceProp
     setSelectedSectionId(matchedSectionId);
   }, [matchedSectionId]);
 
-  // Contar apelaciones pendientes para la sección
+  // Contar apelaciones pendientes de la sección (llegan desde los celulares vía Supabase)
   useEffect(() => {
+    const sectionCode =
+      sections.find((s) => s.id === selectedSectionId || s.codigo === selectedSectionId)?.codigo || selectedSectionId;
+    let isMounted = true;
     const updateCount = () => {
-      const list = getSavedAppeals(selectedSectionId);
-      setPendingAppealsCount(list.filter((a) => a.status === "pendiente").length);
+      getSavedAppeals(sectionCode).then((list) => {
+        if (isMounted) setPendingAppealsCount(list.filter((a) => a.status === "pendiente").length);
+      });
     };
     updateCount();
-    window.addEventListener("udp_appeals_updated", updateCount);
-    return () => window.removeEventListener("udp_appeals_updated", updateCount);
-  }, [selectedSectionId]);
+    const interval = setInterval(updateCount, 30000);
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, [selectedSectionId, sections]);
 
   // Modales y estados de copiado
   const [cancelModalSession, setCancelModalSession] = useState<ClassSession | null>(null);
@@ -167,6 +175,17 @@ export const TeacherAttendanceWorkspace: React.FC<TeacherAttendanceWorkspaceProp
   const [copiedVisual, setCopiedVisual] = useState(false);
   const [copiedPin, setCopiedPin] = useState(false);
   const lastLocalEditTimeRef = useRef<number>(0);
+  // Secciones cuyas décimas locales ya se subieron a la nube en esta sesión
+  const uploadedWorkSectionsRef = useRef<Set<string>>(new Set());
+  // Claves con una marca manual aún en vuelo hacia Supabase: la nube no puede pisarlas
+  const pendingWritesRef = useRef<Set<string>>(new Set());
+  const withoutPendingKeys = (cloudMap: Record<string, AttendanceValue>) => {
+    const filtered: Record<string, AttendanceValue> = {};
+    Object.keys(cloudMap).forEach((k) => {
+      if (!pendingWritesRef.current.has(k)) filtered[k] = cloudMap[k];
+    });
+    return filtered;
+  };
 
   // Secciones relevantes para este curso
   const relevantSections = useMemo(() => {
@@ -360,15 +379,50 @@ export const TeacherAttendanceWorkspace: React.FC<TeacherAttendanceWorkspaceProp
     setDecimasPorTrabajo(getSavedDecimasPorTrabajo(selectedSectionId));
   }, [selectedSectionId]);
 
+  const selectedSectionCode =
+    sections.find((s) => s.id === selectedSectionId || s.codigo === selectedSectionId)?.codigo || selectedSectionId;
+
   const handleUpdateTotalTrabajos = (total: number) => {
     setTotalTrabajosRealizados(total);
     saveTotalTrabajos(total, selectedSectionId);
+    saveSectionWorkSettings(selectedSectionCode, { totalTrabajos: total });
   };
 
   const handleUpdateDecimasPorTrabajo = (val: number) => {
     setDecimasPorTrabajo(val);
     saveDecimasPorTrabajo(val, selectedSectionId);
+    saveSectionWorkSettings(selectedSectionCode, { decimasPorTrabajo: val });
   };
+
+  // Estado compartido de la sección en la nube: clases suspendidas
+  // y parámetros de décimas. Así todos los dispositivos del docente ven lo mismo.
+  useEffect(() => {
+    if (!isSupabaseConfigured() || !selectedSectionCode) return;
+    let isMounted = true;
+    (async () => {
+      const states = await fetchSectionSessionStates(selectedSectionCode);
+      if (isMounted) mergeRemoteSessionOverrides(states);
+
+      const settings = await fetchSectionWorkSettings(selectedSectionCode);
+      if (!isMounted || !settings) return;
+      if (settings.totalTrabajos !== undefined) {
+        setTotalTrabajosRealizados(settings.totalTrabajos);
+        saveTotalTrabajos(settings.totalTrabajos, selectedSectionId);
+      } else {
+        // Primera vez: subir a la nube el valor que hoy solo existe en este navegador
+        saveSectionWorkSettings(selectedSectionCode, { totalTrabajos: getSavedTotalTrabajos(selectedSectionId) });
+      }
+      if (settings.decimasPorTrabajo !== undefined) {
+        setDecimasPorTrabajo(settings.decimasPorTrabajo);
+        saveDecimasPorTrabajo(settings.decimasPorTrabajo, selectedSectionId);
+      } else {
+        saveSectionWorkSettings(selectedSectionCode, { decimasPorTrabajo: getSavedDecimasPorTrabajo(selectedSectionId) });
+      }
+    })();
+    return () => {
+      isMounted = false;
+    };
+  }, [selectedSectionCode, selectedSectionId]);
 
   // Escuchar actualizaciones de asistencia, décimas y trabajos en tiempo real
   useEffect(() => {
@@ -499,7 +553,7 @@ export const TeacherAttendanceWorkspace: React.FC<TeacherAttendanceWorkspaceProp
           const cloudMap = await fetchAttendanceMapFromSupabase(selectedSection?.codigo || courseCode);
           if (isMounted && Object.keys(cloudMap).length > 0) {
             setAttendanceMap((prev) => {
-              const merged = { ...prev, ...cloudMap };
+              const merged = { ...prev, ...withoutPendingKeys(cloudMap) };
               saveAttendanceMap(merged);
               return merged;
             });
@@ -507,6 +561,20 @@ export const TeacherAttendanceWorkspace: React.FC<TeacherAttendanceWorkspaceProp
 
           // Cargar cualquier registro de décimas y trabajos guardado en Supabase
           const cloudWorkRecords = await fetchStudentWorkRecordsFromSupabase(selectedSection?.codigo || courseCode);
+
+          // Subir una vez las décimas/trabajos que hoy solo existen en este navegador (sin pisar la nube)
+          const secCodeForWork = selectedSection?.codigo || courseCode;
+          if (isMounted && !uploadedWorkSectionsRef.current.has(secCodeForWork)) {
+            uploadedWorkSectionsRef.current.add(secCodeForWork);
+            const localWork = getSavedStudentWorkRecords();
+            currentRoster.forEach((st) => {
+              const rec = localWork[st.canvas_id];
+              if (!rec || cloudWorkRecords[st.canvas_id] !== undefined) return;
+              if ((rec.decimas || 0) === 0 && (rec.trabajosRealizados || 0) === 0) return;
+              saveStudentWorkRecordToSupabase(secCodeForWork, st.canvas_id, rec.decimas, rec.trabajosRealizados).catch(() => {});
+            });
+          }
+
           if (isMounted && Object.keys(cloudWorkRecords).length > 0) {
             setStudentWorkRecords((prev) => {
               const merged = { ...prev, ...cloudWorkRecords };
@@ -584,7 +652,9 @@ export const TeacherAttendanceWorkspace: React.FC<TeacherAttendanceWorkspaceProp
         // Si el profesor/ayudante editó localmente hace menos de 6 segundos, proteger el estado local
         if (Date.now() - lastLocalEditTimeRef.current < 6000) return;
 
-        const cloudMap = await fetchAttendanceMapFromSupabase(selectedSection?.codigo || courseCode);
+        const cloudMap = withoutPendingKeys(
+          await fetchAttendanceMapFromSupabase(selectedSection?.codigo || courseCode)
+        );
         if (Object.keys(cloudMap).length > 0) {
           setAttendanceMap((prev) => {
             const hasChanges = Object.keys(cloudMap).some((k) => prev[k] !== cloudMap[k]);
@@ -700,27 +770,6 @@ export const TeacherAttendanceWorkspace: React.FC<TeacherAttendanceWorkspaceProp
     message: string;
   } | null>(null);
 
-  // Contador de alumnos presentes hoy en sala en vivo
-  const livePresentesCount = useMemo(() => {
-    const todayStr = getTodayDateStr();
-    const todaySess =
-      activeSessions.find((s) => s.fecha === todayStr && s.tipo === "ayudantia") ||
-      todaySessionInfo.todaySession;
-    if (!todaySess) return 0;
-    return sectionStudents.filter((st) => getAttendanceValue(attendanceMap, todaySess.id, st.canvas_id) === 1).length;
-  }, [activeSessions, todaySessionInfo.todaySession, sectionStudents, attendanceMap]);
-
-  // Manejar regeneración de PIN para la sección activa
-  const handleRegeneratePin = () => {
-    const newPin = regenerateSectionPin(selectedSection.id, todaySessionInfo.todayDateStr);
-    setSections(getSavedSections());
-    setQuickNotification({
-      type: "success",
-      message: `🔑 Nuevo PIN generado para hoy en ${selectedSection.nombre}: ${newPin}. Proyéctalo o compártelo a los alumnos.`,
-    });
-    setTimeout(() => setQuickNotification(null), 5000);
-  };
-
   // Sincronización protegida con la planilla Excel oficial:
   // Usa ref para evitar bucles infinitos (Maximum update depth exceeded)
   const lastSyncedRef = useRef<Record<number, number>>({});
@@ -736,47 +785,49 @@ export const TeacherAttendanceWorkspace: React.FC<TeacherAttendanceWorkspaceProp
     });
   }, [summaries, onUpdateGrade]);
 
-  // Marcación rápida de asistencia de hoy (1 clic)
-  const handleMarkTodayAttendance = (studentId: number, targetSessionId?: string) => {
-    const sess = targetSessionId
-      ? activeSessions.find((s) => s.id === targetSessionId)
-      : todaySessionInfo.todaySession;
-
-    if (!sess) {
+  // Persiste una marca manual en Supabase. Mientras está en vuelo, el polling no puede pisarla;
+  // si falla, se revierte localmente para que la planilla muestre lo que realmente quedó guardado.
+  const persistManualMark = (
+    sessionCode: string,
+    studentId: number,
+    value: AttendanceValue,
+    localKeys: string[],
+    previousValue: AttendanceValue,
+    method: "Docente Manual" | "Apelación aceptada" = "Docente Manual"
+  ) => {
+    if (!isSupabaseConfigured()) return;
+    localKeys.forEach((k) => pendingWritesRef.current.add(k));
+    saveAttendanceMarkToSupabase(sessionCode, studentId, value).then((res) => {
+      localKeys.forEach((k) => pendingWritesRef.current.delete(k));
+      if (res.success) {
+        // Dejar constancia del cambio manual en el historial inalterable
+        const student = currentRoster.find((st) => st.canvas_id === studentId);
+        insertCheckinLog({
+          sectionCode: selectedSection.codigo,
+          sessionCode,
+          date: sessionCode.slice(-10),
+          studentCanvasId: studentId,
+          studentName: student ? `${student.nombres} ${student.apellidos}` : `Canvas ${studentId}`,
+          studentEmail: student?.email,
+          value,
+          method,
+        });
+        return;
+      }
+      setAttendanceMap((prev) => {
+        const next = { ...prev };
+        localKeys.forEach((k) => {
+          next[k] = previousValue;
+        });
+        saveAttendanceMap(next);
+        return next;
+      });
       setQuickNotification({
         type: "warning",
-        message: `Hoy (${todaySessionInfo.diaActualNombre}) no hay sesión de ayudantía configurada para ${selectedSection.nombre}. Horario oficial: ${todaySessionInfo.diasConfigurados} de ${selectedSection.horarioAyudantia?.horaInicio || "16:15"} a ${selectedSection.horarioAyudantia?.horaFin || "17:45"}.`,
+        message: "No se pudo guardar la asistencia en la nube. Revisa tu conexión y vuelve a marcar.",
       });
-      setTimeout(() => setQuickNotification(null), 5000);
-      return;
-    }
-
-    const key = `${sess.id}_${studentId}`;
-    const currentVal = attendanceMap[key] ?? 0;
-    const nextVal: AttendanceValue = currentVal === 1 ? 0 : 1;
-
-    lastLocalEditTimeRef.current = Date.now();
-    setAttendanceMap((prev) => {
-      const next = { ...prev, [key]: nextVal };
-      saveAttendanceMap(next);
-      return next;
+      setTimeout(() => setQuickNotification(null), 6000);
     });
-
-    saveAttendanceMarkToSupabase(sess.id, studentId, nextVal).catch((err) =>
-      console.warn("Error guardando en Supabase:", err)
-    );
-
-    const student = sectionStudents.find((s) => s.canvas_id === studentId);
-    const stName = student ? `${student.nombres} ${student.apellidos}` : "Estudiante";
-
-    setQuickNotification({
-      type: "success",
-      message:
-        nextVal === 1
-          ? `✓ Asistencia registrada: ${stName} quedó PRESENTE en ayudantía (${sess.fecha}).`
-          : `Asistencia anulada: ${stName} quedó AUSENTE en ayudantía (${sess.fecha}).`,
-    });
-    setTimeout(() => setQuickNotification(null), 4000);
   };
 
   // Toggle de celda binaria 1 <-> 0 y persistencia local + Supabase
@@ -801,33 +852,29 @@ export const TeacherAttendanceWorkspace: React.FC<TeacherAttendanceWorkspaceProp
     const nextVal: AttendanceValue = currentVal === 1 ? 0 : 1;
     lastLocalEditTimeRef.current = Date.now();
 
-    const key = `${sessionId}_${studentId}`;
+    // Código canónico de sesión (sess_CIT3203_CA01_...) y todas sus variantes locales
+    let canonicalSessionId = sessionId;
+    for (const [fr, code] of Object.entries(reverseMap)) {
+      if (sessionId.includes(fr)) canonicalSessionId = sessionId.replace(fr, code);
+    }
+    const localKeys = [`${sessionId}_${studentId}`, `${canonicalSessionId}_${studentId}`];
+    for (const [code, fr] of Object.entries(friendlyMap)) {
+      if (canonicalSessionId.includes(code)) {
+        localKeys.push(`${canonicalSessionId.replace(code, fr)}_${studentId}`);
+      }
+    }
+    const uniqueKeys = Array.from(new Set(localKeys));
 
     setAttendanceMap((prev) => {
-      const next = { ...prev, [key]: nextVal };
-      for (const [code, fr] of Object.entries(friendlyMap)) {
-        if (sessionId.includes(code)) {
-          next[`${sessionId.replace(code, fr)}_${studentId}`] = nextVal;
-        }
-      }
-      for (const [fr, code] of Object.entries(reverseMap)) {
-        if (sessionId.includes(fr)) {
-          next[`${sessionId.replace(fr, code)}_${studentId}`] = nextVal;
-        }
-      }
+      const next = { ...prev };
+      uniqueKeys.forEach((k) => {
+        next[k] = nextVal;
+      });
       saveAttendanceMap(next);
       return next;
     });
 
-    // Guardado asíncrono e instantáneo en Supabase
-    saveAttendanceMarkToSupabase(sessionId, studentId, nextVal).catch((err) =>
-      console.warn("Error guardando en Supabase:", err)
-    );
-    for (const [fr, code] of Object.entries(reverseMap)) {
-      if (sessionId.includes(fr)) {
-        saveAttendanceMarkToSupabase(sessionId.replace(fr, code), studentId, nextVal).catch(() => {});
-      }
-    }
+    persistManualMark(canonicalSessionId, studentId, nextVal, uniqueKeys, currentVal);
   };
 
   // Reiniciar todas las asistencias de la sección a 0
@@ -855,102 +902,44 @@ export const TeacherAttendanceWorkspace: React.FC<TeacherAttendanceWorkspaceProp
   // Resolver todas las apelaciones de asistencia marcando 1 en la planilla y persistiendo
   const handleResolveAllAttendanceAppeals = (resolvedAppeals: AttendanceAppeal[]) => {
     lastLocalEditTimeRef.current = Date.now();
-    const batch: Array<{ session_code: string; student_canvas_id: number; value: number }> = [];
-
-    setAttendanceMap((prev) => {
-      const next: Record<string, AttendanceValue> = { ...prev };
-      resolvedAppeals.forEach((app) => {
-        const matchingSess =
-          activeSessions.find((s) => s.fecha === app.date && s.tipo === "ayudantia") ||
-          activeSessions.find((s) => s.fecha === app.date);
-
-        if (matchingSess) {
-          const key = `${matchingSess.id}_${app.studentCanvasId}`;
-          next[key] = 1;
-          batch.push({
-            session_code: matchingSess.id,
-            student_canvas_id: app.studentCanvasId,
-            value: 1,
-          });
-        }
-      });
-      saveAttendanceMap(next);
-      return next;
-    });
-
-    if (batch.length > 0) {
-      saveAttendanceBatchToSupabase(batch).catch((err) =>
-        console.warn("Error guardando apelaciones en Supabase:", err)
-      );
-    }
+    resolvedAppeals.forEach((app) => markAppealAsPresent(app));
 
     setQuickNotification({
       type: "success",
-      message: `✓ Se resolvieron ${resolvedAppeals.length} apelaciones. Todos los estudiantes quedaron con asistencia PRESENTE (1) en la planilla.`,
+      message: `✓ Se resolvieron ${resolvedAppeals.length} apelaciones. Los estudiantes quedaron con asistencia PRESENTE (1) en la planilla.`,
     });
     setTimeout(() => setQuickNotification(null), 5000);
+  };
+
+  // Marca PRESENTE la clase apelada (ayudantía de esa fecha) y la persiste con trazabilidad
+  const markAppealAsPresent = (app: AttendanceAppeal) => {
+    const matchingSess =
+      activeSessions.find((s) => s.fecha === app.date && s.tipo === "ayudantia") ||
+      activeSessions.find((s) => s.fecha === app.date);
+    if (!matchingSess) return null;
+    const key = `${matchingSess.id}_${app.studentCanvasId}`;
+    const previous = getAttendanceValue(attendanceMap, matchingSess.id, app.studentCanvasId);
+    setAttendanceMap((prev) => {
+      const next: Record<string, AttendanceValue> = { ...prev, [key]: 1 };
+      saveAttendanceMap(next);
+      return next;
+    });
+    persistManualMark(matchingSess.id, app.studentCanvasId, 1, [key], previous, "Apelación aceptada");
+    return matchingSess;
   };
 
   // Resolver una apelación individual
   const handleResolveSingleAttendanceAppeal = (app: AttendanceAppeal) => {
     lastLocalEditTimeRef.current = Date.now();
-    const matchingSess =
-      activeSessions.find((s) => s.fecha === app.date && s.tipo === "ayudantia") ||
-      activeSessions.find((s) => s.fecha === app.date);
+    const matchingSess = markAppealAsPresent(app);
 
     if (matchingSess) {
-      const key = `${matchingSess.id}_${app.studentCanvasId}`;
-      setAttendanceMap((prev) => {
-        const next: Record<string, AttendanceValue> = { ...prev, [key]: 1 };
-        saveAttendanceMap(next);
-        return next;
-      });
-      saveAttendanceMarkToSupabase(matchingSess.id, app.studentCanvasId, 1).catch((err) =>
-        console.warn("Error guardando apelación en Supabase:", err)
-      );
       setQuickNotification({
         type: "success",
         message: `✓ Apelación resuelta: ${app.studentName} marcado como PRESENTE en ${matchingSess.fecha}.`,
       });
       setTimeout(() => setQuickNotification(null), 4000);
     }
-  };
-
-  // Ejecutar reglas de asistencia compartida (quórum grupal) para la sección
-  const handleExecuteSharedAttendanceRules = () => {
-    lastLocalEditTimeRef.current = Date.now();
-    const rules = getSavedRules(courseCode);
-    const groups = getSavedGroups(courseCode, selectedSectionId);
-    let currentMap = { ...attendanceMap };
-    let totalBenefited = 0;
-    const allBatch: Array<{ session_code: string; student_canvas_id: number; value: number }> = [];
-
-    rules.filter((r) => r.enabled).forEach((rule) => {
-      const outcome = evaluateSharedAttendanceRule(rule, groups, activeSessions, currentMap);
-      currentMap = outcome.updatedAttendanceMap;
-      totalBenefited += outcome.modificationsCount;
-      allBatch.push(...outcome.batchPayload);
-    });
-
-    if (totalBenefited > 0) {
-      setAttendanceMap(currentMap);
-      saveAttendanceMap(currentMap);
-      if (allBatch.length > 0) {
-        saveAttendanceBatchToSupabase(allBatch).catch((err) =>
-          console.warn("Error guardando quórum grupal en Supabase:", err)
-        );
-      }
-      setQuickNotification({
-        type: "success",
-        message: `⚡ Regla de asistencia compartida aplicada: ${totalBenefited} asistencias completadas por quórum grupal.`,
-      });
-    } else {
-      setQuickNotification({
-        type: "info",
-        message: "No hay alumnos pendientes por completar: los grupos con quórum ya están al día.",
-      });
-    }
-    setTimeout(() => setQuickNotification(null), 5000);
   };
 
   // Alternar modalidad Online / Presencial por sesión (P <-> O)
@@ -1401,18 +1390,6 @@ export const TeacherAttendanceWorkspace: React.FC<TeacherAttendanceWorkspaceProp
             <span>Historial de Registros</span>
           </button>
         </div>
-
-        {attendanceSubTab === "matriz" && (
-          <button
-            type="button"
-            onClick={handleExecuteSharedAttendanceRules}
-            className="mb-1.5 px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 rounded-[3px] text-[11px] font-bold flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs"
-            title="Aplica automáticamente la regla de asistencia compartida si 2 o más integrantes del grupo asistieron"
-          >
-            <Zap size={13} className="text-amber-600" />
-            <span>⚡ Aplicar Quórum Grupal (Sección 1)</span>
-          </button>
-        )}
       </div>
 
       {attendanceSubTab === "historial" ? (

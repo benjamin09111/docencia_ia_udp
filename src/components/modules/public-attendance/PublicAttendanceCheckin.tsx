@@ -43,6 +43,8 @@ export const PublicAttendanceCheckin: React.FC<PublicAttendanceCheckinProps> = (
     setPinInput,
     pinError,
     setPinError,
+    submitError,
+    isSubmitting,
     geoStatus,
     distancia,
     handleVerifyLocation,
@@ -171,12 +173,16 @@ export const PublicAttendanceCheckin: React.FC<PublicAttendanceCheckinProps> = (
 
         <button
           type="submit"
-          disabled={!selectedStudent || (currentSection.requiereGeolocalizacion && geoStatus !== "verified")}
+          disabled={isSubmitting || !selectedStudent || (currentSection.requiereGeolocalizacion && geoStatus !== "verified")}
           className="w-full py-3 bg-[#C8102E] hover:bg-[#A00D24] text-white rounded-[4px] font-bold text-xs uppercase tracking-wider transition-colors disabled:opacity-50 shadow-xs flex items-center justify-center gap-2 cursor-pointer"
         >
-          <span>Confirmar y Marcar Asistencia</span>
+          <span>{isSubmitting ? "Registrando..." : "Confirmar y Marcar Asistencia"}</span>
           <ArrowRight size={14} />
         </button>
+
+        {submitError && (
+          <p className="text-[11px] text-center text-red-600 font-semibold">{submitError}</p>
+        )}
 
         {currentSection.requiereGeolocalizacion && geoStatus !== "verified" && selectedStudent && (
           <p className="text-[10px] text-center text-gray-500">

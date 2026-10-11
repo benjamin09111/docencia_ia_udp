@@ -12,7 +12,7 @@ import {
   saveSections,
   getSectionDailyPin,
 } from "@/services/attendanceStore";
-import { addAttendanceLog } from "@/services/attendanceLogsStore";
+import { fetchSessionState, insertCheckinLog } from "@/services/attendanceCloudService";
 import { ClassSession, CourseSection } from "@/types/attendance";
 import {
   UDP_CAMPUS_LOCATION,
@@ -88,7 +88,9 @@ export function usePublicAttendanceCheckin({
     setSelectedSectionId(resolvedInitialSec);
   }, [resolvedInitialSec]);
 
+  // El bypass ?demo=1 / ?test=true solo existe en desarrollo: en producción nadie puede forzar una sesión activa
   const [forceDemoActive, setForceDemoActive] = useState<boolean>(() => {
+    if (process.env.NODE_ENV === "production") return false;
     if (typeof window !== "undefined") {
       const search = window.location.search;
       return search.includes("demo=1") || search.includes("test=true");
@@ -159,6 +161,8 @@ export function usePublicAttendanceCheckin({
   const [selectedStudent, setSelectedStudent] = useState<StudentRosterItem | null>(null);
   const [pinInput, setPinInput] = useState("");
   const [pinError, setPinError] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [geoStatus, setGeoStatus] = useState<"idle" | "checking" | "verified" | "out_of_range" | "denied">("idle");
   const [distancia, setDistancia] = useState<number | undefined>();
@@ -252,115 +256,126 @@ export function usePublicAttendanceCheckin({
     );
   }, [targetLat, targetLng, targetRadius]);
 
-  const handleSubmit = useCallback((e: React.FormEvent) => {
+  const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedStudent) return;
-
-    const todayStr = getTodayDateStr();
-    const expectedPin = getSectionDailyPin(currentSection, todayStr);
-    if (currentSection.requierePin && pinInput.trim() !== expectedPin.trim()) {
-      setPinError(true);
-      return;
-    }
+    if (!selectedStudent || isSubmitting) return;
+    setSubmitError(null);
 
     if (currentSection.requiereGeolocalizacion && geoStatus !== "verified") {
       return;
     }
 
-    const timestamp = new Date().toLocaleTimeString("es-CL", {
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-    });
+    // El alumno solo puede marcar la clase de HOY y del tipo cuyo horario está activo
+    // (cátedra y ayudantía pueden caer el mismo día). Nunca otra fecha ni sesiones pasadas.
+    const todayStr = getTodayDateStr();
+    const targetSemesterSession = generateSemesterSessions(currentSection).find(
+      (s) => s.fecha === todayStr && s.tipo === activeSessionType && s.estado !== "cancelada"
+    );
+    if (!targetSemesterSession) {
+      setSubmitError("Hoy no hay clase registrada para esta sección. La asistencia solo se puede marcar el día de la clase.");
+      return;
+    }
 
-    const lockKey = `udp_device_attendance_${currentSection.id}_${todayStr}`;
-    const recordPayload = {
-      studentName: `${selectedStudent.nombres} ${selectedStudent.apellidos}`,
-      studentRut: selectedStudent.rut,
-      timestamp,
-      distanciaMetros: distancia,
-    };
+    setIsSubmitting(true);
     try {
-      localStorage.setItem(lockKey, JSON.stringify(recordPayload));
-      if (typeof document !== "undefined") {
-        document.cookie = `${lockKey}=${encodeURIComponent(JSON.stringify(recordPayload))}; max-age=86400; path=/; SameSite=Lax`;
+      // Estado real de la clase en la nube: ¿fue suspendida por el docente?
+      const cloudState = isSupabaseConfigured() ? await fetchSessionState(targetSemesterSession.id) : {};
+      if (cloudState === null) {
+        setSubmitError("No hay conexión con el servidor. Revisa tu internet e inténtalo nuevamente.");
+        return;
       }
-    } catch {}
+      if (cloudState.status === "cancelada") {
+        setSubmitError("La clase de hoy fue suspendida por el equipo docente. No es necesario marcar asistencia.");
+        return;
+      }
 
-    const semesterSessions = generateSemesterSessions(currentSection);
-    // Vincular la marcación: si se toma en horario secundario (Bloque 2), se acredita a la sesión semanal oficial
-    const getWeekKey = (dt: Date) => {
-      const mon = new Date(dt.getFullYear(), dt.getMonth(), dt.getDate() - ((dt.getDay() + 6) % 7));
-      return `${mon.getFullYear()}-${mon.getMonth() + 1}-${mon.getDate()}`;
-    };
-    const currentWeekKey = getWeekKey(new Date());
+      const expectedPin = getSectionDailyPin(currentSection, todayStr);
+      if (currentSection.requierePin && pinInput.trim() !== expectedPin.trim()) {
+        setPinError(true);
+        return;
+      }
 
-    const targetSemesterSession =
-      semesterSessions.find((s) => s.fecha === todayStr) ||
-      semesterSessions.find((s) => {
-        const [sy, sm, sd] = s.fecha.split("-").map(Number);
-        return getWeekKey(new Date(sy, sm - 1, sd, 12, 0, 0)) === currentWeekKey;
-      }) ||
-      semesterSessions.find((s) => s.fecha <= todayStr) ||
-      semesterSessions[0];
+      // Guardar en la nube y ESPERAR la confirmación antes de dar el comprobante
+      if (isSupabaseConfigured()) {
+        const saved = await saveAttendanceMarkToSupabase(
+          targetSemesterSession.id,
+          selectedStudent.canvas_id,
+          1,
+          "alumno_link"
+        );
+        if (!saved.success) {
+          setSubmitError("No se pudo registrar tu asistencia. Revisa tu conexión e inténtalo nuevamente.");
+          return;
+        }
+      }
 
-    const map = getSavedAttendanceMap();
-    if (targetSemesterSession) {
-      map[`${targetSemesterSession.id}_${selectedStudent.canvas_id}`] = 1;
-      map[`${currentSection.id}_${selectedStudent.canvas_id}_${targetSemesterSession.fecha}`] = 1;
-    }
-    saveAttendanceMap(map);
+      const timestamp = new Date().toLocaleTimeString("es-CL", {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+      });
+      const studentName = `${selectedStudent.nombres} ${selectedStudent.apellidos}`;
 
-    // Guardar log auditable inalterable en la bitácora
-    addAttendanceLog({
-      sectionId: currentSection.id,
-      sectionCode: currentSection.codigo || currentSection.id,
-      studentCanvasId: selectedStudent.canvas_id,
-      studentName: `${selectedStudent.nombres} ${selectedStudent.apellidos}`,
-      studentRut: selectedStudent.rut,
-      studentEmail: selectedStudent.email,
-      date: todayStr,
-      time: timestamp,
-      method: currentSection.requiereGeolocalizacion ? "PIN + GPS" : "PIN",
-      distanciaMetros: distancia,
-    });
+      // Historial inalterable en la nube: quién, cuándo, en qué sección y en qué horario
+      insertCheckinLog({
+        sectionCode: currentSection.codigo || currentSection.id,
+        sessionCode: targetSemesterSession.id,
+        date: todayStr,
+        studentCanvasId: selectedStudent.canvas_id,
+        studentName,
+        studentEmail: selectedStudent.email,
+        value: 1,
+        method: currentSection.requiereGeolocalizacion ? "PIN + GPS" : "PIN",
+        scheduleLabel: sessionStatus.horaInicio ? `${sessionStatus.horaInicio} - ${sessionStatus.horaFin}` : undefined,
+        distanciaMetros: distancia,
+      });
 
-    if (targetSemesterSession) {
-      saveAttendanceMarkToSupabase(
-        targetSemesterSession.id,
-        selectedStudent.canvas_id,
-        1,
-        "alumno_link"
-      ).catch((err) => console.warn("Aviso guardando asistencia en Supabase:", err));
-    }
-
-    if (typeof window !== "undefined" && "BroadcastChannel" in window) {
+      const lockKey = `udp_device_attendance_${currentSection.id}_${todayStr}`;
+      const recordPayload = { studentName, studentRut: selectedStudent.rut, timestamp, distanciaMetros: distancia };
       try {
-        const channel = new BroadcastChannel("udp_attendance_channel");
-        channel.postMessage({
-          type: "ATTENDANCE_CHECKIN",
-          studentId: selectedStudent.canvas_id,
-          sessionId: targetSemesterSession?.id || activeSession.id,
-          timestamp,
-        });
-        channel.close();
+        localStorage.setItem(lockKey, JSON.stringify(recordPayload));
+        if (typeof document !== "undefined") {
+          document.cookie = `${lockKey}=${encodeURIComponent(JSON.stringify(recordPayload))}; max-age=86400; path=/; SameSite=Lax`;
+        }
       } catch {}
-    }
 
-    onSuccess({
-      student: selectedStudent,
-      session: targetSemesterSession || activeSession,
-      section: currentSection,
-      timestamp,
-      distanciaMetros: distancia,
-    });
+      const map = getSavedAttendanceMap();
+      map[`${targetSemesterSession.id}_${selectedStudent.canvas_id}`] = 1;
+      saveAttendanceMap(map);
+
+      if (typeof window !== "undefined" && "BroadcastChannel" in window) {
+        try {
+          const channel = new BroadcastChannel("udp_attendance_channel");
+          channel.postMessage({
+            type: "ATTENDANCE_CHECKIN",
+            studentId: selectedStudent.canvas_id,
+            sessionId: targetSemesterSession.id,
+            timestamp,
+          });
+          channel.close();
+        } catch {}
+      }
+
+      onSuccess({
+        student: selectedStudent,
+        session: targetSemesterSession,
+        section: currentSection,
+        timestamp,
+        distanciaMetros: distancia,
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   }, [
     selectedStudent,
+    isSubmitting,
     currentSection,
     pinInput,
     geoStatus,
     distancia,
-    activeSession.id,
+    activeSessionType,
+    sessionStatus.horaInicio,
+    sessionStatus.horaFin,
     onSuccess,
   ]);
 
@@ -382,6 +397,8 @@ export function usePublicAttendanceCheckin({
     setPinInput,
     pinError,
     setPinError,
+    submitError,
+    isSubmitting,
     geoStatus,
     distancia,
     handleVerifyLocation,

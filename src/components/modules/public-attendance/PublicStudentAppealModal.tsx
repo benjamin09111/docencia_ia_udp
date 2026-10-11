@@ -25,9 +25,10 @@ export const PublicStudentAppealModal: React.FC<PublicStudentAppealModalProps> =
   const [comentario, setComentario] = useState<string>("Sí asistí hoy");
   const [statusMessage, setStatusMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [appealsHistory, setAppealsHistory] = useState<AttendanceAppeal[]>([]);
+  const [isSending, setIsSending] = useState(false);
 
   useEffect(() => {
-    setAppealsHistory(getSavedAppeals(section.codigo));
+    getSavedAppeals(section.codigo).then(setAppealsHistory);
   }, [section.codigo]);
 
   const studentOptions = useMemo<CanvasSearchOption[]>(() => {
@@ -40,11 +41,12 @@ export const PublicStudentAppealModal: React.FC<PublicStudentAppealModalProps> =
     }));
   }, [students]);
 
-  const refreshHistory = () => setAppealsHistory(getSavedAppeals(section.codigo));
+  const refreshHistory = () => getSavedAppeals(section.codigo).then(setAppealsHistory);
   if (!isOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSending) return;
     if (!selectedCanvasId) {
       setStatusMessage({ type: "error", text: "Por favor busca y selecciona tu nombre de la lista." });
       return;
@@ -52,16 +54,16 @@ export const PublicStudentAppealModal: React.FC<PublicStudentAppealModalProps> =
     const student = students.find((s) => s.canvas_id === Number(selectedCanvasId));
     if (!student) return;
 
-    const result = createAppeal({
-      sectionId: section.id,
+    setIsSending(true);
+    const result = await createAppeal({
       sectionCode: section.codigo,
       studentCanvasId: student.canvas_id,
       studentName: `${student.nombres} ${student.apellidos}`,
       studentRut: student.rut,
       date: selectedDate,
-      motivo: "asistencia",
       comentario: comentario.trim() || "Sí asistí hoy",
     });
+    setIsSending(false);
 
     if (result.success) {
       setStatusMessage({ type: "success", text: result.message });
@@ -133,7 +135,7 @@ export const PublicStudentAppealModal: React.FC<PublicStudentAppealModalProps> =
 
               <div className="pt-2 flex justify-end gap-2">
                 <button type="button" onClick={onClose} className="px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-100 rounded-[4px] font-semibold cursor-pointer">Cancelar</button>
-                <button type="submit" className="px-4 py-1.5 text-xs bg-[#C8102E] hover:bg-[#A00D24] text-white font-bold rounded-[4px] inline-flex items-center gap-1.5 cursor-pointer">
+                <button type="submit" disabled={isSending} className="px-4 py-1.5 text-xs bg-[#C8102E] hover:bg-[#A00D24] text-white font-bold rounded-[4px] inline-flex items-center gap-1.5 cursor-pointer disabled:opacity-50">
                   <Send size={13} /><span>Enviar Apelación</span>
                 </button>
               </div>

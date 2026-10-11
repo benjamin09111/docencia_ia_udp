@@ -110,6 +110,8 @@ CREATE TABLE IF NOT EXISTS public.sections (
     horario_ayudantia_inicio TIME DEFAULT '16:00',
     horario_ayudantia_fin TIME DEFAULT '17:20',
     horario_ayudantia_sala VARCHAR(100) DEFAULT 'SALA X',
+    -- Segundo horario opcional para marcar la MISMA ayudantía semanal (ej. {"dias":[3],"horaInicio":"20:10","horaFin":"21:30","sala":"SALA X"})
+    horario_ayudantia2 JSONB NULL,
 
     -- Parámetros Operativos y Seguridad
     pin_activo VARCHAR(10) DEFAULT '4821',
@@ -121,6 +123,8 @@ CREATE TABLE IF NOT EXISTS public.sections (
     updated_at TIMESTAMPTZ DEFAULT NOW(),
     CONSTRAINT uq_section_course_code UNIQUE (course_id, code)
 );
+-- Migración para bases existentes
+ALTER TABLE public.sections ADD COLUMN IF NOT EXISTS horario_ayudantia2 JSONB NULL;
 
 -- 3.3 Horarios Detallados Multi-bloque (Soporte para cátedras con múltiples días/bloques)
 CREATE TABLE IF NOT EXISTS public.section_schedules (
