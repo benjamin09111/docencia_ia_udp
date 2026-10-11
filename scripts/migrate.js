@@ -4,12 +4,16 @@ const path = require('path');
 
 async function migrate() {
   const sql = fs.readFileSync(path.join(__dirname, '..', 'supabase', 'schema.sql'), 'utf8');
-  const password = process.env.SUPABASE_PASSWORD || process.env.NEXT_PUBLIC_SUPABASE_PASSWORD || '2hbN0dKKZcw8ZEEU';
+  // Credenciales SOLO desde variables de entorno (node --env-file=.env.local scripts/migrate.js)
+  const { SUPABASE_DB_HOST, SUPABASE_DB_USER, SUPABASE_PASSWORD } = process.env;
+  if (!SUPABASE_DB_HOST || !SUPABASE_DB_USER || !SUPABASE_PASSWORD) {
+    throw new Error('Faltan SUPABASE_DB_HOST, SUPABASE_DB_USER o SUPABASE_PASSWORD en las variables de entorno.');
+  }
   const client = new Client({
-    host: 'aws-0-us-west-2.pooler.supabase.com',
-    port: 6543,
-    user: 'postgres.xsjmjiiuicsbfrnlseui',
-    password,
+    host: SUPABASE_DB_HOST,
+    port: Number(process.env.SUPABASE_DB_PORT || 5432),
+    user: SUPABASE_DB_USER,
+    password: SUPABASE_PASSWORD,
     database: 'postgres',
     ssl: { rejectUnauthorized: false },
   });

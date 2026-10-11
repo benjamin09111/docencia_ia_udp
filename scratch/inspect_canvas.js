@@ -1,7 +1,12 @@
 const fs = require('fs');
 
-const token = '14869~kTrmBfE6ztBL2Nv4fREyAZUMDuLJJcQC3MvuX2KnyMP897n4hGKWZ6HJWeLBcF2e';
-const baseUrl = 'https://udp.instructure.com/api/v1';
+// Uso: node --env-file=.env.local scratch/<archivo>.js
+const token = process.env.CANVAS_API_TOKEN;
+const baseUrl = `${process.env.CANVAS_BASE_URL}/api/v1`;
+if (!token || !process.env.CANVAS_BASE_URL) {
+  console.error('Faltan CANVAS_API_TOKEN / CANVAS_BASE_URL en las variables de entorno.');
+  process.exit(1);
+}
 
 async function inspect() {
   const headers = { Authorization: `Bearer ${token}` };
