@@ -289,6 +289,7 @@ export default function DashboardPage() {
               entregables={entregables}
               estudiantesExcel={estudiantesExcel}
               entregasAlumnos={entregasAlumnos}
+              currentRole={currentRole}
               onAddDeliverable={handleAddDeliverable}
               onUpdateGrade={handleUpdateGrade}
               onResolveAppeal={handleResolveAppeal}

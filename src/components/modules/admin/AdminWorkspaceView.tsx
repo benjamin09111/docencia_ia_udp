@@ -16,7 +16,8 @@ import { getSavedSections, saveSections, INITIAL_SECTIONS } from "@/services/att
 import { updateSectionScheduleInSupabase, fetchSectionsFromSupabase, isSupabaseConfigured } from "@/services/attendanceDbService";
 import { CourseSection } from "@/types/attendance";
 import { INITIAL_TECHNICAL_AGENTS } from "@/constants/technicalAgentsCatalog";
-import { Bot, Cpu, Calendar, Users, Award, CheckCircle2, ArrowLeft, GraduationCap } from "lucide-react";
+import { OfficialMaterialsView } from "@/components/modules/official-materials/OfficialMaterialsView";
+import { Bot, Cpu, Calendar, Users, Award, CheckCircle2, ArrowLeft, GraduationCap, FolderArchive } from "lucide-react";
 
 interface AdminWorkspaceViewProps {
   faculty: InstitutionalFaculty;
@@ -32,7 +33,7 @@ export const AdminWorkspaceView: React.FC<AdminWorkspaceViewProps> = ({
   onBackToFaculties,
 }) => {
   const [activeTab, setActiveTab] = useState<
-    "course_agents" | "technical_agents" | "course_schedules" | "ayudantias" | "grade_scale"
+    "course_agents" | "technical_agents" | "official_files" | "course_schedules" | "ayudantias" | "grade_scale"
   >("course_agents");
 
   const [selectedDetailSection, setSelectedDetailSection] = useState<CourseSection | null>(null);
@@ -63,6 +64,7 @@ export const AdminWorkspaceView: React.FC<AdminWorkspaceViewProps> = ({
   const navItems: CourseNavItem[] = [
     { id: "course_agents", label: "Sistemas de agentes", icon: <Bot size={15} /> },
     { id: "technical_agents", label: "Agentes técnicos", icon: <Cpu size={15} /> },
+    { id: "official_files", label: "Archivos e info oficial", icon: <FolderArchive size={15} /> },
     { id: "course_schedules", label: "Cursos y Horarios", icon: <Calendar size={15} /> },
     { id: "ayudantias", label: "Ayudantías", icon: <Users size={15} /> },
     { id: "grade_scale", label: "Escala y Notas", icon: <Award size={15} /> },
@@ -148,6 +150,8 @@ export const AdminWorkspaceView: React.FC<AdminWorkspaceViewProps> = ({
               onOpenEdit={(agent) => setSelectedEditAgent(agent)}
             />
           )}
+
+          {activeTab === "official_files" && <OfficialMaterialsView isAdmin={true} />}
 
           {activeTab === "course_schedules" && <AdminCourseScheduleManagement />}
           {activeTab === "ayudantias" && <AdminAyudantiasView />}
