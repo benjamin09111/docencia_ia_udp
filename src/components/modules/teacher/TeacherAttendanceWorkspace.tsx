@@ -56,6 +56,7 @@ import { AttendanceMatrixTable } from "./attendance/AttendanceMatrixTable";
 import { AttendanceCancelClassModal } from "./attendance/AttendanceCancelClassModal";
 import { TeacherAppealsWorkspace } from "./TeacherAppealsWorkspace";
 import { TeacherAttendanceLogsWorkspace } from "./attendance/TeacherAttendanceLogsWorkspace";
+import { QuickCopyAttendanceInfoButton } from "./attendance/QuickCopyAttendanceInfoButton";
 import {
   insertCheckinLog,
   fetchSectionSessionStates,
@@ -1260,6 +1261,15 @@ export const TeacherAttendanceWorkspace: React.FC<TeacherAttendanceWorkspaceProp
               </button>
             )}
           </div>
+
+          {/* Copiar información general rápidamente (Asistencia + Pin + Plantilla) */}
+          <QuickCopyAttendanceInfoButton
+            courseCode={courseCode}
+            courseName={courseName}
+            selectedSection={selectedSection}
+            effectivePin={effectivePin}
+            visualPin={visualPin}
+          />
 
           {/* 1. Copiar link para llenar asistencia del día */}
           <button
