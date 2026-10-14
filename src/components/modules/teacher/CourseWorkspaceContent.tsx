@@ -7,6 +7,7 @@ import { TeacherCourseDashboardView } from "./dashboard/TeacherCourseDashboardVi
 import { CourseHomePageView } from "./CourseHomePageView";
 import { CourseEvaluacionesView } from "./evaluaciones/CourseEvaluacionesView";
 import { CourseActivitiesView } from "./CourseActivitiesView";
+import { CourseQuickActivitiesView } from "./quick-activities/CourseQuickActivitiesView";
 import { CourseCronogramaView } from "./CourseCronogramaView";
 import { CourseAnnouncementsView } from "./CourseAnnouncementsView";
 import { TeacherAttendanceWorkspace } from "./TeacherAttendanceWorkspace";
@@ -20,6 +21,7 @@ export type CourseWorkspaceTab =
   | "resumen"
   | "evaluaciones"
   | "actividades"
+  | "actividades_rapidas"
   | "cronograma"
   | "anuncios"
   | "asistencia"
@@ -80,6 +82,14 @@ export const CourseWorkspaceContent: React.FC<CourseWorkspaceContentProps> = ({
           entregasAlumnos={entregasAlumnos}
           onAddDeliverable={onAddDeliverable}
           onResolveAppeal={onResolveAppeal}
+        />
+      );
+    case "actividades_rapidas":
+      return (
+        <CourseQuickActivitiesView
+          courseId={course.id}
+          courseCode={course.code}
+          courseName={course.name}
         />
       );
     case "cronograma":

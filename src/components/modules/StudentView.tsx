@@ -9,9 +9,10 @@ import { StudentActivitiesTab } from "./student/StudentActivitiesTab";
 import { StudentLearnChatTab } from "./student/StudentLearnChatTab";
 import { StudentPracticeLabTab } from "./student/StudentPracticeLabTab";
 import { StudentAttendanceGradesTab } from "./student/StudentAttendanceGradesTab";
-import { Home, FileText, Sparkles, Brain, ListChecks, CalendarCheck } from "lucide-react";
+import { StudentQuickActivitiesTab } from "./student/StudentQuickActivitiesTab";
+import { Home, FileText, Sparkles, Zap, Brain, ListChecks, CalendarCheck } from "lucide-react";
 
-export type StudentWorkspaceTab = "inicio" | "sumativas" | "formativas" | "aprendizaje" | "practica" | "asistencia";
+export type StudentWorkspaceTab = "inicio" | "sumativas" | "formativas" | "actividades_rapidas" | "aprendizaje" | "practica" | "asistencia";
 
 interface StudentViewProps {
   entregables?: CourseDeliverable[];
@@ -51,6 +52,7 @@ export const StudentView: React.FC<StudentViewProps> = ({
     { id: "inicio", label: "Página de inicio", icon: <Home size={15} /> },
     { id: "sumativas", label: "Evaluaciones sumativas", icon: <FileText size={15} /> },
     { id: "formativas", label: "Evaluaciones formativas", icon: <Sparkles size={15} /> },
+    { id: "actividades_rapidas", label: "Actividades rápidas", icon: <Zap size={15} /> },
     { id: "aprendizaje", label: "Tutor IA (Aprendizaje)", icon: <Brain size={15} /> },
     { id: "practica", label: "Laboratorio de Práctica", icon: <ListChecks size={15} /> },
     { id: "asistencia", label: "Calificaciones y Asistencia", icon: <CalendarCheck size={15} /> },
@@ -129,6 +131,10 @@ export const StudentView: React.FC<StudentViewProps> = ({
             onSubmitActivity={onSubmitActivity}
             onSendAppeal={onSendAppeal}
           />
+        )}
+
+        {activeTab === "actividades_rapidas" && (
+          <StudentQuickActivitiesTab courseCode={courseCode} />
         )}
 
         {activeTab === "aprendizaje" && (

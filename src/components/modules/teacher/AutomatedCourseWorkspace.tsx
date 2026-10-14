@@ -16,17 +16,8 @@ import {
 import { fetchSectionsFromSupabase, isSupabaseConfigured } from "@/services/attendanceDbService";
 
 import {
-  LayoutDashboard,
-  FileText,
-  Sparkles,
-  Calendar,
-  Megaphone,
-  CalendarCheck,
-  Users,
-  FileSpreadsheet,
-  BarChart3,
-  GraduationCap,
-  Home,
+  LayoutDashboard, FileText, Sparkles, Zap, Calendar, Megaphone,
+  CalendarCheck, Users, FileSpreadsheet, BarChart3, GraduationCap, Home
 } from "lucide-react";
 
 interface AutomatedCourseWorkspaceProps {
@@ -107,6 +98,7 @@ export const AutomatedCourseWorkspace: React.FC<AutomatedCourseWorkspaceProps> =
     { id: "resumen", label: cleanCourseName, icon: <LayoutDashboard size={15} /> },
     { id: "evaluaciones", label: "Evaluaciones sumativas", icon: <FileText size={15} /> },
     { id: "actividades", label: "Evaluaciones formativas", icon: <Sparkles size={15} /> },
+    { id: "actividades_rapidas", label: "Actividades rápidas", icon: <Zap size={15} /> },
     { id: "cronograma", label: "Cronograma", icon: <Calendar size={15} /> },
     { id: "anuncios", label: "Anuncios", icon: <Megaphone size={15} /> },
     { id: "asistencia", label: "Asistencia", icon: <CalendarCheck size={15} /> },
