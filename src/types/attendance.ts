@@ -15,7 +15,6 @@ export interface CourseSection {
   horarioCatedra: SectionSchedule;
   horarioCatedra2?: SectionSchedule;
   horarioAyudantia: SectionSchedule;
-  horarioAyudantia2?: SectionSchedule; // Segundo bloque/horario opcional para la misma sección
   pinActivo?: string; // Ej. "4821"
   requierePin: boolean;
   requiereGeolocalizacion: boolean;

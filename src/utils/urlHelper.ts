@@ -43,11 +43,8 @@ export function getPublicVisualUrl(sectionCode: string): string {
   return `${base}/${safeCode}/visual`;
 }
 
-/**
- * Obtiene el enlace público para que los alumnos marquen asistencia con su PIN/RUT
- */
 export function getPublicCheckinUrl(sectionCode: string): string {
   const base = getAppBaseUrl();
   const safeCode = encodeURIComponent(sectionCode || "CIT3203_CA01");
-  return `${base}/asistencia/${safeCode}`;
+  return `${base}/asistencia/${safeCode}?tipo=ayudantia`;
 }

@@ -179,13 +179,6 @@ export function getSavedSections(): CourseSection[] {
           horaFin: sec.horarioAyudantia?.horaFin || matchInit?.horarioAyudantia?.horaFin || "17:20",
           sala: sec.horarioAyudantia?.sala || matchInit?.horarioAyudantia?.sala || "SALA X",
         },
-        horarioAyudantia2: sec.horarioAyudantia2 && (sec.horarioAyudantia2.dias?.length ?? 0) > 0 ? {
-          ...sec.horarioAyudantia2,
-          dias: (sec.horarioAyudantia2.dias || []).filter((d) => d >= 0 && d <= 6),
-          horaInicio: sec.horarioAyudantia2.horaInicio || "14:30",
-          horaFin: sec.horarioAyudantia2.horaFin || "16:00",
-          sala: sec.horarioAyudantia2.sala || "SALA X",
-        } : undefined,
         horarioCatedra2: sec.horarioCatedra2 && (sec.horarioCatedra2.dias?.length ?? 0) > 0 ? {
           ...sec.horarioCatedra2,
           dias: (sec.horarioCatedra2.dias || []).filter((d) => d >= 0 && d <= 6),
@@ -759,15 +752,11 @@ export function formatSectionSchedule(section: CourseSection) {
   const tieneAyudantia = Boolean(section.horarioAyudantia?.dias && section.horarioAyudantia.dias.length > 0);
   const ayudantiaDias = tieneAyudantia ? section.horarioAyudantia.dias.map((d) => diasNombres[d]).join(" y ") : null;
 
-  const tieneAyudantia2 = Boolean(section.horarioAyudantia2?.dias && section.horarioAyudantia2.dias.length > 0);
-  const ayudantiaDias2 = tieneAyudantia2 ? section.horarioAyudantia2!.dias.map((d) => diasNombres[d]).join(" y ") : null;
-  const extraAyudantia = tieneAyudantia2 ? ` | Bloque 2: ${ayudantiaDias2} ${section.horarioAyudantia2!.horaInicio} - ${section.horarioAyudantia2!.horaFin}` : "";
-
   return {
     claseSemanal: `${catedraDias} ${section.horarioCatedra.horaInicio} - ${section.horarioCatedra.horaFin}`,
     catedra: `${catedraDias} ${section.horarioCatedra.horaInicio} - ${section.horarioCatedra.horaFin}`,
     catedraSala: section.horarioCatedra.sala,
-    ayudantia: tieneAyudantia ? `${ayudantiaDias} ${section.horarioAyudantia.horaInicio} - ${section.horarioAyudantia.horaFin}${extraAyudantia}` : "Integrada en bloque semanal",
+    ayudantia: tieneAyudantia ? `${ayudantiaDias} ${section.horarioAyudantia.horaInicio} - ${section.horarioAyudantia.horaFin}` : "Integrada en bloque semanal",
     ayudantiaSala: tieneAyudantia ? section.horarioAyudantia.sala : section.horarioCatedra.sala,
     profesor: section.profesor,
     ayudante: section.ayudante,

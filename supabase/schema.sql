@@ -375,7 +375,22 @@ BEGIN
         INSERT INTO public.attendance_records (session_id, student_id, value, marked_by, marked_at)
         VALUES (v_session_id, v_student_id, p_value, COALESCE(p_marked_by, 'profesor'), NOW())
         ON CONFLICT (session_id, student_id)
-        DO UPDATE SET value = EXCLUDED.value, marked_by = EXCLUDED.marked_by, marked_at = NOW();
+        DO UPDATE SET 
+            value = CASE
+                WHEN attendance_records.value = 1 
+                     AND attendance_records.marked_by IN ('alumno_link', 'alumno_pin', 'alumno_qr') 
+                     AND EXCLUDED.value = 0 
+                     AND EXCLUDED.marked_by NOT IN ('profesor', 'ayudante') THEN 1
+                ELSE EXCLUDED.value
+            END,
+            marked_by = CASE
+                WHEN attendance_records.value = 1 
+                     AND attendance_records.marked_by IN ('alumno_link', 'alumno_pin', 'alumno_qr') 
+                     AND EXCLUDED.value = 0 
+                     AND EXCLUDED.marked_by NOT IN ('profesor', 'ayudante') THEN attendance_records.marked_by
+                ELSE EXCLUDED.marked_by
+            END,
+            marked_at = NOW();
     END IF;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
@@ -398,8 +413,20 @@ BEGIN
     JOIN public.students st ON st.canvas_id = (r->>'student_canvas_id')::BIGINT
     ON CONFLICT (session_id, student_id)
     DO UPDATE SET 
-        value = EXCLUDED.value,
-        marked_by = EXCLUDED.marked_by,
+        value = CASE
+            WHEN attendance_records.value = 1 
+                 AND attendance_records.marked_by IN ('alumno_link', 'alumno_pin', 'alumno_qr') 
+                 AND EXCLUDED.value = 0 
+                 AND EXCLUDED.marked_by NOT IN ('profesor', 'ayudante') THEN 1
+            ELSE EXCLUDED.value
+        END,
+        marked_by = CASE
+            WHEN attendance_records.value = 1 
+                 AND attendance_records.marked_by IN ('alumno_link', 'alumno_pin', 'alumno_qr') 
+                 AND EXCLUDED.value = 0 
+                 AND EXCLUDED.marked_by NOT IN ('profesor', 'ayudante') THEN attendance_records.marked_by
+            ELSE EXCLUDED.marked_by
+        END,
         marked_at = NOW();
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;

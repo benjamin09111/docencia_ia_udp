@@ -182,7 +182,7 @@ export function checkCurrentSessionActive(
     };
   }
 
-  // 1. Revisar si coincide con horario de Ayudantía principal (abre 15 min antes y cierra 15 min después)
+  // 1. Revisar si coincide con el horario único oficial de Ayudantía (abre 15 min antes y cierra 15 min después)
   if (section.horarioAyudantia?.dias?.includes(currentDay) && section.horarioAyudantia?.horaInicio && section.horarioAyudantia?.horaFin) {
     const start = toMinutes(section.horarioAyudantia.horaInicio) - 15;
     const end = toMinutes(section.horarioAyudantia.horaFin) + 15;
@@ -194,54 +194,6 @@ export function checkCurrentSessionActive(
         horaFin: section.horarioAyudantia.horaFin,
         sala: section.horarioAyudantia.sala || "No definida",
         edificio: "Edificio Informática UDP",
-      };
-    }
-  }
-
-  // 1.1 Revisar si coincide con horario de Ayudantía secundario (2do horario)
-  if (section.horarioAyudantia2?.dias?.includes(currentDay) && section.horarioAyudantia2?.horaInicio && section.horarioAyudantia2?.horaFin) {
-    const start = toMinutes(section.horarioAyudantia2.horaInicio) - 15;
-    const end = toMinutes(section.horarioAyudantia2.horaFin) + 15;
-    if (currentMinutes >= start && currentMinutes <= end) {
-      return {
-        isActive: true,
-        tipo: "ayudantia",
-        horaInicio: section.horarioAyudantia2.horaInicio,
-        horaFin: section.horarioAyudantia2.horaFin,
-        sala: section.horarioAyudantia2.sala || "No definida",
-        edificio: "Edificio Informática UDP",
-      };
-    }
-  }
-
-  // 2. Revisar si coincide con horario de Cátedra principal
-  if (section.horarioCatedra?.dias?.includes(currentDay) && section.horarioCatedra?.horaInicio && section.horarioCatedra?.horaFin) {
-    const start = toMinutes(section.horarioCatedra.horaInicio) - 15;
-    const end = toMinutes(section.horarioCatedra.horaFin) + 15;
-    if (currentMinutes >= start && currentMinutes <= end) {
-      return {
-        isActive: true,
-        tipo: "catedra",
-        horaInicio: section.horarioCatedra.horaInicio,
-        horaFin: section.horarioCatedra.horaFin,
-        sala: section.horarioCatedra.sala || "No definida",
-        edificio: "Edificio B (Aulas)",
-      };
-    }
-  }
-
-  // 2.1 Revisar si coincide con horario de Cátedra secundario
-  if (section.horarioCatedra2?.dias?.includes(currentDay) && section.horarioCatedra2?.horaInicio && section.horarioCatedra2?.horaFin) {
-    const start = toMinutes(section.horarioCatedra2.horaInicio) - 15;
-    const end = toMinutes(section.horarioCatedra2.horaFin) + 15;
-    if (currentMinutes >= start && currentMinutes <= end) {
-      return {
-        isActive: true,
-        tipo: "catedra",
-        horaInicio: section.horarioCatedra2.horaInicio,
-        horaFin: section.horarioCatedra2.horaFin,
-        sala: section.horarioCatedra2.sala || "No definida",
-        edificio: "Edificio B (Aulas)",
       };
     }
   }

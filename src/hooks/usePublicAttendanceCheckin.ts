@@ -109,17 +109,17 @@ export function usePublicAttendanceCheckin({
   );
 
   const todayDateOnly = new Date().toISOString().split("T")[0];
-  const activeSessionType = sessionStatus.tipo || "ayudantia";
+  const activeSessionType = "ayudantia";
   const secIdOrCode = currentSection?.codigo || currentSection?.id || "sec_1";
   const activeSession: ClassSession = {
-    id: `sess_${secIdOrCode}_${activeSessionType === "ayudantia" ? "ayu" : "cat"}_${todayDateOnly}`,
+    id: `sess_${secIdOrCode}_ayu_${todayDateOnly}`,
     seccionId: currentSection?.id || "sec_1",
     fecha: todayDateOnly,
     diaSemana: new Date().toLocaleDateString("es-CL", { weekday: "long" }),
-    tipo: activeSessionType,
+    tipo: "ayudantia",
     estado: "realizada",
-    horaInicio: sessionStatus.horaInicio || currentSection?.horarioAyudantia?.horaInicio || "16:15",
-    horaFin: sessionStatus.horaFin || currentSection?.horarioAyudantia?.horaFin || "17:45",
+    horaInicio: sessionStatus.horaInicio || currentSection?.horarioAyudantia?.horaInicio || "16:00",
+    horaFin: sessionStatus.horaFin || currentSection?.horarioAyudantia?.horaFin || "17:20",
   };
 
   const [canvasStudents, setCanvasStudents] = useState<StudentRosterItem[]>([]);

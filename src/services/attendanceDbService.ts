@@ -310,19 +310,6 @@ export async function updateSectionScheduleInSupabase(
 
     if (error) throw error;
 
-    // Segundo horario de ayudantía (Bloque 2) en un update aparte: si la columna aún no existe
-    // en la base, solo se avisa y no se pierde el guardado del horario principal.
-    const bloque2 = section.horarioAyudantia2 && (section.horarioAyudantia2.dias?.length ?? 0) > 0
-      ? section.horarioAyudantia2
-      : null;
-    const { error: bloque2Err } = await supabase
-      .from("sections")
-      .update({ horario_ayudantia2: bloque2 })
-      .eq("code", section.codigo);
-    if (bloque2Err) {
-      console.warn("Aviso guardando Bloque 2 de ayudantía en Supabase:", bloque2Err.message);
-    }
-
     // Sincronizar sesiones semestrales en la tabla class_sessions
     const sectionUuid = updatedSection?.[0]?.id;
     if (sectionUuid) {
@@ -434,7 +421,6 @@ export async function fetchSectionsFromSupabase(): Promise<CourseSection[] | nul
           horaFin: sec.horario_ayudantia_fin?.slice(0, 5) || "17:20",
           sala: sec.horario_ayudantia_sala || "SALA X",
         },
-        horarioAyudantia2: sec.horario_ayudantia2 || matchLocal?.horarioAyudantia2,
         horarioCatedra2: sec.horario_catedra2 || matchLocal?.horarioCatedra2,
         pinActivo: sec.pin_activo || "4821",
         requierePin: Boolean(sec.requiere_pin),

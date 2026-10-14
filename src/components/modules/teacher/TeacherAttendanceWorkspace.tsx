@@ -297,25 +297,6 @@ export const TeacherAttendanceWorkspace: React.FC<TeacherAttendanceWorkspaceProp
               window.dispatchEvent(new CustomEvent("udp_canvas_students_updated"));
             }
           } catch {}
-
-          // Inicializar asistencias para estos alumnos en 0 si aún no existen
-          const sessList = sessionsBySection[selectedSectionId] || [];
-          setAttendanceMap((prev) => {
-            const next = { ...prev };
-            let hasNew = false;
-            sessList.forEach((sess) => {
-              if (sess.estado === "cancelada") return;
-              mapped.forEach((st) => {
-                const k = `${sess.id}_${st.canvas_id}`;
-                if (next[k] === undefined) {
-                  next[k] = 0;
-                  hasNew = true;
-                }
-              });
-            });
-            if (hasNew) saveAttendanceMap(next);
-            return hasNew ? next : prev;
-          });
         }
       })
       .catch((err) => console.error("Error al cargar alumnos de Canvas:", err))
@@ -811,7 +792,7 @@ export const TeacherAttendanceWorkspace: React.FC<TeacherAttendanceWorkspaceProp
   ) => {
     if (!isSupabaseConfigured()) return;
     localKeys.forEach((k) => pendingWritesRef.current.add(k));
-    saveAttendanceMarkToSupabase(sessionCode, studentId, value).then((res) => {
+    saveAttendanceMarkToSupabase(sessionCode, studentId, value, "profesor").then((res) => {
       localKeys.forEach((k) => pendingWritesRef.current.delete(k));
       if (res.success) {
         // Dejar constancia del cambio manual en el historial inalterable

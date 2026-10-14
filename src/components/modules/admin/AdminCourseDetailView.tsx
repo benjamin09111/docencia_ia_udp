@@ -61,7 +61,6 @@ export const AdminCourseDetailView: React.FC<AdminCourseDetailViewProps> = ({
     profesor: string;
     ayudante: string;
     horarioAyudantia: any;
-    horarioAyudantia2?: any;
   }) => {
     setProfesorTitular(updatedData.profesor);
     setAyudanteTitular(updatedData.ayudante);
@@ -71,7 +70,6 @@ export const AdminCourseDetailView: React.FC<AdminCourseDetailViewProps> = ({
         profesor: updatedData.profesor,
         ayudante: updatedData.ayudante,
         horarioAyudantia: updatedData.horarioAyudantia,
-        horarioAyudantia2: updatedData.horarioAyudantia2,
       });
     }
     setSaveSuccess(true);
@@ -502,10 +500,7 @@ export const AdminCourseDetailView: React.FC<AdminCourseDetailViewProps> = ({
               </p>
               <div className="text-xs space-y-1 text-[#55636E]">
                 <strong className="block text-[11px] text-[#2D3B45] uppercase">Parámetros:</strong>
-                <div>• Horario Principal: {section.horarioAyudantia?.horaInicio || "14:30"} - {section.horarioAyudantia?.horaFin || "16:00"} hrs</div>
-                {section.horarioAyudantia2 && (
-                  <div>• Horario Secundario: {section.horarioAyudantia2.horaInicio} - {section.horarioAyudantia2.horaFin} hrs</div>
-                )}
+                <div>• Horario Ayudantía: {section.horarioAyudantia?.horaInicio || "14:30"} - {section.horarioAyudantia?.horaFin || "16:00"} hrs</div>
                 <div>• Sala oficial: {section.horarioAyudantia?.sala || "SALA X"}</div>
                 <div>• RAG: Descriptor oficial de la sección y reglamento RI</div>
               </div>
