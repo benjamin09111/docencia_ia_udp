@@ -2,8 +2,9 @@
 
 import React, { useState } from "react";
 import { CourseDeliverable } from "@/types";
+import { CanvasModal } from "@/components/canvas/CanvasModal";
 import { CanvasButton } from "@/components/canvas/CanvasButton";
-import { Edit3, CheckCircle2 } from "lucide-react";
+import { Edit3 } from "lucide-react";
 
 interface ActivityEditModalProps {
   activity: CourseDeliverable;
@@ -21,7 +22,6 @@ export const ActivityEditModal: React.FC<ActivityEditModalProps> = ({
   const [titulo, setTitulo] = useState(activity.titulo);
   const [descripcion, setDescripcion] = useState(activity.descripcion);
   const [decimas, setDecimas] = useState(() => {
-    // Extraer solo el número de ponderacion_o_decimas si contiene texto
     const match = activity.ponderacion_o_decimas.match(/[\d.]+/);
     return match ? match[0] : "0.3";
   });
@@ -29,11 +29,9 @@ export const ActivityEditModal: React.FC<ActivityEditModalProps> = ({
   const [fechaLimite, setFechaLimite] = useState(activity.fecha_limite || "2026-04-20");
   const [estado, setEstado] = useState(activity.estado);
 
-  if (!isOpen) return null;
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const updated: CourseDeliverable = {
+    onSave({
       ...activity,
       titulo,
       descripcion,
@@ -41,141 +39,114 @@ export const ActivityEditModal: React.FC<ActivityEditModalProps> = ({
       target_evaluacion: targetEvaluacion,
       fecha_limite: fechaLimite,
       estado,
-    };
-    onSave(updated);
+    });
     onClose();
   };
 
   return (
-    <div className="fixed inset-0 bg-black/40 backdrop-blur-xs z-50 flex items-center justify-center p-3 sm:p-4">
-      <div className="bg-white rounded-[6px] max-w-lg w-full p-5 sm:p-6 shadow-xl border border-gray-200 space-y-4 animate-scaleUp">
-        <div className="flex justify-between items-center border-b pb-3">
-          <div className="flex items-center gap-2">
-            <Edit3 size={16} className="text-[#008EE2]" />
-            <h3 className="text-base font-bold text-[#2D3B45]">
-              Ver y Editar Actividad
-            </h3>
-          </div>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 font-bold text-sm"
-          >
-            ✕
-          </button>
+    <CanvasModal
+      isOpen={isOpen}
+      onClose={onClose}
+      maxWidth="md"
+      title={
+        <div className="flex items-center gap-2">
+          <Edit3 size={16} className="text-[#008EE2]" />
+          <span>Editar Actividad Formativa</span>
+        </div>
+      }
+      subtitle="Modifica los parámetros de entrega y bonificación de la actividad."
+      footer={
+        <div className="flex items-center justify-end gap-2 w-full">
+          <CanvasButton type="button" variant="secondary" size="sm" onClick={onClose}>
+            Cancelar
+          </CanvasButton>
+          <CanvasButton type="submit" form="edit-activity-form" variant="primary-udp" size="sm">
+            Guardar Cambios
+          </CanvasButton>
+        </div>
+      }
+    >
+      <form id="edit-activity-form" onSubmit={handleSubmit} className="space-y-3.5 text-xs text-[#2D3B45]">
+        <div>
+          <label className="block font-bold mb-1">Título de la Actividad</label>
+          <input
+            type="text"
+            value={titulo}
+            onChange={(e) => setTitulo(e.target.value)}
+            className="w-full bg-white border border-[#C7CDD1] rounded-[3px] p-2 text-xs focus:border-[#008EE2] focus:outline-none"
+            required
+          />
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-3.5 text-xs">
+        <div>
+          <label className="block font-bold mb-1">Descripción / Desafío</label>
+          <textarea
+            rows={3}
+            value={descripcion}
+            onChange={(e) => setDescripcion(e.target.value)}
+            className="w-full bg-white border border-[#C7CDD1] rounded-[3px] p-2 text-xs focus:border-[#008EE2] focus:outline-none leading-relaxed"
+            required
+          />
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block font-bold text-[#2D3B45] mb-1">
-              Nombre de la Actividad / Taller
-            </label>
-            <input
-              type="text"
-              value={titulo}
-              onChange={(e) => setTitulo(e.target.value)}
-              className="w-full border border-gray-300 rounded-[3px] p-2 text-xs focus:border-[#008EE2] focus:outline-hidden"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block font-bold text-[#2D3B45] mb-1">
-              Descripción o Enunciado del Desafío
-            </label>
-            <textarea
-              rows={3}
-              value={descripcion}
-              onChange={(e) => setDescripcion(e.target.value)}
-              className="w-full border border-gray-300 rounded-[3px] p-2 text-xs focus:border-[#008EE2] focus:outline-hidden leading-relaxed"
-              required
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block font-bold text-[#2D3B45] mb-1">
-                Décimas de Bonificación
-              </label>
-              <div className="relative">
-                <span className="absolute left-2.5 top-2 text-gray-500 font-bold">+</span>
-                <input
-                  type="number"
-                  step="0.1"
-                  min="0.1"
-                  max="1.0"
-                  value={decimas}
-                  onChange={(e) => setDecimas(e.target.value)}
-                  className="w-full border border-gray-300 rounded-[3px] p-2 pl-6 text-xs focus:border-[#008EE2] focus:outline-hidden font-bold text-[#2D3B45]"
-                  required
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block font-bold text-[#2D3B45] mb-1">
-                Evaluación Destino
-              </label>
-              <select
-                value={targetEvaluacion}
-                onChange={(e) => setTargetEvaluacion(e.target.value)}
-                className="w-full border border-gray-300 rounded-[3px] p-2 text-xs focus:border-[#008EE2] focus:outline-hidden bg-white"
-              >
-                <option value="Solemne 1">Solemne 1</option>
-                <option value="Solemne 2">Solemne 2</option>
-                <option value="Reporte de Avance 1">Reporte de Avance 1</option>
-                <option value="Reporte de Avance 2">Reporte de Avance 2</option>
-                <option value="Nota de Presentación">Nota de Presentación</option>
-              </select>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block font-bold text-[#2D3B45] mb-1">
-                Fecha Límite de Entrega
-              </label>
+            <label className="block font-bold mb-1">Décimas Sugeridas</label>
+            <div className="relative">
+              <span className="absolute left-2.5 top-2 text-[#6B7780] font-bold">+</span>
               <input
-                type="date"
-                value={fechaLimite}
-                onChange={(e) => setFechaLimite(e.target.value)}
-                className="w-full border border-gray-300 rounded-[3px] p-2 text-xs focus:border-[#008EE2] focus:outline-hidden"
+                type="number"
+                step="0.1"
+                min="0.1"
+                max="1.0"
+                value={decimas}
+                onChange={(e) => setDecimas(e.target.value)}
+                className="w-full bg-white border border-[#C7CDD1] rounded-[3px] p-2 pl-6 text-xs focus:border-[#008EE2] focus:outline-none font-bold"
+                required
               />
             </div>
-
-            <div>
-              <label className="block font-bold text-[#2D3B45] mb-1">
-                Estado de Publicación
-              </label>
-              <select
-                value={estado}
-                onChange={(e) => setEstado(e.target.value as any)}
-                className="w-full border border-gray-300 rounded-[3px] p-2 text-xs focus:border-[#008EE2] focus:outline-hidden bg-white"
-              >
-                <option value="publicada">Publicada (Visible para alumnos)</option>
-                <option value="borrador">Borrador (Oculta)</option>
-              </select>
-            </div>
           </div>
 
-          <div className="flex justify-end gap-2 pt-3 border-t">
-            <CanvasButton
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={onClose}
+          <div>
+            <label className="block font-bold mb-1">Evaluación Destino</label>
+            <select
+              value={targetEvaluacion}
+              onChange={(e) => setTargetEvaluacion(e.target.value)}
+              className="w-full bg-white border border-[#C7CDD1] rounded-[3px] p-2 text-xs focus:border-[#008EE2] focus:outline-none"
             >
-              Cancelar
-            </CanvasButton>
-            <CanvasButton
-              type="submit"
-              variant="primary-udp"
-              size="sm"
-            >
-              Guardar Cambios
-            </CanvasButton>
+              <option value="Solemne 1">Solemne 1</option>
+              <option value="Solemne 2">Solemne 2</option>
+              <option value="Reporte de Avance 1">Reporte de Avance 1</option>
+              <option value="Reporte de Avance 2">Reporte de Avance 2</option>
+              <option value="Presentación Final">Presentación Final</option>
+            </select>
           </div>
-        </form>
-      </div>
-    </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="block font-bold mb-1">Fecha Límite</label>
+            <input
+              type="date"
+              value={fechaLimite}
+              onChange={(e) => setFechaLimite(e.target.value)}
+              className="w-full bg-white border border-[#C7CDD1] rounded-[3px] p-2 text-xs focus:border-[#008EE2] focus:outline-none"
+            />
+          </div>
+
+          <div>
+            <label className="block font-bold mb-1">Estado</label>
+            <select
+              value={estado}
+              onChange={(e) => setEstado(e.target.value as any)}
+              className="w-full bg-white border border-[#C7CDD1] rounded-[3px] p-2 text-xs focus:border-[#008EE2] focus:outline-none"
+            >
+              <option value="publicada">Publicada</option>
+              <option value="borrador">Borrador</option>
+            </select>
+          </div>
+        </div>
+      </form>
+    </CanvasModal>
   );
 };

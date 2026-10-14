@@ -2,6 +2,7 @@
 
 import React from "react";
 import { Search } from "lucide-react";
+import { CanvasButton } from "./CanvasButton";
 import { ActionMenuItem, CanvasActionMenu } from "./CanvasActionMenu";
 
 interface CanvasToolbarProps {
@@ -42,30 +43,30 @@ export const CanvasToolbar: React.FC<CanvasToolbarProps> = ({
         />
       </div>
 
-      {/* Botones de acción a la derecha */}
+      {/* Botones de acción utilizando CanvasButton canónico */}
       <div className="flex items-center gap-2.5 justify-end">
         {secondaryButtonLabel && onSecondaryClick && (
-          <button
-            type="button"
+          <CanvasButton
+            variant="secondary"
+            size="md"
             onClick={onSecondaryClick}
-            className="px-4 py-2 bg-[#F5F6F8] hover:bg-gray-100 text-[#2D3B45] border border-[#C7CDD1] rounded-[3px] text-sm font-medium transition-colors cursor-pointer shadow-2xs"
           >
             {secondaryButtonLabel}
-          </button>
+          </CanvasButton>
         )}
 
         {primaryButtonLabel && onPrimaryClick && (
-          <button
-            type="button"
+          <CanvasButton
+            variant="primary-udp"
+            size="md"
             onClick={onPrimaryClick}
-            className="px-4 py-2 bg-[#B71C1C] hover:bg-[#A60D24] text-white border border-[#A60D24] rounded-[3px] text-sm font-bold transition-colors cursor-pointer shadow-2xs"
           >
             {primaryButtonLabel}
-          </button>
+          </CanvasButton>
         )}
 
         {menuItems && menuItems.length > 0 && (
-          <div className="border border-[#C7CDD1] rounded-[3px] bg-[#F5F6F8] hover:bg-gray-100 flex items-center justify-center h-[38px] w-[38px] cursor-pointer shadow-2xs">
+          <div className="border border-[#C7CDD1] rounded-[3px] bg-[#F5F6F8] hover:bg-gray-100 flex items-center justify-center h-[36px] w-[36px] cursor-pointer shadow-2xs">
             <CanvasActionMenu items={menuItems} />
           </div>
         )}

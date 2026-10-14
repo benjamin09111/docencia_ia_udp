@@ -59,6 +59,26 @@ export interface CourseDeliverable {
   rubrica: RubricCriterion[];
   estado: "borrador" | "publicada" | "en_revision" | "finalizada";
   target_evaluacion?: string; // Para décimas: ej. "Solemne 1"
+  canvas_assignment_id?: number;
+  canvas_html_url?: string;
+  points_possible?: number;
+  grading_type?: string;
+  assignment_group?: string;
+  submission_types?: string[];
+  allowed_extensions?: string[];
+  allowed_attempts?: number;
+  is_group_assignment?: boolean;
+  unlock_at?: string;
+  lock_at?: string;
+  pin?: string;
+  attachments?: {
+    id: string;
+    name: string;
+    size: string;
+    type: "image" | "pdf" | "doc" | "other";
+    url?: string;
+    previewUrl?: string;
+  }[];
 }
 
 export interface StudentSubmission {

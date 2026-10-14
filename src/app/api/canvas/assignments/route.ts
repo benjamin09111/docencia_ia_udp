@@ -6,7 +6,20 @@ const CANVAS_TOKEN = process.env.CANVAS_API_TOKEN || "";
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { courseId, name, description, dueAt, unlockAt, pointsPossible } = body;
+    const {
+      courseId,
+      name,
+      description,
+      dueAt,
+      unlockAt,
+      lockAt,
+      pointsPossible,
+      gradingType = "points",
+      submissionTypes = ["online_upload"],
+      allowedExtensions = ["pdf"],
+      allowedAttempts = -1,
+      omitFromFinalGrade = false,
+    } = body;
 
     if (!CANVAS_TOKEN) {
       return NextResponse.json(
@@ -20,11 +33,14 @@ export async function POST(req: NextRequest) {
         name: name,
         description: description || "<p>Entregable oficial generado por Docencia IA UDP.</p>",
         points_possible: pointsPossible || 7.0,
-        grading_type: "points",
+        grading_type: gradingType,
         due_at: dueAt || null,
         unlock_at: unlockAt || null,
-        submission_types: ["online_upload"],
-        allowed_extensions: ["pdf"],
+        lock_at: lockAt || null,
+        submission_types: submissionTypes,
+        allowed_extensions: allowedExtensions,
+        allowed_attempts: allowedAttempts,
+        omit_from_final_grade: omitFromFinalGrade,
         published: false, // REGLA ESTRICTA: NUNCA PUBLICAR DIRECTO (SIEMPRE BORRADOR)
         notify_of_update: false,
       },

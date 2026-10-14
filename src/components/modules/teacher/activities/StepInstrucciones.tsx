@@ -1,12 +1,18 @@
 "use client";
 
-import React from "react";
-import { ListOrdered, Sparkles, ChevronLeft, ChevronRight } from "lucide-react";
+import React, { useMemo } from "react";
+import { InstruccionItem, ActivityAttachment } from "@/types/actividadesFormativas";
+import { InstructionItemCard } from "./instructions/InstructionItemCard";
+import { ScoreBalanceBanner } from "./instructions/ScoreBalanceBanner";
+import { ActivityAttachmentsSection } from "./instructions/ActivityAttachmentsSection";
 import { CanvasButton } from "@/components/canvas/CanvasButton";
+import { ListOrdered, Sparkles, ChevronLeft, ChevronRight, Plus } from "lucide-react";
 
 interface StepInstruccionesProps {
-  instrucciones: string;
-  setInstrucciones: (v: string) => void;
+  items: InstruccionItem[];
+  setItems: (items: InstruccionItem[]) => void;
+  attachments: ActivityAttachment[];
+  setAttachments: (attachments: ActivityAttachment[]) => void;
   onGenerarIA: () => void;
   isGenerating: boolean;
   onPrev: () => void;
@@ -14,54 +20,141 @@ interface StepInstruccionesProps {
 }
 
 export const StepInstrucciones: React.FC<StepInstruccionesProps> = ({
-  instrucciones,
-  setInstrucciones,
+  items,
+  setItems,
+  attachments,
+  setAttachments,
   onGenerarIA,
   isGenerating,
   onPrev,
   onNext,
 }) => {
+  const sumaActual = useMemo(() => {
+    return items.reduce((acc, it) => acc + (Number(it.puntaje) || 0), 0);
+  }, [items]);
+
+  const esValido60 = sumaActual === 60;
+
+  const handleAddItem = () => {
+    const nextNum = items.length + 1;
+    const faltante = Math.max(0, 60 - sumaActual);
+    const nuevoPuntaje = faltante > 0 ? faltante : 10;
+
+    const newItem: InstruccionItem = {
+      id: `inst_${Date.now()}`,
+      numero: nextNum,
+      titulo: `Pregunta ${nextNum}: Nuevo Desafío / Ejercicio`,
+      descripcion: "Describe la actividad que debe realizar el estudiante...",
+      puntaje: nuevoPuntaje,
+    };
+    setItems([...items, newItem]);
+  };
+
+  const handleUpdateItem = (index: number, updated: InstruccionItem) => {
+    const copy = [...items];
+    copy[index] = updated;
+    setItems(copy);
+  };
+
+  const handleDeleteItem = (index: number) => {
+    if (items.length <= 1) return;
+    const copy = items.filter((_, i) => i !== index);
+    setItems(copy);
+  };
+
+  const handleAutoAjustar60 = () => {
+    if (items.length === 0) return;
+    const faltante = 60 - sumaActual;
+    const copy = [...items];
+    const ultimo = copy[copy.length - 1];
+    const ajustado = Math.max(1, ultimo.puntaje + faltante);
+    copy[copy.length - 1] = { ...ultimo, puntaje: ajustado };
+    setItems(copy);
+  };
+
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-start gap-2">
+    <div className="space-y-5">
+      {/* Encabezado Canvas */}
+      <div className="border-b border-[#E0E3E6] pb-3 flex justify-between items-start gap-3 flex-wrap">
         <div>
-          <h2 className="text-sm font-bold text-[#2D3B45] flex items-center gap-2">
-            <ListOrdered size={16} className="text-[#008EE2]" />
-            Paso 3: Instrucciones para Estudiantes
+          <h2 className="text-xl font-bold text-[#2D3B45] flex items-center gap-2">
+            <ListOrdered size={20} className="text-[#B71C1C]" />
+            Paso 3: Instrucciones, Preguntas con Puntaje y Anexos
           </h2>
-          <p className="text-xs text-[#6B7780] mt-0.5">
-            Detalla los pasos que deben seguir los estudiantes para completar el taller.
+          <p className="text-sm text-[#6B7780] mt-0.5">
+            Cada instrucción representa una pregunta o tarea evaluada. Asigna los puntajes hasta sumar exactamente 60 puntos.
           </p>
         </div>
 
-        <button
-          type="button"
+        <CanvasButton
+          variant="secondary"
+          size="sm"
           onClick={onGenerarIA}
           disabled={isGenerating}
-          className="px-2.5 py-1.5 bg-purple-50 hover:bg-purple-100 text-purple-900 border border-purple-200 rounded-[4px] text-xs font-bold flex items-center gap-1.5 transition-colors shrink-0 shadow-2xs cursor-pointer disabled:opacity-50"
+          icon={<Sparkles size={14} className="text-[#B71C1C]" />}
         >
-          <Sparkles size={13} className="text-purple-700" />
-          {isGenerating ? "Generando..." : "Generar con Agente Creativo"}
-        </button>
+          {isGenerating ? "Generando con IA..." : "Sugerir con IA (60 pts)"}
+        </CanvasButton>
       </div>
 
-      <div className="space-y-1">
-        <label className="text-xs font-bold text-[#2D3B45]">
-          Pauta e Instrucciones Paso a Paso (Editable)
-        </label>
-        <textarea
-          rows={9}
-          value={instrucciones}
-          onChange={(e) => setInstrucciones(e.target.value)}
-          className="w-full text-xs font-mono border border-gray-300 rounded-[4px] p-3 focus:ring-1 focus:ring-[#008EE2] leading-relaxed bg-[#FAFAFA]"
-        />
+      {/* Banner de Verificación de Puntaje en Tiempo Real */}
+      <ScoreBalanceBanner
+        sumaActual={sumaActual}
+        esValido60={esValido60}
+        onAutoAjustar={handleAutoAjustar60}
+      />
+
+      {/* Listado Controlado de Instrucciones / Preguntas */}
+      <div className="space-y-3">
+        {items.map((item, idx) => (
+          <InstructionItemCard
+            key={item.id}
+            item={item}
+            index={idx}
+            canDelete={items.length > 1}
+            onChange={(updated) => handleUpdateItem(idx, updated)}
+            onDelete={() => handleDeleteItem(idx)}
+          />
+        ))}
       </div>
 
-      <div className="pt-3 border-t flex justify-between">
-        <CanvasButton variant="outline" size="sm" onClick={onPrev} icon={<ChevronLeft size={14} />}>
+      {/* Botón para Añadir Nueva Instrucción */}
+      <div className="flex justify-center pt-1">
+        <CanvasButton
+          variant="secondary"
+          size="sm"
+          onClick={handleAddItem}
+          icon={<Plus size={14} className="text-[#B71C1C]" />}
+        >
+          + Agregar Instrucción / Pregunta
+        </CanvasButton>
+      </div>
+
+      {/* Anexos y Material Complementario para el Estudiante */}
+      <ActivityAttachmentsSection
+        attachments={attachments}
+        onChangeAttachments={setAttachments}
+      />
+
+      {/* Navegación del Wizard */}
+      <div className="pt-4 border-t border-[#E0E3E6] flex items-center justify-between">
+        <CanvasButton
+          variant="secondary"
+          size="sm"
+          onClick={onPrev}
+          icon={<ChevronLeft size={16} />}
+        >
           Volver a Información
         </CanvasButton>
-        <CanvasButton variant="primary-udp" size="sm" onClick={onNext} icon={<ChevronRight size={14} />}>
+
+        <CanvasButton
+          variant="primary-udp"
+          size="sm"
+          onClick={onNext}
+          disabled={!esValido60}
+          icon={<ChevronRight size={16} />}
+          title={!esValido60 ? "Debes completar exactamente 60 puntos para avanzar" : undefined}
+        >
           Continuar a Rúbrica
         </CanvasButton>
       </div>

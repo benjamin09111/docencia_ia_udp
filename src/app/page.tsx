@@ -12,7 +12,13 @@ import { initialCourseData, getStoredCourseGrades, saveStoredCourseGrades } from
 export default function DashboardPage() {
   const [currentRole, setCurrentRole] = useState<UserRole>("admin");
   const [activeNav, setActiveNav] = useState("docencia_ia");
-  const [activeCourseBreadcrumb, setActiveCourseBreadcrumb] = useState<{ courseCode: string; tabTitle: string } | null>(null);
+  const [activeCourseBreadcrumb, setActiveCourseBreadcrumb] = useState<{
+    courseCode: string;
+    tabTitle: string;
+    courseName?: string;
+    scheduleText?: string;
+    salaText?: string;
+  } | null>(null);
 
   // Canvas API state
   const [canvasUser, setCanvasUser] = useState<CanvasUser>({
@@ -263,6 +269,9 @@ export default function DashboardPage() {
         {activeCourseBreadcrumb && (
           <CanvasHeader
             courseCode={activeCourseBreadcrumb.courseCode}
+            courseName={activeCourseBreadcrumb.courseName}
+            scheduleText={activeCourseBreadcrumb.scheduleText}
+            salaText={activeCourseBreadcrumb.salaText}
             currentPageTitle={activeCourseBreadcrumb.tabTitle}
             isStudentView={currentRole === "student"}
             onToggleStudentView={() => setCurrentRole(currentRole === "student" ? "teacher" : "student")}

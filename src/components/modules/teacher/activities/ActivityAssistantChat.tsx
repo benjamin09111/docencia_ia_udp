@@ -2,6 +2,7 @@
 
 import React from "react";
 import { Bot, Send } from "lucide-react";
+import { CanvasButton } from "@/components/canvas/CanvasButton";
 
 export interface ChatMessageItem {
   sender: "user" | "agent";
@@ -24,46 +25,51 @@ export const ActivityAssistantChat: React.FC<ActivityAssistantChatProps> = ({
   onSendMessage,
 }) => {
   return (
-    <div className="lg:col-span-5 bg-white border border-[#E0E3E6] rounded-[4px] shadow-canvas-card flex flex-col h-[580px] xl:h-[650px] max-h-[calc(100vh-100px)] lg:sticky lg:top-20 z-10">
-      {/* Header del Chat */}
-      <div className="p-3.5 border-b border-[#E0E3E6] flex items-center justify-between bg-[#F9FAFB]">
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-full bg-purple-100 text-purple-800 flex items-center justify-center shrink-0">
+    <aside
+      aria-label="Copiloto de Actividades Formativas"
+      className="w-full h-full bg-white border border-[#C7CDD1] rounded-[3px] shadow-2xs flex flex-col overflow-hidden"
+    >
+      {/* Header Canvas con tipografía clara y sin colores estridentes */}
+      <div className="p-4 border-b border-[#C7CDD1] flex items-center justify-between bg-[#F5F6F8] shrink-0">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-full bg-red-100 text-[#B71C1C] flex items-center justify-center shrink-0">
             <Bot size={17} />
           </div>
           <div>
-            <h3 className="text-xs font-bold text-[#2D3B45]">
-              Agente de Actividades Dinámicas
+            <h3 className="text-sm font-bold text-[#2D3B45]">
+              Copiloto de Actividades
             </h3>
-            <span className="text-[10.5px] text-emerald-700 font-medium flex items-center gap-1">
-              ● Conectado con Agente Teórico & Técnico UDP
+            <span className="text-xs text-[#2E7D32] font-semibold flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-[#2E7D32] inline-block" />
+              Asistente Pedagógico Activo
             </span>
           </div>
         </div>
-        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-100 text-[#008EE2] shrink-0">
-          Asistente en Vivo
+
+        <span className="text-xs font-semibold px-2.5 py-1 rounded bg-white text-[#2D3B45] border border-[#C7CDD1]">
+          CREA UDP
         </span>
       </div>
 
-      {/* Mensajes del Chat */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-3.5 text-xs">
+      {/* Lista de Mensajes con tipografía legible Canvas (13.5px) */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-3.5 text-[13.5px]">
         {chatMessages.map((msg, idx) => (
           <div
             key={idx}
             className={`flex gap-2.5 ${msg.sender === "user" ? "justify-end" : "justify-start"}`}
           >
             {msg.sender === "agent" && (
-              <div className="w-6 h-6 rounded-full bg-purple-50 text-purple-800 border border-purple-200 flex items-center justify-center shrink-0 mt-0.5 text-[11px] font-bold">
+              <div className="w-7 h-7 rounded-full bg-[#F5F6F8] text-[#B71C1C] border border-[#C7CDD1] flex items-center justify-center shrink-0 mt-0.5 text-xs font-bold">
                 IA
               </div>
             )}
 
-            <div className={`space-y-1.5 max-w-[88%] ${msg.sender === "user" ? "items-end" : "items-start"}`}>
+            <div className={`space-y-1 max-w-[85%] ${msg.sender === "user" ? "items-end" : "items-start"}`}>
               <div
-                className={`p-3 rounded-[6px] leading-relaxed ${
+                className={`p-3.5 rounded-[4px] leading-relaxed shadow-2xs ${
                   msg.sender === "user"
-                    ? "bg-[#008EE2] text-white"
-                    : "bg-[#F5F6F8] text-[#2D3B45] border border-gray-200"
+                    ? "bg-[#B71C1C] text-white font-medium"
+                    : "bg-[#F5F6F8] text-[#2D3B45] border border-[#C7CDD1]"
                 }`}
               >
                 {msg.text}
@@ -73,30 +79,31 @@ export const ActivityAssistantChat: React.FC<ActivityAssistantChatProps> = ({
         ))}
 
         {isTyping && (
-          <div className="flex items-center gap-2 text-xs text-gray-500 italic">
-            <Bot size={13} className="animate-spin text-purple-700" />
-            <span>Generando sugerencia pedagógica...</span>
+          <div className="flex items-center gap-2 text-xs text-[#6B7780] italic p-2">
+            <Bot size={14} className="animate-spin text-[#B71C1C]" />
+            <span>Consultando modelo pedagógico...</span>
           </div>
         )}
       </div>
 
-      {/* Input del Chat */}
-      <form onSubmit={onSendMessage} className="p-3 border-t border-gray-200 flex gap-2 bg-white">
+      {/* Input de Chat Canvas con CanvasButton */}
+      <form onSubmit={onSendMessage} className="p-3 border-t border-[#C7CDD1] flex gap-2 bg-[#F9FAFB] shrink-0">
         <input
           type="text"
-          placeholder="Pregúntale al agente o pídele cambios para cualquier paso..."
+          placeholder="Pregúntale al copiloto o solicita ajustes al taller..."
           value={chatInput}
           onChange={(e) => setChatInput(e.target.value)}
-          className="flex-1 text-xs border border-gray-300 rounded-[4px] px-3 py-2 focus:ring-1 focus:ring-[#008EE2]"
+          className="flex-1 text-[13px] bg-white border border-[#C7CDD1] rounded-[3px] px-3.5 py-2 text-[#2D3B45] focus:outline-none focus:border-[#B71C1C]"
         />
-        <button
+        <CanvasButton
           type="submit"
-          className="px-3.5 py-2 bg-[#2D3B45] hover:bg-[#1E272E] text-white rounded-[4px] text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
+          variant="primary-udp"
+          size="sm"
+          icon={<Send size={13} />}
         >
-          <Send size={12} />
-          <span>Enviar</span>
-        </button>
+          Enviar
+        </CanvasButton>
       </form>
-    </div>
+    </aside>
   );
 };

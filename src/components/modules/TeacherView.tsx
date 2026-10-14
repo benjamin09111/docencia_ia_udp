@@ -23,7 +23,13 @@ interface TeacherViewProps {
   onAddDeliverable: (d: CourseDeliverable) => void;
   onUpdateGrade: (canvasId: number, field: keyof StudentExcelRow, value: number) => void;
   onResolveAppeal?: (submissionId: string, action: "aceptar" | "ratificar") => void;
-  onActiveCourseChange?: (info: { courseCode: string; tabTitle: string } | null) => void;
+  onActiveCourseChange?: (info: {
+    courseCode: string;
+    tabTitle: string;
+    courseName?: string;
+    scheduleText?: string;
+    salaText?: string;
+  } | null) => void;
 }
 
 const DEFAULT_TEACHER_COURSES: CanvasCourse[] = [

@@ -3,7 +3,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { CourseDeliverable, StudentExcelRow, StudentSubmission, StudentStudyMetrics } from "@/types";
 import { CanvasCourseNav, CourseNavItem } from "@/components/canvas/CanvasCourseNav";
-import { StudentCourseHeader } from "./student/StudentCourseHeader";
 import { StudentHomeTab } from "./student/StudentHomeTab";
 import { StudentSumativasTab } from "./student/StudentSumativasTab";
 import { StudentActivitiesTab } from "./student/StudentActivitiesTab";
@@ -20,7 +19,13 @@ interface StudentViewProps {
   estudiantesExcel?: StudentExcelRow[];
   onSubmitActivity?: (deliverableId: string, solutionText: string) => void;
   onSendAppeal?: (submissionId: string, appealText: string) => void;
-  onActiveCourseChange?: (info: { courseCode: string; tabTitle: string } | null) => void;
+  onActiveCourseChange?: (info: {
+    courseCode: string;
+    tabTitle: string;
+    courseName?: string;
+    scheduleText?: string;
+    salaText?: string;
+  } | null) => void;
 }
 
 export const StudentView: React.FC<StudentViewProps> = ({
@@ -53,7 +58,13 @@ export const StudentView: React.FC<StudentViewProps> = ({
 
   useEffect(() => {
     const activeLabel = navItems.find((n) => n.id === activeTab)?.label || "Módulos";
-    onActiveCourseChange?.({ courseCode, tabTitle: activeLabel });
+    onActiveCourseChange?.({
+      courseCode,
+      courseName: "ARQUITECTURA DE SOFTWARE",
+      tabTitle: activeLabel,
+      scheduleText: "Horario: Mié 16:00 - 17:20",
+      salaText: "Sala B-204",
+    });
     return () => onActiveCourseChange?.(null);
   }, [activeTab, navItems, onActiveCourseChange]);
 
@@ -96,13 +107,6 @@ export const StudentView: React.FC<StudentViewProps> = ({
 
       {/* Área Principal de Contenido */}
       <div className="flex-1 min-w-0 w-full">
-        <StudentCourseHeader
-          courseCode="CIT3000_CA02"
-          courseName="ARQUITECTURA DE SOFTWARE & GESTIÓN TIC"
-          profesor="Jorge Esteban Cruz León"
-          ayudante="Benjamín Morales Pizarro"
-          horario="Mié 16:00 - 17:20 | Bloque 2: Mié 20:10 - 21:30"
-        />
 
         {activeTab === "inicio" && (
           <StudentHomeTab

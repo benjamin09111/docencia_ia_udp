@@ -4,7 +4,6 @@ import React, { useState, useMemo, useEffect } from "react";
 import { CanvasCourse, CourseDeliverable, StudentExcelRow, StudentSubmission } from "@/types";
 import { CourseSection, ClassSession } from "@/types/attendance";
 import { CanvasCourseNav, CourseNavItem } from "@/components/canvas/CanvasCourseNav";
-import { CourseWorkspaceHeader } from "./CourseWorkspaceHeader";
 import { CourseWorkspaceContent, CourseWorkspaceTab } from "./CourseWorkspaceContent";
 import {
   getSectionByCourseCode,
@@ -40,7 +39,13 @@ interface AutomatedCourseWorkspaceProps {
   onAddDeliverable: (d: CourseDeliverable) => void;
   onUpdateGrade: (canvasId: number, field: keyof StudentExcelRow, value: number) => void;
   onResolveAppeal?: (submissionId: string, action: "aceptar" | "ratificar") => void;
-  onActiveCourseChange?: (info: { courseCode: string; tabTitle: string } | null) => void;
+  onActiveCourseChange?: (info: {
+    courseCode: string;
+    tabTitle: string;
+    courseName?: string;
+    scheduleText?: string;
+    salaText?: string;
+  } | null) => void;
 }
 
 export const AutomatedCourseWorkspace: React.FC<AutomatedCourseWorkspaceProps> = ({
@@ -112,15 +117,21 @@ export const AutomatedCourseWorkspace: React.FC<AutomatedCourseWorkspaceProps> =
     { id: "inicio", label: "Página de inicio", icon: <Home size={15} /> },
   ], [cleanCourseName]);
 
-  // Sincronizar dinámicamente el código de sección y el módulo actual para los breadcrumbs de Canvas
+  // Sincronizar dinámicamente el código de sección, horario y módulo actual para los breadcrumbs de Canvas
   useEffect(() => {
     const sectionBreadcrumb = section?.codigo || course.code || "CIT3203_CA01";
     const currentTabLabel = navItems.find((item) => item.id === activeTab)?.label || "Módulos";
-    onActiveCourseChange?.({ courseCode: sectionBreadcrumb, tabTitle: currentTabLabel });
+    onActiveCourseChange?.({
+      courseCode: sectionBreadcrumb,
+      courseName: cleanCourseName,
+      tabTitle: currentTabLabel,
+      scheduleText: scheduleInfo.ayudantia ? `Ayudantía: ${scheduleInfo.ayudantia}` : undefined,
+      salaText: scheduleInfo.ayudantiaSala ? `Sala: ${scheduleInfo.ayudantiaSala}` : undefined,
+    });
     return () => {
       onActiveCourseChange?.(null);
     };
-  }, [section?.codigo, course.code, activeTab, navItems, onActiveCourseChange]);
+  }, [section?.codigo, course.code, cleanCourseName, scheduleInfo, activeTab, navItems, onActiveCourseChange]);
 
   return (
     <div className="flex flex-col md:flex-row gap-6 items-start w-full">
@@ -162,12 +173,6 @@ export const AutomatedCourseWorkspace: React.FC<AutomatedCourseWorkspaceProps> =
 
       {/* Área Principal de Contenido del Curso */}
       <div className="flex-1 min-w-0 w-full">
-        <CourseWorkspaceHeader
-          course={course}
-          scheduleInfo={scheduleInfo}
-          onBack={onBack}
-        />
-
         <CourseWorkspaceContent
           activeTab={activeTab}
           course={course}

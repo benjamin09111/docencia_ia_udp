@@ -37,3 +37,20 @@ export interface ActividadFormativa {
   valorDefecto: string;
   instruccionesDefecto: string;
 }
+
+export interface InstruccionItem {
+  id: string;
+  numero: number;
+  titulo: string;
+  descripcion: string;
+  puntaje: number;
+}
+
+export interface ActivityAttachment {
+  id: string;
+  name: string;
+  size: string;
+  type: "image" | "pdf" | "doc" | "other";
+  url?: string;
+  previewUrl?: string;
+}

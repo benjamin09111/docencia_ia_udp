@@ -2,6 +2,7 @@
 
 import React from "react";
 import { CourseDeliverable } from "@/types";
+import { CanvasModal } from "@/components/canvas/CanvasModal";
 import { CanvasButton } from "@/components/canvas/CanvasButton";
 import { AlertTriangle } from "lucide-react";
 
@@ -18,44 +19,23 @@ export const ActivityDeleteConfirmModal: React.FC<ActivityDeleteConfirmModalProp
   onClose,
   onConfirm,
 }) => {
-  if (!isOpen || !activity) return null;
+  if (!activity) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/40 backdrop-blur-xs z-50 flex items-center justify-center p-3 sm:p-4">
-      <div className="bg-white rounded-[6px] max-w-md w-full p-5 sm:p-6 shadow-xl border border-gray-200 space-y-4 animate-scaleUp">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center text-red-600 shrink-0">
-            <AlertTriangle size={20} />
-          </div>
-          <div>
-            <h3 className="text-base font-bold text-[#2D3B45]">
-              ¿Eliminar Actividad?
-            </h3>
-            <p className="text-xs text-[#6B7780] mt-0.5">
-              Confirmación de eliminación de taller
-            </p>
-          </div>
+    <CanvasModal
+      isOpen={isOpen}
+      onClose={onClose}
+      maxWidth="sm"
+      title={
+        <div className="flex items-center gap-2 text-[#C8102E]">
+          <AlertTriangle size={18} />
+          <span>¿Eliminar Actividad?</span>
         </div>
-
-        <div className="bg-gray-50 border border-gray-200 rounded p-3 text-xs text-[#55636E] space-y-1">
-          <p>
-            Estás a punto de eliminar la actividad:
-          </p>
-          <strong className="block text-[#2D3B45] font-semibold">
-            "{activity.titulo}"
-          </strong>
-          <p className="text-[11px] text-[#6B7780] pt-1">
-            Esta acción desvinculará las rúbricas y entregas asociadas en este curso.
-          </p>
-        </div>
-
-        <div className="flex justify-end gap-2 pt-2 border-t border-gray-100">
-          <CanvasButton
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={onClose}
-          >
+      }
+      subtitle="Esta acción no se puede deshacer."
+      footer={
+        <div className="flex items-center justify-end gap-2 w-full">
+          <CanvasButton type="button" variant="secondary" size="sm" onClick={onClose}>
             Cancelar
           </CanvasButton>
           <CanvasButton
@@ -65,10 +45,20 @@ export const ActivityDeleteConfirmModal: React.FC<ActivityDeleteConfirmModalProp
             onClick={onConfirm}
             className="bg-[#C8102E] hover:bg-[#A00C24] text-white"
           >
-            Eliminar Actividad
+            Eliminar
           </CanvasButton>
         </div>
+      }
+    >
+      <div className="space-y-2 text-xs text-[#2D3B45]">
+        <p>Estás a punto de eliminar la actividad formativa:</p>
+        <div className="p-2.5 bg-[#F9FAFB] border border-[#E0E3E6] rounded-[3px] font-bold">
+          {activity.titulo}
+        </div>
+        <p className="text-[11px] text-[#6B7780]">
+          Se desvincularán las entregas, la rúbrica y las décimas asociadas en este curso.
+        </p>
       </div>
-    </div>
+    </CanvasModal>
   );
 };
