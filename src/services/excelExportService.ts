@@ -2,6 +2,7 @@ import * as XLSX from "xlsx";
 import { ClassSession, StudentAttendanceSummary, StudentWorkRecord } from "@/types/attendance";
 import { StudentExcelRow } from "@/types";
 import { getTodayDateStr } from "@/services/attendanceStore";
+import { computeAttendanceStats, isAttendanceAtRisk } from "@/utils/attendanceMetrics";
 
 export type AttendanceExportScope = "catedras" | "ayudantias" | "ambas";
 
@@ -69,7 +70,7 @@ export function exportAttendanceToExcel(params: {
       const parts = s.fecha.split("-");
       const diaMes = parts.length === 3 ? `${parts[2]}/${parts[1]}` : s.fecha;
       const modLetter = s.modalidad === "online" ? "O" : "P";
-      headers.push(`${diaMes} (${modLetter})`);
+      headers.push(`${diaMes} (${modLetter}${s.esOpcional ? "·Opc" : ""})`);
     });
     if (subtipo === "ayudantia") {
       headers.push("Trabajos Entregados", "Total Trabajos", "Décimas Totales");
@@ -95,13 +96,14 @@ export function exportAttendanceToExcel(params: {
       targetSessions.forEach((s) => {
         const key = `${s.id}_${sum.canvas_id}`;
         const val = attendanceMap[key] ?? 0;
-        if (val === 1) asistidasCount++;
         row.push(val);
       });
 
-      const totalVal = targetSessions.length;
-      const pct = totalVal > 0 ? Math.round((asistidasCount / totalVal) * 100) : 0;
-      const ok = pct >= 75;
+      const stats = computeAttendanceStats(targetSessions, (id) => attendanceMap[`${id}_${sum.canvas_id}`] === 1);
+      asistidasCount = stats.asistidas;
+      const totalVal = stats.validas;
+      const pct = stats.pct;
+      const ok = !isAttendanceAtRisk(stats);
 
       if (subtipo === "ayudantia") {
         const work = studentWorkRecords[sum.canvas_id];

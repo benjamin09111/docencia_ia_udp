@@ -370,6 +370,7 @@ export function generateSemesterSessions(
         estado: ov.estado || s.estado,
         motivoCancelacion: ov.motivoCancelacion,
         modalidad: ov.modalidad || s.modalidad,
+        esOpcional: ov.esOpcional ?? s.esOpcional,
       };
     }
     return s;
@@ -390,6 +391,7 @@ export interface SessionOverride {
   estado: "programada" | "realizada" | "cancelada";
   motivoCancelacion?: string;
   modalidad?: "presencial" | "online";
+  esOpcional?: boolean;
 }
 
 export function getSavedSessionOverrides(): Record<string, SessionOverride> {
@@ -446,6 +448,19 @@ export function saveSessionModalityOverride(
   }
 }
 
+export function saveSessionOptionalOverride(sessionId: string, esOpcional: boolean): void {
+  if (typeof window === "undefined") return;
+  try {
+    const current = getSavedSessionOverrides();
+    const existing = current[sessionId] || { estado: "programada" };
+    current[sessionId] = { ...existing, esOpcional };
+    localStorage.setItem(SESSION_OVERRIDES_KEY, JSON.stringify(current));
+    window.dispatchEvent(new CustomEvent("udp_sessions_overrides_updated", { detail: current }));
+  } catch (e) {
+    console.error("Error saving session optional flag to localStorage", e);
+  }
+}
+
 /**
  * Aplica sobre la caché local los estados de sesión guardados en la nube (cancelación y modalidad),
  * para que todos los dispositivos del docente vean las mismas clases suspendidas.
@@ -470,6 +485,15 @@ export function mergeRemoteSessionOverrides(remote: Record<string, SessionOverri
           estado: current[sessionId]?.estado || "programada",
           modalidad: "online",
         };
+        changed = true;
+      }
+    });
+    // "Opcional" es bidireccional: la nube manda (si se desmarca en otro dispositivo, aquí también)
+    Object.entries(remote).forEach(([sessionId, ov]) => {
+      if (ov.esOpcional === undefined) return;
+      const local = current[sessionId];
+      if ((local?.esOpcional ?? false) !== ov.esOpcional) {
+        current[sessionId] = { ...local, estado: local?.estado || "programada", esOpcional: ov.esOpcional };
         changed = true;
       }
     });

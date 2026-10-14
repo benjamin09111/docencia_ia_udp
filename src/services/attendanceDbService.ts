@@ -555,6 +555,32 @@ export async function updateSessionModalityInSupabase(
 }
 
 /**
+ * Marca o desmarca una sesión como opcional (suma a quien asiste, no resta a quien falta)
+ */
+export async function updateSessionOptionalInSupabase(
+  sessionCode: string,
+  esOpcional: boolean
+): Promise<AttendanceDbSyncResult> {
+  const supabase = getSupabaseClient();
+  if (!supabase) return { success: false };
+
+  try {
+    const { error } = await supabase
+      .from("class_sessions")
+      .update({ is_optional: esOpcional })
+      .eq("session_code", sessionCode);
+    if (error) {
+      console.warn("Aviso actualizando clase opcional en Supabase:", error.message);
+      return { success: false, error };
+    }
+    return { success: true };
+  } catch (error) {
+    console.warn("Error updateSessionOptionalInSupabase:", error);
+    return { success: false, error };
+  }
+}
+
+/**
  * Obtiene sesiones de clase de una sección que ya tienen asistencia registrada en Supabase
  */
 export async function fetchHistoricalRecordedSessionsFromSupabase(

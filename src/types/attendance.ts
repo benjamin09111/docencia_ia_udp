@@ -38,6 +38,8 @@ export interface ClassSession {
   modalidad?: SessionModality; // "presencial" | "online"
   estado: ClassSessionState;
   motivoCancelacion?: string;
+  /** Clase opcional: quien asiste suma al porcentaje; quien falta no pierde asistencia. */
+  esOpcional?: boolean;
   tema?: string;
   horaInicio: string;
   horaFin: string;

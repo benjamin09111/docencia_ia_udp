@@ -11,7 +11,10 @@ import {
   getSavedTotalTrabajos,
   generateSemesterSessions,
   saveSections,
+  mergeRemoteSessionOverrides,
 } from "@/services/attendanceStore";
+import { fetchSectionSessionStates } from "@/services/attendanceCloudService";
+import { computeAttendanceStats, isAttendanceAtRisk } from "@/utils/attendanceMetrics";
 import {
   fetchAttendanceMapFromSupabase,
   fetchStudentWorkRecordsFromSupabase,
@@ -71,12 +74,24 @@ export const PublicAttendanceVisualView: React.FC<PublicAttendanceVisualViewProp
     }
   }, [selectedSection.codigo, selectedSection.id]);
 
+  // Estados de clase compartidos (canceladas / online / opcionales) desde la nube:
+  // el alumno debe ver el mismo porcentaje que el docente.
+  const [sessionStatesVersion, setSessionStatesVersion] = useState(0);
+  useEffect(() => {
+    if (!isSupabaseConfigured()) return;
+    let alive = true;
+    fetchSectionSessionStates(selectedSection.codigo).then((states) => {
+      if (alive && mergeRemoteSessionOverrides(states)) setSessionStatesVersion((v) => v + 1);
+    });
+    return () => { alive = false; };
+  }, [selectedSection.codigo]);
+
   const sessions: ClassSession[] = useMemo(() => {
     const todayStr = getTodayDateStr();
     return generateSemesterSessions(selectedSection).filter(
       (s) => s.tipo === "ayudantia" && s.estado !== "cancelada" && s.fecha <= todayStr
     );
-  }, [selectedSection]);
+  }, [selectedSection, sessionStatesVersion]);
 
   const [students, setStudents] = useState<StudentRosterItem[]>([]);
   const [attendanceMap, setAttendanceMap] = useState<Record<string, AttendanceValue>>({});
@@ -109,9 +124,8 @@ export const PublicAttendanceVisualView: React.FC<PublicAttendanceVisualViewProp
     const query = searchTerm.trim().toLowerCase();
     return students
       .map((st) => {
-        const asistidas = sessions.filter((sess) => attendanceMap[`${sess.id}_${st.canvas_id}`] === 1).length;
-        const validas = sessions.length;
-        const pct = validas > 0 ? Math.round((asistidas / validas) * 100) : 0;
+        const stats = computeAttendanceStats(sessions, (id) => attendanceMap[`${id}_${st.canvas_id}`] === 1);
+        const { asistidas, validas, pct } = stats;
         const work = studentWorkRecords[st.canvas_id];
         const trabCount = work ? (work.trabajosRealizados ?? 0) : 0;
         const fullName = `${st.nombres || ""} ${st.apellidos || ""}`.trim() || (st as any).name || st.rut || `Estudiante ${st.canvas_id}`;
@@ -124,7 +138,7 @@ export const PublicAttendanceVisualView: React.FC<PublicAttendanceVisualViewProp
           asistidas,
           validas,
           pct,
-          ok: pct >= 75,
+          ok: !isAttendanceAtRisk(stats),
           decimas: Math.round(trabCount * 0.2 * 10) / 10,
           trabajosRealizados: trabCount,
         };

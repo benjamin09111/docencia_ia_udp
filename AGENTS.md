@@ -148,6 +148,8 @@ El objetivo central es consolidar una **Suite Integral de Docencia Automatizada 
 > 1. **Módulo de Asistencia & Apelaciones (INTOCABLE)**:
 >    - Queda **estrictamente prohibido volver a tocar o modificar nada referente a asistencia**: arquitectura, esquemas de datos, planillas, archivos de constantes (`initialAttendanceData.ts`, `asistencias.txt`), flujos de marcaje GPS/PIN, reglas de quórum grupal, sincronización con Supabase o componentes del **Módulo de Asistencia** (`src/components/modules/public-attendance/`, `src/components/modules/teacher/attendance/`, `usePublicAttendanceCheckin.ts`, `attendanceStore.ts`, etc.).
 > 
+>    - **Excepción autorizada por el usuario (2026-10-14):** el código del módulo de asistencia queda habilitado para el plan de endurecimiento en curso (auditoría, clases opcionales, apelaciones, historial paginado, anti-doble-marcaje y capa de servidor segura). Solo cambia el código y el esquema; **los datos de los cursos reales siguen blindados** (ver punto 2).
+> 
 > 2. **Cursos Reales UDP 100% Blindados (SOLO EL USUARIO PUEDE TOCARLOS MANUALMENTE)**:
 >    - Queda **estrictamente prohibido que la IA modifique datos, estudiantes, notas, calendarios o asistencias** de los siguientes cursos reales:
 >      - **Proyecto en TICs II** (Secciones 1, 2 y 3 — `CIT3203_CA01`, `CIT3203_CA02`, `CIT3203_CA03`).

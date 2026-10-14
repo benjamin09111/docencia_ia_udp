@@ -31,6 +31,7 @@ import {
   getSectionByCourseCode,
   saveSessionOverride,
   saveSessionModalityOverride,
+  saveSessionOptionalOverride,
   mergeRemoteSessionOverrides,
   getSectionDailyPin,
   getSectionVisualPin,
@@ -48,17 +49,18 @@ import {
   fetchStudentWorkRecordsFromSupabase,
   updateSessionStatusInSupabase,
   updateSessionModalityInSupabase,
+  updateSessionOptionalInSupabase,
   isSupabaseConfigured,
   updateSectionOnlineStatusInSupabase,
   fetchSectionsFromSupabase,
 } from "@/services/attendanceDbService";
+import { computeAttendanceStats, isAttendanceAtRisk } from "@/utils/attendanceMetrics";
 import { AttendanceMatrixTable } from "./attendance/AttendanceMatrixTable";
 import { AttendanceCancelClassModal } from "./attendance/AttendanceCancelClassModal";
 import { TeacherAppealsWorkspace } from "./TeacherAppealsWorkspace";
 import { TeacherAttendanceLogsWorkspace } from "./attendance/TeacherAttendanceLogsWorkspace";
 import { QuickCopyAttendanceInfoButton } from "./attendance/QuickCopyAttendanceInfoButton";
 import {
-  insertCheckinLog,
   fetchSectionSessionStates,
   fetchSectionWorkSettings,
   saveSectionWorkSettings,
@@ -668,35 +670,27 @@ export const TeacherAttendanceWorkspace: React.FC<TeacherAttendanceWorkspaceProp
   // Calcular resúmenes de asistencia por alumno (evaluadas sobre clases realizadas hasta la fecha actual)
   const summaries: StudentAttendanceSummary[] = useMemo(() => {
     const todayStr = getTodayDateStr();
-    const validSessions = activeSessions.filter(
-      (s) => s.estado !== "cancelada" && s.fecha <= todayStr
-    );
-    const validAyud = validSessions.filter((s) => s.tipo === "ayudantia");
-    const validCat = validSessions.filter((s) => s.tipo === "catedra");
+    const ayudSessions = activeSessions.filter((s) => s.tipo === "ayudantia");
+    const catSessions = activeSessions.filter((s) => s.tipo === "catedra");
 
     return sectionStudents.map((st) => {
-      let ayudAsist = 0;
-      let catAsist = 0;
+      const attended = (sessionId: string) => getAttendanceValue(attendanceMap, sessionId, st.canvas_id) === 1;
+      const ayud = computeAttendanceStats(ayudSessions, attended, todayStr);
+      const cat = computeAttendanceStats(catSessions, attended, todayStr);
 
-      validSessions.forEach((s) => {
-        const val = getAttendanceValue(attendanceMap, s.id, st.canvas_id);
-        if (val === 1) {
-          if (s.tipo === "ayudantia") ayudAsist++;
-          else catAsist++;
-        }
-      });
+      const ayudAsist = ayud.asistidas;
+      const ayudVal = ayud.validas;
+      const ayudPct = ayud.pct;
+      const catAsist = cat.asistidas;
+      const catVal = cat.validas;
+      const catPct = cat.pct;
 
-      const catVal = validCat.length;
-      const ayudVal = validAyud.length;
-      const catPct = catVal > 0 ? Math.round((catAsist / catVal) * 100) : 100;
-      const ayudPct = ayudVal > 0 ? Math.round((ayudAsist / ayudVal) * 100) : 100;
-
-      // Modo enfocado exclusivamente en Ayudantías:
-      // Las asistencias, promedios y condición de riesgo RI se evalúan directamente sobre las ayudantías realizadas a la fecha
+      // Modo enfocado exclusivamente en Ayudantías: promedios y riesgo RI se evalúan sobre las ayudantías a la fecha.
+      // Las clases opcionales suman a quien asistió y nunca restan a quien faltó.
       const totalVal = ayudVal;
       const totalAsist = ayudAsist;
       const totalPct = ayudPct;
-      const enRiesgoRI = totalVal > 0 ? totalPct < 75 : false;
+      const enRiesgoRI = isAttendanceAtRisk(ayud);
 
       return {
         canvas_id: st.canvas_id,
@@ -787,28 +781,14 @@ export const TeacherAttendanceWorkspace: React.FC<TeacherAttendanceWorkspaceProp
     studentId: number,
     value: AttendanceValue,
     localKeys: string[],
-    previousValue: AttendanceValue,
-    method: "Docente Manual" | "Apelación aceptada" = "Docente Manual"
+    previousValue: AttendanceValue
   ) => {
     if (!isSupabaseConfigured()) return;
     localKeys.forEach((k) => pendingWritesRef.current.add(k));
     saveAttendanceMarkToSupabase(sessionCode, studentId, value, "profesor").then((res) => {
       localKeys.forEach((k) => pendingWritesRef.current.delete(k));
-      if (res.success) {
-        // Dejar constancia del cambio manual en el historial inalterable
-        const student = currentRoster.find((st) => st.canvas_id === studentId);
-        insertCheckinLog({
-          sectionCode: selectedSection.codigo,
-          sessionCode,
-          date: sessionCode.slice(-10),
-          studentCanvasId: studentId,
-          studentName: student ? `${student.nombres} ${student.apellidos}` : `Canvas ${studentId}`,
-          studentEmail: student?.email,
-          value,
-          method,
-        });
-        return;
-      }
+      // El cambio queda registrado automáticamente en audit_events (trigger de la base)
+      if (res.success) return;
       setAttendanceMap((prev) => {
         const next = { ...prev };
         localKeys.forEach((k) => {
@@ -919,7 +899,7 @@ export const TeacherAttendanceWorkspace: React.FC<TeacherAttendanceWorkspaceProp
       saveAttendanceMap(next);
       return next;
     });
-    persistManualMark(matchingSess.id, app.studentCanvasId, 1, [key], previous, "Apelación aceptada");
+    persistManualMark(matchingSess.id, app.studentCanvasId, 1, [key], previous);
     return matchingSess;
   };
 
@@ -970,6 +950,41 @@ export const TeacherAttendanceWorkspace: React.FC<TeacherAttendanceWorkspaceProp
       message: `Modalidad cambiada: clase quedó como ${nextMod === "online" ? "ONLINE (O)" : "PRESENCIAL (P)"}.`,
     });
     setTimeout(() => setQuickNotification(null), 3500);
+  };
+
+  // Marcar / desmarcar una clase como Opcional: suma a quien asiste y no resta a quien falta
+  const handleToggleSessionOptional = (sessionId: string) => {
+    const target = (sessionsBySection[selectedSectionId] || []).find((s) => s.id === sessionId);
+    const next = !target?.esOpcional;
+
+    setSessionsBySection((prev) => ({
+      ...prev,
+      [selectedSectionId]: (prev[selectedSectionId] || []).map((s) =>
+        s.id === sessionId ? { ...s, esOpcional: next } : s
+      ),
+    }));
+    saveSessionOptionalOverride(sessionId, next);
+    updateSessionOptionalInSupabase(sessionId, next).then((res) => {
+      if (res.success) return;
+      // Sin confirmación de la nube se revierte: lo que se ve debe ser lo que quedó guardado
+      setSessionsBySection((prev) => ({
+        ...prev,
+        [selectedSectionId]: (prev[selectedSectionId] || []).map((s) =>
+          s.id === sessionId ? { ...s, esOpcional: !next } : s
+        ),
+      }));
+      saveSessionOptionalOverride(sessionId, !next);
+      setQuickNotification({ type: "warning", message: "No se pudo guardar el cambio de clase opcional. Revisa tu conexión." });
+      setTimeout(() => setQuickNotification(null), 5000);
+    });
+
+    setQuickNotification({
+      type: "info",
+      message: next
+        ? "Clase OPCIONAL: suma a quien asistió y no baja el porcentaje de quien faltó."
+        : "Clase OBLIGATORIA: vuelve a contar para el porcentaje de todos.",
+    });
+    setTimeout(() => setQuickNotification(null), 4000);
   };
 
   // Cambiar modalidad de forma masiva (todas las ayudantías o todas las sesiones)
@@ -1440,6 +1455,7 @@ export const TeacherAttendanceWorkspace: React.FC<TeacherAttendanceWorkspaceProp
             onOpenCancelModal={(sess) => setCancelModalSession(sess)}
             onReactivateSession={handleReactivateSession}
             onToggleModality={handleToggleSessionModality}
+            onToggleOptional={handleToggleSessionOptional}
             studentWorkRecords={studentWorkRecords}
             totalTrabajosRealizados={totalTrabajosRealizados}
             onUpdateTotalTrabajos={handleUpdateTotalTrabajos}

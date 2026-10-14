@@ -68,6 +68,61 @@ export async function fetchCheckinLogs(sectionCode: string): Promise<CloudChecki
   }));
 }
 
+/**
+ * Historial de marcajes REALES de alumnos (1 por alumno y clase), paginado en el servidor.
+ * Los cambios manuales del docente y los registros en 0 NO aparecen aquí (van a Auditoría).
+ */
+export async function fetchCheckinHistoryPage(params: {
+  sectionCode: string;
+  date?: string | null;
+  search?: string;
+  page: number;
+  pageSize: number;
+}): Promise<{ rows: CloudCheckinLog[]; total: number }> {
+  const supabase = getSupabaseClient();
+  if (!supabase) throw new Error("Supabase no configurado");
+  const { data, error } = await supabase.rpc("get_checkin_history", {
+    p_section_code: params.sectionCode,
+    p_date: params.date || null,
+    p_search: params.search?.trim() || null,
+    p_limit: params.pageSize,
+    p_offset: (params.page - 1) * params.pageSize,
+  });
+  if (error) {
+    console.warn("Aviso cargando historial paginado:", error.message);
+    throw error;
+  }
+  const rows = (data || []) as any[];
+  return {
+    total: rows.length > 0 ? Number(rows[0].total_count) : 0,
+    rows: rows.map((r) => ({
+      id: r.id,
+      sectionCode: params.sectionCode,
+      sessionCode: r.session_code,
+      date: r.session_date,
+      studentCanvasId: Number(r.student_canvas_id),
+      studentName: r.student_name,
+      studentEmail: r.student_email || undefined,
+      value: 1 as AttendanceValue,
+      method: r.method,
+      scheduleLabel: r.schedule_label || undefined,
+      distanciaMetros: r.distancia_metros ?? undefined,
+      createdAt: r.created_at,
+    })),
+  };
+}
+
+/** Días de clase con marcajes de alumnos (más reciente primero) y cuántos marcaron. */
+export async function fetchCheckinHistoryDates(
+  sectionCode: string
+): Promise<Array<{ date: string; total: number }>> {
+  const supabase = getSupabaseClient();
+  if (!supabase) return [];
+  const { data, error } = await supabase.rpc("get_checkin_history_dates", { p_section_code: sectionCode });
+  if (error || !data) return [];
+  return (data as any[]).map((r) => ({ date: r.session_date, total: Number(r.total) }));
+}
+
 // ------------------------------------------------------------------------------
 // Estado de la sesión del día (cancelación) en class_sessions
 // ------------------------------------------------------------------------------
@@ -93,22 +148,26 @@ export async function fetchSessionState(
 /** Estados (cancelada / modalidad) guardados en la nube para todas las sesiones de una sección */
 export async function fetchSectionSessionStates(
   sectionCode: string
-): Promise<Record<string, { estado: "programada" | "realizada" | "cancelada"; motivoCancelacion?: string; modalidad?: "presencial" | "online" }>> {
+): Promise<Record<string, { estado: "programada" | "realizada" | "cancelada"; motivoCancelacion?: string; modalidad?: "presencial" | "online"; esOpcional?: boolean }>> {
   const supabase = getSupabaseClient();
   if (!supabase) return {};
-  const { data, error } = await supabase
-    .from("class_sessions")
-    .select("session_code, status, motivo_cancelacion, modality, sections!inner(code)")
-    .eq("sections.code", sectionCode);
+  const query = (cols: string) =>
+    supabase.from("class_sessions").select(cols).eq("sections.code", sectionCode);
+  let { data, error } = await query("session_code, status, motivo_cancelacion, modality, is_optional, sections!inner(code)");
+  if (error) {
+    // Respaldo: si la columna is_optional aún no existe (migración pendiente), las cancelaciones deben seguir sincronizando
+    ({ data, error } = await query("session_code, status, motivo_cancelacion, modality, sections!inner(code)"));
+  }
   if (error || !data) return {};
-  const map: Record<string, { estado: "programada" | "realizada" | "cancelada"; motivoCancelacion?: string; modalidad?: "presencial" | "online" }> = {};
-  data.forEach((r: any) => {
+  const map: Record<string, { estado: "programada" | "realizada" | "cancelada"; motivoCancelacion?: string; modalidad?: "presencial" | "online"; esOpcional?: boolean }> = {};
+  (data as any[]).forEach((r: any) => {
     if (!r.session_code) return;
     const estado = r.status === "cancelada" || r.status === "realizada" ? r.status : "programada";
     map[r.session_code] = {
       estado,
       motivoCancelacion: r.motivo_cancelacion || undefined,
       modalidad: r.modality === "online" ? "online" : "presencial",
+      esOpcional: r.is_optional === undefined ? undefined : r.is_optional === true,
     };
   });
   return map;

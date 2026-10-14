@@ -3,7 +3,8 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { ClassSession, StudentAttendanceSummary, AttendanceValue, TodaySessionInfo, StudentWorkRecord } from "@/types/attendance";
 import { getAttendanceValue } from "@/services/attendanceStore";
-import { Check, X, AlertTriangle, ChevronDown, ChevronRight, ChevronsRight, ChevronsLeft, Calendar, Zap, Award, CalendarX, Ban } from "lucide-react";
+import { Check, X, AlertTriangle, ChevronDown, ChevronRight, ChevronsRight, ChevronsLeft, Calendar, Zap, Award, CalendarX, Ban, Star } from "lucide-react";
+import { computeAttendanceStats } from "@/utils/attendanceMetrics";
 
 interface AttendanceMatrixTableProps {
   sessions: ClassSession[];
@@ -24,6 +25,7 @@ interface AttendanceMatrixTableProps {
   onOpenCancelModal: (session: ClassSession) => void;
   onReactivateSession?: (sessionId: string) => void;
   onToggleModality?: (sessionId: string) => void;
+  onToggleOptional?: (sessionId: string) => void;
 }
 
 const MONTH_NAMES: Record<string, { short: string; full: string }> = {
@@ -62,6 +64,7 @@ export const AttendanceMatrixTable: React.FC<AttendanceMatrixTableProps> = ({
   onOpenCancelModal,
   onReactivateSession,
   onToggleModality,
+  onToggleOptional,
 }) => {
   const isAyud = filterType === "ayudantias";
   const hasSessionToday = Boolean(todaySessionInfo?.todaySession);
@@ -363,7 +366,7 @@ export const AttendanceMatrixTable: React.FC<AttendanceMatrixTableProps> = ({
                     <th
                       key={s.id}
                       className={`p-1 text-center border-l border-white/10 w-[42px] min-w-[38px] max-w-[44px] transition-colors ${
-                        isCancelled ? "bg-rose-950/80 border-rose-900" : "bg-[#1E272E]"
+                        isCancelled ? "bg-rose-950/80 border-rose-900" : s.esOpcional ? "bg-amber-950/70 border-amber-800" : "bg-[#1E272E]"
                       }`}
                       title={
                         isCancelled
@@ -402,6 +405,26 @@ export const AttendanceMatrixTable: React.FC<AttendanceMatrixTableProps> = ({
                                 }`}
                               >
                                 {s.modalidad === "online" ? "O" : "P"}
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onToggleOptional?.(s.id);
+                                }}
+                                title={
+                                  s.esOpcional
+                                    ? "Clase OPCIONAL: suma a quien asistió y no resta a quien faltó. Clic para volverla obligatoria"
+                                    : "Marcar como clase OPCIONAL (suma a quien asiste, no resta a quien falta)"
+                                }
+                                className={`w-3.5 h-3.5 rounded flex items-center justify-center transition-all cursor-pointer ${
+                                  s.esOpcional
+                                    ? "bg-amber-500 hover:bg-amber-400 text-white ring-1 ring-amber-300"
+                                    : "bg-gray-700 hover:bg-gray-600 text-gray-300"
+                                }`}
+                              >
+                                <Star size={9} fill={s.esOpcional ? "currentColor" : "none"} />
                               </button>
 
                               <button
@@ -456,12 +479,13 @@ export const AttendanceMatrixTable: React.FC<AttendanceMatrixTableProps> = ({
 
                     // Si el mes está colapsado: muestra una sola celda compacta con el acumulado mensual
                     if (isCollapsed) {
-                      const activeSessionsInGrp = grp.sessions.filter((s) => s.estado !== "cancelada");
-                      const mesAsistidas = activeSessionsInGrp.filter(
-                        (s) => getAttendanceValue(attendanceMap, s.id, sum.canvas_id) === 1
-                      ).length;
-                      const mesTotal = activeSessionsInGrp.length;
-                      const mesPct = mesTotal > 0 ? Math.round((mesAsistidas / mesTotal) * 100) : 0;
+                      const mes = computeAttendanceStats(
+                        grp.sessions,
+                        (id) => getAttendanceValue(attendanceMap, id, sum.canvas_id) === 1
+                      );
+                      const mesAsistidas = mes.asistidas;
+                      const mesTotal = mes.validas;
+                      const mesPct = mes.pct;
 
                       return (
                         <td
@@ -523,8 +547,11 @@ export const AttendanceMatrixTable: React.FC<AttendanceMatrixTableProps> = ({
                             className={`w-6 h-6 rounded-[2px] font-bold text-[11px] transition-all active:scale-90 inline-flex items-center justify-center cursor-pointer ${
                               val === 1
                                 ? "bg-emerald-100 text-emerald-800 border border-emerald-300 hover:bg-emerald-200"
-                                : "bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100"
+                                : s.esOpcional
+                                  ? "bg-gray-100 text-gray-500 border border-gray-300 hover:bg-gray-200"
+                                  : "bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100"
                             }`}
+                            title={s.esOpcional ? "Clase opcional: faltar no resta" : undefined}
                           >
                             {val === 1 ? "1" : "0"}
                           </button>
