@@ -1,48 +1,67 @@
 import { NextRequest, NextResponse } from "next/server";
+import { SESSION_COOKIE, SessionConfigError, refreshIdle, sessionCookieOptions, verifySessionToken } from "@/lib/server/session";
 
-export function middleware(request: NextRequest) {
+/**
+ * Rutas de API que pueden llamarse SIN sesión de docente. Todo lo demás bajo /api/ exige sesión.
+ * Cada una valida por sí misma lo que recibe (PIN, fecha, etc.) y devuelve solo datos mínimos.
+ */
+const PUBLIC_API = [
+  "/api/auth/login",
+  "/api/auth/logout",
+  "/api/attendance/checkin",
+  "/api/data", // cada operación declara su acceso (público / tablero / docente) y la ruta lo verifica
+  "/api/canvas/courses/", // solo .../students (nómina mínima sin sesión; el resto se valida en la ruta)
+];
+
+const isPublicApi = (pathname: string) =>
+  PUBLIC_API.some((p) => (p.endsWith("/") ? pathname.startsWith(p) && pathname.endsWith("/students") : pathname === p));
+
+// Páginas públicas del alumno (asistencia y portales visuales)
+const isPublicPage = (pathname: string) =>
+  pathname.startsWith("/asistencia") || pathname.includes("/visual");
+
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // 1. Rutas que son 100% públicas y NUNCA requieren autenticación
-  // Toda la asistencia y portales visuales de cualquier curso (/asistencia, /[cursoId]/visual, etc.)
-  if (
-    pathname.startsWith("/asistencia") ||
-    pathname.includes("/visual") ||
-    pathname.startsWith("/api/") ||
-    pathname.startsWith("/_next/") ||
-    pathname.includes(".") // favicon.ico, svgs, etc.
-  ) {
-    return NextResponse.next();
+  // Estáticos de Next.js y archivos con extensión (favicon, svg, etc.)
+  if (pathname.startsWith("/_next/") || pathname.includes(".")) return NextResponse.next();
+
+  const isApi = pathname.startsWith("/api/");
+  if ((isApi && isPublicApi(pathname)) || (!isApi && isPublicPage(pathname))) return NextResponse.next();
+
+  let claims = null;
+  try {
+    claims = await verifySessionToken(request.cookies.get(SESSION_COOKIE)?.value);
+  } catch (e) {
+    // Falla CERRADA: sin SESSION_SECRET nada protegido se abre
+    if (e instanceof SessionConfigError) {
+      console.error("[middleware]", e.message);
+      return isApi
+        ? NextResponse.json({ error: "El servicio no está disponible en este momento." }, { status: 503 })
+        : new NextResponse("Servicio no disponible: configuración de seguridad incompleta.", { status: 503 });
+    }
   }
 
-  const sessionCookie = request.cookies.get("udp_auth_session")?.value;
-  const isAuthenticated = Boolean(sessionCookie && sessionCookie.trim() !== "");
-
-  // 2. Si ya está autenticado e intenta entrar a /login, redirigir al Dashboard principal
   if (pathname === "/login") {
-    if (isAuthenticated) {
-      return NextResponse.redirect(new URL("/", request.url));
-    }
-    return NextResponse.next();
+    return claims ? NextResponse.redirect(new URL("/", request.url)) : NextResponse.next();
   }
 
-  // 3. Proteger todas las demás rutas privadas si no está autenticado
-  if (!isAuthenticated) {
+  if (!claims) {
+    if (isApi) return NextResponse.json({ error: "Sesión requerida." }, { status: 401 });
     const loginUrl = new URL("/login", request.url);
-    if (pathname !== "/") {
-      loginUrl.searchParams.set("next", pathname);
-    }
-    return NextResponse.redirect(loginUrl);
+    if (pathname !== "/") loginUrl.searchParams.set("next", pathname);
+    const response = NextResponse.redirect(loginUrl);
+    if (request.cookies.get(SESSION_COOKIE)) response.cookies.set(SESSION_COOKIE, "", { ...sessionCookieOptions(0), maxAge: 0 });
+    return response;
   }
 
-  return NextResponse.next();
+  // Sesión válida: renueva la ventana de inactividad (30 min) sin cambiar el identificador
+  const response = NextResponse.next();
+  const refreshed = await refreshIdle(claims);
+  if (refreshed) response.cookies.set(SESSION_COOKIE, refreshed, sessionCookieOptions(claims.exp - Math.floor(Date.now() / 1000)));
+  return response;
 }
 
 export const config = {
-  matcher: [
-    /*
-     * Aplica a todas las rutas excepto archivos estáticos internos de Next.js
-     */
-    "/((?!_next/static|_next/image|favicon.ico).*)",
-  ],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
 };

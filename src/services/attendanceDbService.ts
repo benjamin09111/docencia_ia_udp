@@ -1,6 +1,11 @@
-import { getSupabaseClient, isSupabaseConfigured } from "./supabaseClient";
 import { ClassSession, CourseSection, AttendanceValue } from "@/types/attendance";
 import { StudentRosterItem, generateSemesterSessions, getSavedSections } from "./attendanceStore";
+import { callOp, GatewayError } from "./dataGateway";
+
+/**
+ * Servicio de datos de asistencia. Antes hablaba directo con Supabase usando la clave pública del navegador;
+ * ahora TODA operación pasa por el servidor (/api/data), que valida y autoriza. Las firmas se mantienen.
+ */
 
 export interface AttendanceDbSyncResult {
   success: boolean;
@@ -9,404 +14,199 @@ export interface AttendanceDbSyncResult {
 }
 
 /**
- * Registra o actualiza el curso y su sección en Supabase
+ * Antes indicaba si había credenciales de Supabase en el navegador. Ya no las hay: la disponibilidad real
+ * la decide el servidor y las funciones de este archivo fallan con gracia si no responde.
  */
+export const isSupabaseConfigured = () => true;
+
+const failure = (error: unknown): AttendanceDbSyncResult => {
+  const message = error instanceof GatewayError ? error.message : "No se pudo completar la operación.";
+  console.warn("Aviso de sincronización:", message);
+  return { success: false, message, error: message };
+};
+
+type AttendanceMarker = "profesor" | "ayudante" | "alumno_pin" | "sistema" | "alumno_link" | "alumno_qr";
+
+/** Solo estos orígenes los puede enviar el docente; los de alumno los escribe únicamente el check-in del servidor. */
+const teacherMarker = (markedBy?: string) => (markedBy === "ayudante" || markedBy === "sistema" ? markedBy : "profesor");
+
+const sectionPayload = (section: CourseSection) => ({
+  codigo: section.codigo,
+  nombre: section.nombre,
+  profesor: section.profesor,
+  ayudante: section.ayudante,
+  horarioCatedra: section.horarioCatedra,
+  horarioAyudantia: section.horarioAyudantia,
+  pinActivo: section.pinActivo,
+  requierePin: section.requierePin,
+  requiereGeolocalizacion: section.requiereGeolocalizacion,
+});
+
+const sessionsPayload = (sessions: ClassSession[]) =>
+  sessions.map((s) => ({ id: s.id, fecha: s.fecha, diaSemana: s.diaSemana, tipo: s.tipo, horaInicio: s.horaInicio, horaFin: s.horaFin, sala: s.sala }));
+
+/** Registra o actualiza el curso y su sección */
 export async function syncCourseAndSectionToSupabase(
   courseCode: string,
   courseName: string,
   canvasCourseId: number,
   section: CourseSection
 ): Promise<{ success: boolean; courseId?: string; sectionId?: string; error?: unknown }> {
-  const supabase = getSupabaseClient();
-  if (!supabase) {
-    return { success: false, error: "Supabase no configurado" };
-  }
-
   try {
-    // 1. Upsert del Curso
-    const { data: course, error: cErr } = await supabase
-      .from("courses")
-      .upsert(
-        {
-          canvas_course_id: canvasCourseId,
-          code: courseCode,
-          name: courseName,
-          term: "2026-02",
-        },
-        { onConflict: "canvas_course_id" }
-      )
-      .select("id")
-      .single();
-
-    if (cErr || !course) throw cErr || new Error("Fallo al registrar curso");
-
-    // 2. Upsert de la Sección
-    const { data: sec, error: sErr } = await supabase
-      .from("sections")
-      .upsert(
-        {
-          course_id: course.id,
-          code: section.codigo || courseCode,
-          name: section.nombre,
-          teacher_name: section.profesor,
-          assistant_name: section.ayudante,
-          horario_catedra_dias: section.horarioCatedra.dias,
-          horario_catedra_inicio: section.horarioCatedra.horaInicio,
-          horario_catedra_fin: section.horarioCatedra.horaFin,
-          horario_catedra_sala: section.horarioCatedra.sala,
-          horario_ayudantia_dias: section.horarioAyudantia?.dias || [3],
-          horario_ayudantia_inicio: section.horarioAyudantia?.horaInicio || "16:00",
-          horario_ayudantia_fin: section.horarioAyudantia?.horaFin || "17:20",
-          horario_ayudantia_sala: section.horarioAyudantia?.sala || "SALA X",
-          pin_activo: section.pinActivo,
-          requiere_pin: section.requierePin,
-          requiere_geo: section.requiereGeolocalizacion,
-        },
-        { onConflict: "course_id,code" }
-      )
-      .select("id")
-      .single();
-
-    if (sErr || !sec) throw sErr || new Error("Fallo al registrar sección");
-
-    return { success: true, courseId: course.id, sectionId: sec.id };
-  } catch (error: any) {
-    const errMsg = error?.message || (typeof error === "object" ? JSON.stringify(error) : String(error));
-    console.warn("Aviso syncCourseAndSectionToSupabase:", errMsg);
-    return { success: false, error: errMsg };
+    const res = await callOp<{ courseId: string; sectionId: string }>("sections.syncCourse", {
+      courseCode,
+      courseName,
+      canvasCourseId,
+      section: sectionPayload(section),
+    });
+    return { success: true, ...res };
+  } catch (error) {
+    return failure(error);
   }
 }
 
-/**
- * Sincroniza la lista de estudiantes matriculados y las sesiones programadas
- */
+/** Sincroniza la lista de estudiantes matriculados y las sesiones programadas */
 export async function syncStudentsAndSessionsToSupabase(
   sectionId: string,
   students: StudentRosterItem[],
   sessions: ClassSession[]
 ): Promise<AttendanceDbSyncResult> {
-  const supabase = getSupabaseClient();
-  if (!supabase) return { success: false };
-
   try {
-    // 1. Upsert estudiantes
-    if (students.length > 0) {
-      const studentsPayload = students.map((st) => ({
-        canvas_id: st.canvas_id,
-        rut: st.rut,
-        nombres: st.nombres,
-        apellidos: st.apellidos,
-        email: st.email,
-      }));
-
-      const { data: insertedStudents, error: stErr } = await supabase
-        .from("students")
-        .upsert(studentsPayload, { onConflict: "canvas_id" })
-        .select("id, canvas_id");
-
-      if (stErr) console.warn("Aviso upsert estudiantes:", stErr.message);
-
-      // Crear matrículas si los estudiantes existen
-      if (insertedStudents && insertedStudents.length > 0) {
-        const enrollmentsPayload = insertedStudents.map((st) => ({
-          section_id: sectionId,
-          student_id: st.id,
-          status: "active" as const,
-        }));
-
-        await supabase
-          .from("enrollments")
-          .upsert(enrollmentsPayload, { onConflict: "section_id,student_id" });
-      }
-    }
-
-    // 2. Upsert sesiones de clase
-    if (sessions.length > 0) {
-      const sessionsPayload = sessions.map((sess) => ({
-        section_id: sectionId,
-        session_code: sess.id,
-        date: sess.fecha,
-        dia_semana: sess.diaSemana,
-        type: sess.tipo,
-        // status / modality / motivo NO se sincronizan aquí: solo cambian con acciones explícitas
-        // del docente (updateSessionStatusInSupabase), para que un dispositivo con caché antigua
-        // no revierta una clase suspendida.
-        start_time: sess.horaInicio || null,
-        end_time: sess.horaFin || null,
-        room: sess.sala || null,
-      }));
-
-      const { error: sessErr } = await supabase
-        .from("class_sessions")
-        .upsert(sessionsPayload, { onConflict: "section_id,date,type" });
-
-      if (sessErr) console.warn("Aviso upsert sesiones:", sessErr.message);
-    }
-
+    await callOp("sections.syncRoster", {
+      sectionId,
+      students: students.map((st) => ({ canvas_id: st.canvas_id, rut: st.rut, nombres: st.nombres, apellidos: st.apellidos, email: st.email })),
+      sessions: sessionsPayload(sessions),
+    });
     return { success: true };
-  } catch (error: any) {
-    const errMsg = error?.message || (typeof error === "object" ? JSON.stringify(error) : String(error));
-    console.warn("Aviso syncStudentsAndSessionsToSupabase:", errMsg);
-    return { success: false, error: errMsg };
+  } catch (error) {
+    return failure(error);
   }
 }
 
-/**
- * Guarda una marcación individual (1 o 0) en Supabase por código semántico
- */
+/** Guarda una marcación individual (1 o 0) por código semántico */
 export async function saveAttendanceMarkToSupabase(
   sessionCode: string,
   studentCanvasId: number,
   value: AttendanceValue,
-  markedBy: "profesor" | "ayudante" | "alumno_pin" | "sistema" | "alumno_link" | "alumno_qr" = "profesor"
+  markedBy: AttendanceMarker = "profesor"
 ): Promise<AttendanceDbSyncResult> {
-  const supabase = getSupabaseClient();
-  if (!supabase) return { success: false, message: "Supabase no configurado" };
-
   if (!sessionCode || !studentCanvasId || isNaN(Number(studentCanvasId))) {
     return { success: false, message: "Parámetros incompletos para registrar asistencia" };
   }
-
-  const allowedMarkedBy = ["profesor", "ayudante", "alumno_pin", "sistema", "alumno_link", "alumno_qr"];
-  const safeMarkedBy = allowedMarkedBy.includes(markedBy) ? markedBy : "profesor";
-
   try {
-    const { error } = await supabase.rpc("upsert_attendance_by_code", {
-      p_session_code: sessionCode,
-      p_student_canvas_id: Number(studentCanvasId),
-      p_value: (value === 1 ? 1 : 0) as 0 | 1,
-      p_marked_by: safeMarkedBy,
-    });
-
-    if (error) throw error;
+    await callOp("attendance.mark", { sessionCode, studentCanvasId: Number(studentCanvasId), value: value === 1 ? 1 : 0, markedBy: teacherMarker(markedBy) });
     return { success: true };
-  } catch (error: any) {
-    const errMsg = error?.message || (typeof error === "object" ? JSON.stringify(error) : String(error));
-    console.warn("Aviso guardando asistencia en Supabase:", errMsg);
-    return { success: false, error: errMsg };
+  } catch (error) {
+    return failure(error);
   }
 }
 
-/**
- * Guarda masivamente una lista de asistencias en Supabase
- */
+/** Guarda masivamente una lista de asistencias */
 export async function saveAttendanceBatchToSupabase(
   records: Array<{ session_code: string; student_canvas_id: number; value: number; marked_by?: string }>
 ): Promise<AttendanceDbSyncResult> {
-  const supabase = getSupabaseClient();
-  if (!supabase) return { success: false, message: "Supabase no configurado" };
-
-  if (!records || records.length === 0) return { success: true };
-
-  const allowedMarkedBy = ["profesor", "ayudante", "alumno_pin", "sistema", "alumno_link", "alumno_qr"];
-  const safeRecords = records
+  const safe = (records || [])
     .filter((r) => r.session_code && r.student_canvas_id && !isNaN(Number(r.student_canvas_id)))
     .map((r) => ({
       session_code: r.session_code,
       student_canvas_id: Number(r.student_canvas_id),
       value: r.value === 1 ? 1 : 0,
-      marked_by: r.marked_by && allowedMarkedBy.includes(r.marked_by) ? r.marked_by : "profesor",
+      marked_by: teacherMarker(r.marked_by),
     }));
-
-  if (safeRecords.length === 0) return { success: true };
-
+  if (safe.length === 0) return { success: true };
   try {
-    const { error } = await supabase.rpc("upsert_attendance_batch_by_codes", {
-      records_json: safeRecords,
-    });
-
-    if (error) throw error;
+    // Lotes de 2000 para no superar el tamaño máximo de la solicitud
+    for (let i = 0; i < safe.length; i += 2000) await callOp("attendance.batch", { records: safe.slice(i, i + 2000) });
     return { success: true };
-  } catch (error: any) {
-    const errMsg = error?.message || (typeof error === "object" ? JSON.stringify(error) : String(error));
-    console.warn("Aviso en batch de asistencia a Supabase:", errMsg);
-    return { success: false, error: errMsg };
+  } catch (error) {
+    return failure(error);
   }
 }
 
-/**
- * Carga el mapa de asistencia almacenado en Supabase para una sección
- */
-export async function fetchAttendanceMapFromSupabase(
-  sectionCode: string
-): Promise<Record<string, AttendanceValue>> {
-  const supabase = getSupabaseClient();
-  if (!supabase) return {};
+const FRIENDLY_SECTION_IDS: Record<string, string> = {
+  CIT3203_CA01: "sec_1",
+  CIT3203_CA02: "sec_2",
+  CIT3203_CA03: "sec_3",
+  CIT3100_CA02: "sec_arq_emergentes",
+};
 
+/** Carga el mapa de asistencia de una sección (docente, o alumno con el PIN del tablero desbloqueado) */
+export async function fetchAttendanceMapFromSupabase(sectionCode: string): Promise<Record<string, AttendanceValue>> {
   try {
-    const { data, error } = await supabase.rpc("get_section_attendance_map", {
-      p_section_code: sectionCode,
-    });
-
-    if (error || !data) {
-      console.warn("No se pudo obtener mapa de asistencia Supabase:", error?.message);
-      return {};
-    }
-
+    const rows = await callOp<Array<{ session_code: string; student_canvas_id: number; value: number }>>(
+      "attendance.map",
+      { sectionCode },
+      { boardSection: sectionCode }
+    );
     const map: Record<string, AttendanceValue> = {};
-    const friendlyMap: Record<string, string> = {
-      CIT3203_CA01: "sec_1",
-      CIT3203_CA02: "sec_2",
-      CIT3203_CA03: "sec_3",
-      CIT3100_CA02: "sec_arq_emergentes",
-    };
-
-    data.forEach((r: { session_code: string; student_canvas_id: number; value: number }) => {
+    rows.forEach((r) => {
       const code = r.session_code;
       // Descartar de raíz sesiones secundarias o espurias como 2026-10-08 en ramos de los miércoles
-      if (!code || code.includes("_ayu2_") || (code.includes("CIT3203") && code.includes("2026-10-08"))) {
-        return;
-      }
+      if (!code || code.includes("_ayu2_") || (code.includes("CIT3203") && code.includes("2026-10-08"))) return;
       const val = (r.value === 1 ? 1 : 0) as AttendanceValue;
       map[`${code}_${r.student_canvas_id}`] = val;
-
-      // Mapear también variantes friendly (sec_1, sec_2, sec_3, sec_arq_emergentes)
-      for (const [realCode, friendly] of Object.entries(friendlyMap)) {
-        if (code.includes(realCode)) {
-          const friendlyCode = code.replace(realCode, friendly);
-          map[`${friendlyCode}_${r.student_canvas_id}`] = val;
-        }
+      // Variantes friendly (sec_1, sec_2, ...)
+      for (const [realCode, friendly] of Object.entries(FRIENDLY_SECTION_IDS)) {
+        if (code.includes(realCode)) map[`${code.replace(realCode, friendly)}_${r.student_canvas_id}`] = val;
       }
     });
-
     return map;
   } catch (e) {
-    console.error("Error cargando mapa desde Supabase:", e);
+    console.warn("No se pudo obtener el mapa de asistencia:", e instanceof GatewayError ? e.message : e);
     return {};
   }
 }
 
-/**
- * Actualiza la configuración de horario y PIN de una sección en Supabase
- */
-export async function updateSectionScheduleInSupabase(
-  section: CourseSection
-): Promise<AttendanceDbSyncResult> {
-  const supabase = getSupabaseClient();
-  if (!supabase) return { success: false, message: "Supabase no configurado" };
-
+/** Actualiza horario, PIN y sesiones de una sección */
+export async function updateSectionScheduleInSupabase(section: CourseSection): Promise<AttendanceDbSyncResult> {
   try {
-    const { data: updatedSection, error } = await supabase
-      .from("sections")
-      .update({
-        name: section.nombre,
-        teacher_name: section.profesor,
-        assistant_name: section.ayudante,
-        horario_catedra_dias: section.horarioCatedra.dias,
-        horario_catedra_inicio: section.horarioCatedra.horaInicio,
-        horario_catedra_fin: section.horarioCatedra.horaFin,
-        horario_catedra_sala: section.horarioCatedra.sala,
-        horario_ayudantia_dias: section.horarioAyudantia?.dias || [3],
-        horario_ayudantia_inicio: section.horarioAyudantia?.horaInicio || "16:00",
-        horario_ayudantia_fin: section.horarioAyudantia?.horaFin || "17:20",
-        horario_ayudantia_sala: section.horarioAyudantia?.sala || "SALA X",
-        pin_activo: section.pinActivo,
-        requiere_pin: section.requierePin,
-        requiere_geo: section.requiereGeolocalizacion,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("code", section.codigo)
-      .select("id");
-
-    if (error) throw error;
-
-    // Sincronizar sesiones semestrales en la tabla class_sessions
-    const sectionUuid = updatedSection?.[0]?.id;
-    if (sectionUuid) {
-      const generatedSessions = generateSemesterSessions(section);
-      if (generatedSessions.length > 0) {
-        const sessionsPayload = generatedSessions.map((sess) => ({
-          section_id: sectionUuid,
-          session_code: sess.id,
-          date: sess.fecha,
-          dia_semana: sess.diaSemana,
-          type: sess.tipo,
-          start_time: sess.horaInicio ? `${sess.horaInicio}:00` : null,
-          end_time: sess.horaFin ? `${sess.horaFin}:00` : null,
-          room: sess.sala || null,
-        }));
-
-        await supabase
-          .from("class_sessions")
-          .upsert(sessionsPayload, { onConflict: "section_id,date,type" });
-      }
-    }
-
+    await callOp("sections.updateSchedule", { section: sectionPayload(section), sessions: sessionsPayload(generateSemesterSessions(section)) });
     return { success: true };
   } catch (error) {
-    console.error("Error actualizando horario en Supabase:", error);
-    return { success: false, error };
+    return failure(error);
   }
 }
 
-/**
- * Actualiza la modalidad online/presencial (requiere_geo) de una sección en Supabase
- */
-export async function updateSectionOnlineStatusInSupabase(
-  sectionCode: string,
-  requiereGeo: boolean
-): Promise<AttendanceDbSyncResult> {
-  const supabase = getSupabaseClient();
-  if (!supabase) return { success: false, message: "Supabase no configurado" };
-
+/** Actualiza la modalidad online/presencial (requiere_geo) de una sección */
+export async function updateSectionOnlineStatusInSupabase(sectionCode: string, requiereGeo: boolean): Promise<AttendanceDbSyncResult> {
   try {
-    const { error } = await supabase
-      .from("sections")
-      .update({
-        requiere_geo: requiereGeo,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("code", sectionCode);
-
-    if (error) throw error;
+    await callOp("sections.updateOnline", { sectionCode, requiereGeo });
     return { success: true };
-  } catch (error: any) {
-    console.warn("Aviso updateSectionOnlineStatusInSupabase:", error);
-    return { success: false, error: error?.message || String(error) };
+  } catch (error) {
+    return failure(error);
   }
 }
 
-/**
- * Obtiene todas las secciones configuradas en Supabase
- */
+const COURSE_NAMES: Array<[string, string]> = [
+  ["3203", "Proyecto en TICs II"],
+  ["2206", "Gestión Organizacional"],
+  ["3100", "Arquitecturas Emergentes de Software"],
+];
+
+/** Obtiene las secciones configuradas. El PIN semestral solo llega al docente con sesión. */
 export async function fetchSectionsFromSupabase(): Promise<CourseSection[] | null> {
-  const supabase = getSupabaseClient();
-  if (!supabase) return null;
-
   try {
-    const { data, error } = await supabase.from("sections").select("*");
-    if (error || !data || data.length === 0) return null;
+    const data = await callOp<any[]>("sections.list");
+    if (!data || data.length === 0) return null;
 
-    const idMap: Record<string, string> = {
-      "CIT3203_CA01": "sec_1",
-      "CIT3203_CA02": "sec_2",
-      "CIT3203_CA03": "sec_3",
-      "CIT2206_CA01": "sec_gestion_org",
-      "CIT3100_CA02": "sec_arq_emergentes",
-    };
-
-    const getCourseName = (code: string) => {
-      if (code.includes("CIT3203") || code.includes("3203")) return "Proyecto en TICs II";
-      if (code.includes("CIT2206") || code.includes("2206")) return "Gestión Organizacional";
-      if (code.includes("CIT3100") || code.includes("3100")) return "Arquitecturas Emergentes de Software";
-      return "Asignatura UDP";
-    };
-
+    const idMap: Record<string, string> = { ...FRIENDLY_SECTION_IDS, CIT2206_CA01: "sec_gestion_org" };
+    const courseName = (code: string) => COURSE_NAMES.find(([n]) => code.includes(n))?.[1] || "Asignatura UDP";
     const currentSaved = getSavedSections();
+
     return data.map((sec) => {
       const matchLocal = currentSaved.find((ls) => ls.codigo === sec.code || ls.id === sec.code);
+      const teacher = sec.teacher_name?.trim();
       return {
         id: idMap[sec.code] || sec.code,
         codigo: sec.code,
-        cursoNombre: getCourseName(sec.code),
+        cursoNombre: courseName(sec.code),
         nombre: sec.name,
         profesor: (() => {
-          const t = sec.teacher_name?.trim();
           if (sec.code === "CIT3203_CA01") return "Leandro Llanza";
-          if (sec.code === "CIT3203_CA02") return t || "Cristian Osorio";
-          if (sec.code === "CIT3203_CA03") return t || "Jorge Esteban Cruz León";
-          if (sec.code === "CIT3100_CA02") return t || "Jorge Elliott";
-          return t && t !== "Docente UDP" ? t : "No identificado";
+          if (sec.code === "CIT3203_CA02") return teacher || "Cristian Osorio";
+          if (sec.code === "CIT3203_CA03") return teacher || "Jorge Esteban Cruz León";
+          if (sec.code === "CIT3100_CA02") return teacher || "Jorge Elliott";
+          return teacher && teacher !== "Docente UDP" ? teacher : "No identificado";
         })(),
         ayudante: sec.assistant_name || "Benjamín Morales Pizarro",
         horarioCatedra: {
@@ -421,213 +221,113 @@ export async function fetchSectionsFromSupabase(): Promise<CourseSection[] | nul
           horaFin: sec.horario_ayudantia_fin?.slice(0, 5) || "17:20",
           sala: sec.horario_ayudantia_sala || "SALA X",
         },
-        horarioCatedra2: sec.horario_catedra2 || matchLocal?.horarioCatedra2,
-        pinActivo: sec.pin_activo || "4821",
+        horarioCatedra2: matchLocal?.horarioCatedra2,
+        pinActivo: sec.pin_activo || undefined, // undefined para el público: nunca se inventa un PIN por defecto
         requierePin: Boolean(sec.requiere_pin),
         requiereGeolocalizacion: Boolean(sec.requiere_geo),
       };
     });
   } catch (e) {
-    console.error("Error fetchSectionsFromSupabase:", e);
+    console.warn("Aviso cargando secciones:", e instanceof GatewayError ? e.message : e);
     return null;
   }
 }
 
-/**
- * Guarda o actualiza las décimas y trabajos realizados de un estudiante en Supabase
- */
+/** Guarda o actualiza las décimas y trabajos realizados de un estudiante */
 export async function saveStudentWorkRecordToSupabase(
   sectionCode: string,
   studentCanvasId: number,
   decimas: number,
   trabajosRealizados: number
 ): Promise<AttendanceDbSyncResult> {
-  const supabase = getSupabaseClient();
-  if (!supabase) return { success: false, message: "Supabase no configurado" };
-
   try {
-    const { error } = await supabase.rpc("upsert_student_work_record", {
-      p_section_code: sectionCode,
-      p_student_canvas_id: studentCanvasId,
-      p_decimas: decimas,
-      p_trabajos: trabajosRealizados,
-    });
-
-    if (error) throw error;
+    await callOp("work.save", { sectionCode, studentCanvasId, decimas, trabajos: trabajosRealizados });
     return { success: true };
   } catch (error) {
-    console.warn("Aviso guardando décimas/trabajos en Supabase:", error);
-    return { success: false, error };
+    return failure(error);
   }
 }
 
-/**
- * Carga los registros de décimas y trabajos de ayudantía para una sección desde Supabase
- */
+/** Carga décimas y trabajos de una sección (docente, o alumno con el PIN del tablero desbloqueado) */
 export async function fetchStudentWorkRecordsFromSupabase(
   sectionCode: string
 ): Promise<Record<number, { decimas: number; trabajosRealizados: number }>> {
-  const supabase = getSupabaseClient();
-  if (!supabase) return {};
-
   try {
-    const { data, error } = await supabase.rpc("get_section_work_records", {
-      p_section_code: sectionCode,
-    });
-
-    if (error || !data) {
-      return {};
-    }
-
+    const rows = await callOp<Array<{ student_canvas_id: number; decimas_acumuladas: number; trabajos_realizados: number }>>(
+      "work.records",
+      { sectionCode },
+      { boardSection: sectionCode }
+    );
     const map: Record<number, { decimas: number; trabajosRealizados: number }> = {};
-    data.forEach((r: { student_canvas_id: number; decimas_acumuladas: number; trabajos_realizados: number }) => {
-      map[r.student_canvas_id] = {
-        decimas: Number(r.decimas_acumuladas) || 0,
-        trabajosRealizados: Number(r.trabajos_realizados) || 0,
-      };
+    rows.forEach((r) => {
+      map[r.student_canvas_id] = { decimas: Number(r.decimas_acumuladas) || 0, trabajosRealizados: Number(r.trabajos_realizados) || 0 };
     });
-
     return map;
   } catch (e) {
-    console.warn("Aviso cargando décimas/trabajos desde Supabase:", e);
+    console.warn("Aviso cargando décimas/trabajos:", e instanceof GatewayError ? e.message : e);
     return {};
   }
 }
 
-/**
- * Actualiza el estado de una sesión de clase en Supabase (ej. cancelada, programada, realizada)
- */
+/** Actualiza el estado de una sesión (cancelada, programada, realizada) */
 export async function updateSessionStatusInSupabase(
   sessionCode: string,
   status: "programada" | "realizada" | "cancelada",
   motivoCancelacion?: string
 ): Promise<AttendanceDbSyncResult> {
-  const supabase = getSupabaseClient();
-  if (!supabase) return { success: false };
-
   try {
-    const { error } = await supabase
-      .from("class_sessions")
-      .update({
-        status,
-        motivo_cancelacion: motivoCancelacion || null,
-      })
-      .eq("session_code", sessionCode);
-
-    if (error) {
-      console.warn("Aviso actualizando sesión en Supabase:", error.message);
-      return { success: false, error };
-    }
+    await callOp("sessions.setStatus", { sessionCode, status, motivo: motivoCancelacion });
     return { success: true };
   } catch (error) {
-    console.warn("Error updateSessionStatusInSupabase:", error);
-    return { success: false, error };
+    return failure(error);
   }
 }
 
-/**
- * Actualiza la modalidad de una sesión de clase en Supabase (online / presencial)
- */
+/** Actualiza la modalidad de una sesión (online / presencial) */
 export async function updateSessionModalityInSupabase(
   sessionCode: string,
   modality: "presencial" | "online"
 ): Promise<AttendanceDbSyncResult> {
-  const supabase = getSupabaseClient();
-  if (!supabase) return { success: false };
-
   try {
-    const { error } = await supabase
-      .from("class_sessions")
-      .update({
-        modality,
-      })
-      .eq("session_code", sessionCode);
-
-    if (error) {
-      console.warn("Aviso actualizando modalidad en Supabase:", error.message);
-      return { success: false, error };
-    }
+    await callOp("sessions.setModality", { sessionCode, modality });
     return { success: true };
   } catch (error) {
-    console.warn("Error updateSessionModalityInSupabase:", error);
-    return { success: false, error };
+    return failure(error);
   }
 }
 
-/**
- * Marca o desmarca una sesión como opcional (suma a quien asiste, no resta a quien falta)
- */
-export async function updateSessionOptionalInSupabase(
-  sessionCode: string,
-  esOpcional: boolean
-): Promise<AttendanceDbSyncResult> {
-  const supabase = getSupabaseClient();
-  if (!supabase) return { success: false };
-
+/** Marca o desmarca una sesión como opcional (suma a quien asiste, no resta a quien falta) */
+export async function updateSessionOptionalInSupabase(sessionCode: string, esOpcional: boolean): Promise<AttendanceDbSyncResult> {
   try {
-    const { error } = await supabase
-      .from("class_sessions")
-      .update({ is_optional: esOpcional })
-      .eq("session_code", sessionCode);
-    if (error) {
-      console.warn("Aviso actualizando clase opcional en Supabase:", error.message);
-      return { success: false, error };
-    }
+    await callOp("sessions.setOptional", { sessionCode, esOpcional });
     return { success: true };
   } catch (error) {
-    console.warn("Error updateSessionOptionalInSupabase:", error);
-    return { success: false, error };
+    return failure(error);
   }
 }
 
-/**
- * Obtiene sesiones de clase de una sección que ya tienen asistencia registrada en Supabase
- */
-export async function fetchHistoricalRecordedSessionsFromSupabase(
-  sectionCode: string
-): Promise<ClassSession[]> {
-  const supabase = getSupabaseClient();
-  if (!supabase) return [];
-
+/** Sesiones de una sección que ya tienen asistencia registrada */
+export async function fetchHistoricalRecordedSessionsFromSupabase(sectionCode: string): Promise<ClassSession[]> {
   try {
-    const { data: recs, error } = await supabase
-      .from("attendance_records")
-      .select("class_sessions!inner(id, session_code, date, type, dia_semana, modality, status, motivo_cancelacion, start_time, end_time, room, pin, sections!inner(code))")
-      .eq("class_sessions.sections.code", sectionCode);
-
-    if (error || !recs) return [];
-
-    const map = new Map<string, ClassSession>();
-    recs.forEach((r: any) => {
-      const s = r.class_sessions;
-      if (s && !map.has(s.session_code)) {
-        // Excluir de raíz sesiones espurias como 2026-10-08 o bloques secundarios que no son clase semanal
-        if (s.date === "2026-10-08" || s.session_code?.includes("2026-10-08") || s.session_code?.includes("_ayu2_")) {
-          return;
-        }
-        map.set(s.session_code, {
-          id: s.session_code,
-          seccionId: sectionCode,
-          fecha: s.date,
-          diaSemana: s.dia_semana,
-          tipo: s.type,
-          modalidad: s.modality || "presencial",
-          estado: s.status || "programada",
-          motivoCancelacion: s.motivo_cancelacion || undefined,
-          horaInicio: s.start_time?.slice(0, 5) || "14:30",
-          horaFin: s.end_time?.slice(0, 5) || "16:00",
-          sala: s.room || "No definida",
-          pin: s.pin || undefined,
-        });
-      }
-    });
-
-    return Array.from(map.values());
+    const rows = await callOp<any[]>("sessions.recorded", { sectionCode });
+    return rows
+      // Excluir sesiones espurias como 2026-10-08 o bloques secundarios que no son clase semanal
+      .filter((s) => s.date !== "2026-10-08" && !s.session_code?.includes("2026-10-08") && !s.session_code?.includes("_ayu2_"))
+      .map((s) => ({
+        id: s.session_code,
+        seccionId: sectionCode,
+        fecha: s.date,
+        diaSemana: s.dia_semana,
+        tipo: s.type,
+        modalidad: s.modality || "presencial",
+        estado: s.status || "programada",
+        motivoCancelacion: s.motivo_cancelacion || undefined,
+        horaInicio: s.start_time?.slice(0, 5) || "14:30",
+        horaFin: s.end_time?.slice(0, 5) || "16:00",
+        sala: s.room || "No definida",
+      }));
   } catch (e) {
-    console.warn("Aviso fetchHistoricalRecordedSessionsFromSupabase:", e);
+    console.warn("Aviso cargando sesiones históricas:", e instanceof GatewayError ? e.message : e);
     return [];
   }
 }
-
-export { isSupabaseConfigured };
-

@@ -33,7 +33,6 @@ import {
   saveSessionModalityOverride,
   saveSessionOptionalOverride,
   mergeRemoteSessionOverrides,
-  getSectionDailyPin,
   getSectionVisualPin,
 } from "@/services/attendanceStore";
 import { getSavedAppeals } from "@/services/appealsStore";
@@ -55,6 +54,7 @@ import {
   fetchSectionsFromSupabase,
 } from "@/services/attendanceDbService";
 import { computeAttendanceStats, isAttendanceAtRisk } from "@/utils/attendanceMetrics";
+import { useTeacherDailyPin } from "@/hooks/useTeacherDailyPin";
 import { AttendanceMatrixTable } from "./attendance/AttendanceMatrixTable";
 import { AttendanceCancelClassModal } from "./attendance/AttendanceCancelClassModal";
 import { TeacherAppealsWorkspace } from "./TeacherAppealsWorkspace";
@@ -874,47 +874,26 @@ export const TeacherAttendanceWorkspace: React.FC<TeacherAttendanceWorkspaceProp
     }
   };
 
-  // Resolver todas las apelaciones de asistencia marcando 1 en la planilla y persistiendo
-  const handleResolveAllAttendanceAppeals = (resolvedAppeals: AttendanceAppeal[]) => {
+  // La base ya dejó PRESENTE a cada alumno al resolver la apelación (operación atómica):
+  // aquí solo se refleja en la planilla local, sin volver a escribir en la nube.
+  const handleAppealsResolved = (resolved: AttendanceAppeal[]) => {
     lastLocalEditTimeRef.current = Date.now();
-    resolvedAppeals.forEach((app) => markAppealAsPresent(app));
-
-    setQuickNotification({
-      type: "success",
-      message: `✓ Se resolvieron ${resolvedAppeals.length} apelaciones. Los estudiantes quedaron con asistencia PRESENTE (1) en la planilla.`,
-    });
-    setTimeout(() => setQuickNotification(null), 5000);
-  };
-
-  // Marca PRESENTE la clase apelada (ayudantía de esa fecha) y la persiste con trazabilidad
-  const markAppealAsPresent = (app: AttendanceAppeal) => {
-    const matchingSess =
-      activeSessions.find((s) => s.fecha === app.date && s.tipo === "ayudantia") ||
-      activeSessions.find((s) => s.fecha === app.date);
-    if (!matchingSess) return null;
-    const key = `${matchingSess.id}_${app.studentCanvasId}`;
-    const previous = getAttendanceValue(attendanceMap, matchingSess.id, app.studentCanvasId);
     setAttendanceMap((prev) => {
-      const next: Record<string, AttendanceValue> = { ...prev, [key]: 1 };
+      const next: Record<string, AttendanceValue> = { ...prev };
+      resolved.forEach((app) => {
+        const sess =
+          activeSessions.find((x) => x.fecha === app.date && x.tipo === "ayudantia") ||
+          activeSessions.find((x) => x.fecha === app.date);
+        if (sess) next[`${sess.id}_${app.studentCanvasId}`] = 1;
+      });
       saveAttendanceMap(next);
       return next;
     });
-    persistManualMark(matchingSess.id, app.studentCanvasId, 1, [key], previous);
-    return matchingSess;
-  };
-
-  // Resolver una apelación individual
-  const handleResolveSingleAttendanceAppeal = (app: AttendanceAppeal) => {
-    lastLocalEditTimeRef.current = Date.now();
-    const matchingSess = markAppealAsPresent(app);
-
-    if (matchingSess) {
-      setQuickNotification({
-        type: "success",
-        message: `✓ Apelación resuelta: ${app.studentName} marcado como PRESENTE en ${matchingSess.fecha}.`,
-      });
-      setTimeout(() => setQuickNotification(null), 4000);
-    }
+    setQuickNotification({
+      type: "success",
+      message: `✓ ${resolved.length} fecha(s) apelada(s) quedaron como PRESENTE (1) en la planilla.`,
+    });
+    setTimeout(() => setQuickNotification(null), 5000);
   };
 
   // Alternar modalidad Online / Presencial por sesión (P <-> O)
@@ -1112,7 +1091,9 @@ export const TeacherAttendanceWorkspace: React.FC<TeacherAttendanceWorkspaceProp
     }
   };
 
-  const effectivePin = getSectionDailyPin(selectedSection, todaySessionInfo.todayDateStr);
+  // El PIN del día se calcula solo en el servidor: aquí se muestra "····" mientras llega
+  const dailyPin = useTeacherDailyPin(selectedSection?.codigo, todaySessionInfo.todayDateStr);
+  const effectivePin = dailyPin ?? "····";
 
   const isOnlineAyudantia = selectedSection ? selectedSection.requiereGeolocalizacion === false : false;
 
@@ -1416,8 +1397,7 @@ export const TeacherAttendanceWorkspace: React.FC<TeacherAttendanceWorkspaceProp
       ) : attendanceSubTab === "apelaciones" ? (
         <TeacherAppealsWorkspace
           section={selectedSection}
-          onResolveAllAttendance={handleResolveAllAttendanceAppeals}
-          onResolveSingleAttendance={handleResolveSingleAttendanceAppeal}
+          onAppealsResolved={handleAppealsResolved}
         />
       ) : (
         <>

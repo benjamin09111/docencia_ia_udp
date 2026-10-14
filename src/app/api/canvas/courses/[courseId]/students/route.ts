@@ -1,5 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { INITIAL_STUDENTS_ROSTER } from "@/constants/initialStudentRoster";
+import { getSession } from "@/lib/server/auth";
+
+/**
+ * Minimización de datos (Regla 11): sin sesión de docente solo se entrega lo necesario para que el alumno
+ * elija su nombre (id + nombre). RUT, correo, notas y asistencia quedan reservados al docente.
+ */
+const toPublic = <T extends { canvas_id: number; nombres: string; apellidos: string }>(list: T[]) =>
+  list.map(({ canvas_id, nombres, apellidos }) => ({ canvas_id, nombres, apellidos }));
 
 const CANVAS_BASE_URL = process.env.CANVAS_BASE_URL || "https://udp.instructure.com";
 const CANVAS_TOKEN = process.env.CANVAS_API_TOKEN || "";
@@ -10,6 +18,7 @@ export async function GET(
 ) {
   try {
     const { courseId } = await params;
+    const isTeacher = Boolean(await getSession(request));
 
     // Si no hay token de Canvas configurado o en entorno local, proveer la nómina oficial real
     const courseIdNum = Number(courseId);
@@ -36,7 +45,7 @@ export async function GET(
           nota_final: 5.7,
           estado_curso: "Aprobado",
         }));
-        return NextResponse.json(fallbackStudents);
+        return NextResponse.json(isTeacher ? fallbackStudents : toPublic(fallbackStudents));
       }
       return NextResponse.json({ error: "No CANVAS_API_TOKEN configured" }, { status: 401 });
     }
@@ -104,7 +113,7 @@ export async function GET(
       };
     });
 
-    return NextResponse.json(students);
+    return NextResponse.json(isTeacher ? students : toPublic(students));
   } catch (error) {
     console.error("Excepción en consulta de estudiantes:", error);
     return NextResponse.json(

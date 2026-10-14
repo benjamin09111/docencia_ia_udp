@@ -10,9 +10,8 @@ import {
   generateSemesterSessions,
   getTodayDateStr,
   saveSections,
-  getSectionDailyPin,
 } from "@/services/attendanceStore";
-import { fetchSessionState, insertCheckinLog } from "@/services/attendanceCloudService";
+import { submitCheckin } from "@/services/checkinService";
 import { ClassSession, CourseSection } from "@/types/attendance";
 import {
   UDP_CAMPUS_LOCATION,
@@ -23,7 +22,6 @@ import {
   SessionActiveStatus,
 } from "@/services/udpRoomsService";
 import {
-  saveAttendanceMarkToSupabase,
   fetchSectionsFromSupabase,
   isSupabaseConfigured,
 } from "@/services/attendanceDbService";
@@ -166,6 +164,7 @@ export function usePublicAttendanceCheckin({
 
   const [geoStatus, setGeoStatus] = useState<"idle" | "checking" | "verified" | "out_of_range" | "denied">("idle");
   const [distancia, setDistancia] = useState<number | undefined>();
+  const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
 
   const targetLat = currentSection.ubicacionLat ?? UDP_CAMPUS_LOCATION.lat;
   const targetLng = currentSection.ubicacionLng ?? UDP_CAMPUS_LOCATION.lng;
@@ -242,6 +241,7 @@ export function usePublicAttendanceCheckin({
           targetLng
         );
         setDistancia(dist);
+        setCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
         if (dist <= targetRadius) {
           setGeoStatus("verified");
         } else {
@@ -265,70 +265,31 @@ export function usePublicAttendanceCheckin({
       return;
     }
 
-    // El alumno solo puede marcar la clase de HOY y del tipo cuyo horario está activo
-    // (cátedra y ayudantía pueden caer el mismo día). Nunca otra fecha ni sesiones pasadas.
+    // La clase de hoy (solo para mostrar el comprobante): el servidor es quien decide si se puede marcar
+    // (horario en hora de Chile, PIN, GPS, clase vigente, matrícula y dispositivo).
     const todayStr = getTodayDateStr();
-    const targetSemesterSession = generateSemesterSessions(currentSection).find(
-      (s) => s.fecha === todayStr && s.tipo === activeSessionType && s.estado !== "cancelada"
-    );
-    if (!targetSemesterSession) {
-      setSubmitError("Hoy no hay clase registrada para esta sección. La asistencia solo se puede marcar el día de la clase.");
-      return;
-    }
+    const targetSemesterSession =
+      generateSemesterSessions(currentSection).find((s) => s.fecha === todayStr && s.tipo === activeSessionType) ||
+      activeSession;
 
     setIsSubmitting(true);
     try {
-      // Estado real de la clase en la nube: ¿fue suspendida por el docente?
-      const cloudState = isSupabaseConfigured() ? await fetchSessionState(targetSemesterSession.id) : {};
-      if (cloudState === null) {
-        setSubmitError("No hay conexión con el servidor. Revisa tu internet e inténtalo nuevamente.");
-        return;
-      }
-      if (cloudState.status === "cancelada") {
-        setSubmitError("La clase de hoy fue suspendida por el equipo docente. No es necesario marcar asistencia.");
-        return;
-      }
-
-      const expectedPin = getSectionDailyPin(currentSection, todayStr);
-      if (currentSection.requierePin && pinInput.trim() !== expectedPin.trim()) {
-        setPinError(true);
-        return;
-      }
-
-      // Guardar en la nube y ESPERAR la confirmación antes de dar el comprobante
-      if (isSupabaseConfigured()) {
-        const saved = await saveAttendanceMarkToSupabase(
-          targetSemesterSession.id,
-          selectedStudent.canvas_id,
-          1,
-          "alumno_link"
-        );
-        if (!saved.success) {
-          setSubmitError("No se pudo registrar tu asistencia. Revisa tu conexión e inténtalo nuevamente.");
-          return;
-        }
-      }
-
-      const timestamp = new Date().toLocaleTimeString("es-CL", {
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit",
-      });
-      const studentName = `${selectedStudent.nombres} ${selectedStudent.apellidos}`;
-
-      // Historial inalterable en la nube: quién, cuándo, en qué sección y en qué horario
-      insertCheckinLog({
-        sectionCode: currentSection.codigo || currentSection.id,
-        sessionCode: targetSemesterSession.id,
-        date: todayStr,
+      const response = await submitCheckin({
+        section: currentSection.codigo || currentSection.id,
         studentCanvasId: selectedStudent.canvas_id,
-        studentName,
-        studentEmail: selectedStudent.email,
-        value: 1,
-        method: currentSection.requiereGeolocalizacion ? "PIN + GPS" : "PIN",
-        scheduleLabel: sessionStatus.horaInicio ? `${sessionStatus.horaInicio} - ${sessionStatus.horaFin}` : undefined,
-        distanciaMetros: distancia,
+        pin: currentSection.requierePin ? pinInput.trim() : undefined,
+        lat: coords?.lat,
+        lng: coords?.lng,
       });
+
+      if (!response.ok) {
+        if (response.code === "pin_invalid") setPinError(true);
+        else setSubmitError(response.message);
+        return;
+      }
+
+      const timestamp = response.timestamp;
+      const studentName = response.studentName || `${selectedStudent.nombres} ${selectedStudent.apellidos}`;
 
       const lockKey = `udp_device_attendance_${currentSection.id}_${todayStr}`;
       const recordPayload = { studentName, studentRut: selectedStudent.rut, timestamp, distanciaMetros: distancia };
@@ -373,9 +334,9 @@ export function usePublicAttendanceCheckin({
     pinInput,
     geoStatus,
     distancia,
+    coords,
+    activeSession,
     activeSessionType,
-    sessionStatus.horaInicio,
-    sessionStatus.horaFin,
     onSuccess,
   ]);
 

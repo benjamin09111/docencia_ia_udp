@@ -107,7 +107,7 @@ export interface StudentWorkRecord {
 }
 
 export type AppealStatus = "pendiente" | "resuelta" | "rechazada";
-export type AppealMotivo = "asistencia";
+export type AppealMotivo = "asistencia" | "decimas";
 
 export interface AttendanceAppeal {
   id: string;
@@ -118,7 +118,10 @@ export interface AttendanceAppeal {
   studentRut?: string;
   date: string; // "YYYY-MM-DD"
   motivo: AppealMotivo;
+  /** Asistencia: sin justificación (""). Décimas: descripción breve del alumno. */
   comentario: string;
+  /** Agrupa las fechas enviadas juntas en una misma apelación */
+  requestId?: string;
   status: AppealStatus;
   createdAt: string; // ISO string
   resolvedAt?: string;

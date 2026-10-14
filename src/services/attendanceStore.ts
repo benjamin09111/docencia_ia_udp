@@ -18,7 +18,6 @@ export const INITIAL_SECTIONS: CourseSection[] = [
     ayudante: "Benjamín Morales Pizarro",
     horarioCatedra: { dias: [3], horaInicio: "14:30", horaFin: "17:30", sala: "SALA X" },
     horarioAyudantia: { dias: [3], horaInicio: "16:00", horaFin: "17:20", sala: "SALA X" },
-    pinActivo: "4821",
     requierePin: true,
     requiereGeolocalizacion: true,
     ubicacionNombre: "Facultad de Ingeniería y Ciencias UDP (Av. Ejército Libertador 441)",
@@ -35,7 +34,6 @@ export const INITIAL_SECTIONS: CourseSection[] = [
     ayudante: "Benjamín Morales Pizarro",
     horarioCatedra: { dias: [3], horaInicio: "10:00", horaFin: "13:00", sala: "SALA X" },
     horarioAyudantia: { dias: [3], horaInicio: "16:00", horaFin: "17:20", sala: "SALA X" },
-    pinActivo: "5914",
     requierePin: true,
     requiereGeolocalizacion: true,
     ubicacionNombre: "Facultad de Ingeniería y Ciencias UDP (Av. Ejército Libertador 441)",
@@ -52,7 +50,6 @@ export const INITIAL_SECTIONS: CourseSection[] = [
     ayudante: "Benjamín Morales Pizarro",
     horarioCatedra: { dias: [3], horaInicio: "17:00", horaFin: "20:00", sala: "SALA X" },
     horarioAyudantia: { dias: [3], horaInicio: "16:00", horaFin: "17:20", sala: "SALA X" },
-    pinActivo: "7239",
     requierePin: true,
     requiereGeolocalizacion: true,
     ubicacionNombre: "Facultad de Ingeniería y Ciencias UDP (Av. Ejército Libertador 441)",
@@ -69,7 +66,6 @@ export const INITIAL_SECTIONS: CourseSection[] = [
     ayudante: "Benjamín Morales Pizarro",
     horarioCatedra: { dias: [3], horaInicio: "08:30", horaFin: "11:30", sala: "SALA X" },
     horarioAyudantia: { dias: [4], horaInicio: "14:30", horaFin: "16:00", sala: "SALA X" },
-    pinActivo: "3312",
     requierePin: true,
     requiereGeolocalizacion: true,
     ubicacionNombre: "Facultad de Ingeniería y Ciencias UDP (Av. Ejército Libertador 441)",
@@ -86,7 +82,6 @@ export const INITIAL_SECTIONS: CourseSection[] = [
     ayudante: "Benjamín Morales Pizarro",
     horarioCatedra: { dias: [3], horaInicio: "14:30", horaFin: "17:30", sala: "SALA X" },
     horarioAyudantia: { dias: [4], horaInicio: "16:00", horaFin: "17:20", sala: "SALA X" },
-    pinActivo: "8891",
     requierePin: true,
     requiereGeolocalizacion: true,
     ubicacionNombre: "Facultad de Ingeniería y Ciencias UDP (Av. Ejército Libertador 441)",
@@ -158,7 +153,7 @@ export function getSavedSections(): CourseSection[] {
         nombre: sec.nombre || matchInit?.nombre || "Sección 1",
         profesor: prof,
         ayudante: sec.ayudante || matchInit?.ayudante || "Benjamín Morales Pizarro",
-        pinActivo: sec.pinActivo || matchInit?.pinActivo || "4821",
+        pinActivo: sec.pinActivo || matchInit?.pinActivo,
         requierePin: sec.requierePin !== undefined ? sec.requierePin : true,
         requiereGeolocalizacion: sec.requiereGeolocalizacion !== undefined ? sec.requiereGeolocalizacion : true,
         ubicacionNombre: sec.ubicacionNombre || matchInit?.ubicacionNombre || "Facultad de Ingeniería y Ciencias UDP (Av. Ejército Libertador 441)",
@@ -211,34 +206,11 @@ export function saveSections(sections: CourseSection[]): void {
 }
 
 /**
- * Genera un PIN único determinístico de 4 dígitos para cada día de clase
- */
-export function generateDailyPin(sectionCode: string, dateStr: string): string {
-  let hash = 0;
-  const combined = `${sectionCode}_${dateStr}_udp_secure_salt_2026`;
-  for (let i = 0; i < combined.length; i++) {
-    const char = combined.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
-    hash |= 0;
-  }
-  const abs = Math.abs(hash);
-  const pinNum = 1000 + (abs % 9000);
-  return String(pinNum);
-}
-
-/**
  * Obtiene el PIN permanente semestral único de una sección para desbloquear la planilla pública de alumnos
  */
 export function getSectionVisualPin(section: CourseSection): string {
-  return section.pinActivo || "4821";
-}
-
-/**
- * PIN del día para una sección: determinístico por sección y fecha, idéntico en el
- * dispositivo del docente y en el celular del alumno (sin reemplazos locales).
- */
-export function getSectionDailyPin(section: CourseSection, dateStr?: string): string {
-  return generateDailyPin(section.codigo, dateStr || getTodayDateStr());
+  // Solo el docente recibe el PIN desde el servidor; no hay valores por defecto en el código del navegador
+  return section.pinActivo || "";
 }
 
 import { INITIAL_STUDENTS_ROSTER, StudentRosterItem } from "@/constants/initialStudentRoster";
@@ -318,7 +290,6 @@ export function generateSemesterSessions(
             horaInicio: seccion.horarioCatedra.horaInicio,
             horaFin: seccion.horarioCatedra.horaFin,
             sala: seccion.horarioCatedra.sala || "No definida",
-            pin: getSectionDailyPin(seccion, dateStr),
           });
         }
 
@@ -334,7 +305,6 @@ export function generateSemesterSessions(
             horaInicio: seccion.horarioCatedra2.horaInicio,
             horaFin: seccion.horarioCatedra2.horaFin,
             sala: seccion.horarioCatedra2.sala || "No definida",
-            pin: getSectionDailyPin(seccion, dateStr),
           });
         }
 
@@ -351,7 +321,6 @@ export function generateSemesterSessions(
             horaInicio: seccion.horarioAyudantia?.horaInicio || "16:00",
             horaFin: seccion.horarioAyudantia?.horaFin || "17:20",
             sala: seccion.horarioAyudantia?.sala || "No definida",
-            pin: getSectionDailyPin(seccion, dateStr),
           });
         }
       }

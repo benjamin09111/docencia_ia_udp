@@ -1,8 +1,11 @@
-import { getSupabaseClient } from "./supabaseClient";
 import { AttendanceAppeal, AttendanceValue } from "@/types/attendance";
+import { callOp, GatewayError } from "./dataGateway";
+
+/** Mensaje seguro de mostrar al usuario a partir de un error del servidor. */
+const messageOf = (e: unknown) => (e instanceof GatewayError ? e.message : "No se pudo completar la operación.");
 
 // ------------------------------------------------------------------------------
-// Historial inalterable de marcajes (tabla attendance_checkin_logs)
+// Historial de marcajes REALES de alumnos (docente)
 // ------------------------------------------------------------------------------
 
 export interface CloudCheckinLog {
@@ -20,54 +23,6 @@ export interface CloudCheckinLog {
   createdAt: string; // ISO del momento real del marcaje
 }
 
-export async function insertCheckinLog(log: Omit<CloudCheckinLog, "id" | "createdAt">): Promise<boolean> {
-  const supabase = getSupabaseClient();
-  if (!supabase) return false;
-  const { error } = await supabase.from("attendance_checkin_logs").insert({
-    section_code: log.sectionCode,
-    session_code: log.sessionCode,
-    session_date: log.date,
-    student_canvas_id: log.studentCanvasId,
-    student_name: log.studentName.slice(0, 255),
-    student_email: log.studentEmail || null,
-    value: log.value === 1 ? 1 : 0,
-    method: log.method,
-    schedule_label: log.scheduleLabel || null,
-    distancia_metros: log.distanciaMetros !== undefined ? Math.round(log.distanciaMetros) : null,
-  });
-  if (error) console.warn("Aviso guardando historial de asistencia:", error.message);
-  return !error;
-}
-
-export async function fetchCheckinLogs(sectionCode: string): Promise<CloudCheckinLog[]> {
-  const supabase = getSupabaseClient();
-  if (!supabase) return [];
-  const { data, error } = await supabase
-    .from("attendance_checkin_logs")
-    .select("*")
-    .eq("section_code", sectionCode)
-    .order("created_at", { ascending: false })
-    .limit(2000);
-  if (error || !data) {
-    if (error) console.warn("Aviso cargando historial de asistencia:", error.message);
-    return [];
-  }
-  return data.map((r) => ({
-    id: r.id,
-    sectionCode: r.section_code,
-    sessionCode: r.session_code,
-    date: r.session_date,
-    studentCanvasId: Number(r.student_canvas_id),
-    studentName: r.student_name,
-    studentEmail: r.student_email || undefined,
-    value: (r.value === 1 ? 1 : 0) as AttendanceValue,
-    method: r.method,
-    scheduleLabel: r.schedule_label || undefined,
-    distanciaMetros: r.distancia_metros ?? undefined,
-    createdAt: r.created_at,
-  }));
-}
-
 /**
  * Historial de marcajes REALES de alumnos (1 por alumno y clase), paginado en el servidor.
  * Los cambios manuales del docente y los registros en 0 NO aparecen aquí (van a Auditoría).
@@ -79,20 +34,13 @@ export async function fetchCheckinHistoryPage(params: {
   page: number;
   pageSize: number;
 }): Promise<{ rows: CloudCheckinLog[]; total: number }> {
-  const supabase = getSupabaseClient();
-  if (!supabase) throw new Error("Supabase no configurado");
-  const { data, error } = await supabase.rpc("get_checkin_history", {
-    p_section_code: params.sectionCode,
-    p_date: params.date || null,
-    p_search: params.search?.trim() || null,
-    p_limit: params.pageSize,
-    p_offset: (params.page - 1) * params.pageSize,
+  const rows = await callOp<any[]>("history.page", {
+    sectionCode: params.sectionCode,
+    date: params.date || null,
+    search: params.search?.trim() || null,
+    page: params.page,
+    pageSize: params.pageSize,
   });
-  if (error) {
-    console.warn("Aviso cargando historial paginado:", error.message);
-    throw error;
-  }
-  const rows = (data || []) as any[];
   return {
     total: rows.length > 0 ? Number(rows[0].total_count) : 0,
     rows: rows.map((r) => ({
@@ -113,99 +61,73 @@ export async function fetchCheckinHistoryPage(params: {
 }
 
 /** Días de clase con marcajes de alumnos (más reciente primero) y cuántos marcaron. */
-export async function fetchCheckinHistoryDates(
-  sectionCode: string
-): Promise<Array<{ date: string; total: number }>> {
-  const supabase = getSupabaseClient();
-  if (!supabase) return [];
-  const { data, error } = await supabase.rpc("get_checkin_history_dates", { p_section_code: sectionCode });
-  if (error || !data) return [];
-  return (data as any[]).map((r) => ({ date: r.session_date, total: Number(r.total) }));
-}
-
-// ------------------------------------------------------------------------------
-// Estado de la sesión del día (cancelación) en class_sessions
-// ------------------------------------------------------------------------------
-
-export async function fetchSessionState(
-  sessionCode: string
-): Promise<{ status?: string; pin?: string } | null> {
-  const supabase = getSupabaseClient();
-  if (!supabase) return null;
-  const { data, error } = await supabase
-    .from("class_sessions")
-    .select("status, pin")
-    .eq("session_code", sessionCode)
-    .limit(1);
-  if (error) {
-    console.warn("Aviso consultando estado de la sesión:", error.message);
-    return null;
+export async function fetchCheckinHistoryDates(sectionCode: string): Promise<Array<{ date: string; total: number }>> {
+  try {
+    const rows = await callOp<any[]>("history.dates", { sectionCode });
+    return rows.map((r) => ({ date: r.session_date, total: Number(r.total) }));
+  } catch {
+    return [];
   }
-  const row = data?.[0];
-  return row ? { status: row.status || undefined, pin: row.pin || undefined } : {};
-}
-
-/** Estados (cancelada / modalidad) guardados en la nube para todas las sesiones de una sección */
-export async function fetchSectionSessionStates(
-  sectionCode: string
-): Promise<Record<string, { estado: "programada" | "realizada" | "cancelada"; motivoCancelacion?: string; modalidad?: "presencial" | "online"; esOpcional?: boolean }>> {
-  const supabase = getSupabaseClient();
-  if (!supabase) return {};
-  const query = (cols: string) =>
-    supabase.from("class_sessions").select(cols).eq("sections.code", sectionCode);
-  let { data, error } = await query("session_code, status, motivo_cancelacion, modality, is_optional, sections!inner(code)");
-  if (error) {
-    // Respaldo: si la columna is_optional aún no existe (migración pendiente), las cancelaciones deben seguir sincronizando
-    ({ data, error } = await query("session_code, status, motivo_cancelacion, modality, sections!inner(code)"));
-  }
-  if (error || !data) return {};
-  const map: Record<string, { estado: "programada" | "realizada" | "cancelada"; motivoCancelacion?: string; modalidad?: "presencial" | "online"; esOpcional?: boolean }> = {};
-  (data as any[]).forEach((r: any) => {
-    if (!r.session_code) return;
-    const estado = r.status === "cancelada" || r.status === "realizada" ? r.status : "programada";
-    map[r.session_code] = {
-      estado,
-      motivoCancelacion: r.motivo_cancelacion || undefined,
-      modalidad: r.modality === "online" ? "online" : "presencial",
-      esOpcional: r.is_optional === undefined ? undefined : r.is_optional === true,
-    };
-  });
-  return map;
 }
 
 // ------------------------------------------------------------------------------
-// Parámetros de décimas por sección (sections.total_trabajos / decimas_por_trabajo)
+// Estado de las clases (cancelada / modalidad / opcional) — también lo ve el alumno
+// ------------------------------------------------------------------------------
+
+type SessionState = {
+  estado: "programada" | "realizada" | "cancelada";
+  motivoCancelacion?: string;
+  modalidad?: "presencial" | "online";
+  esOpcional?: boolean;
+};
+
+export async function fetchSectionSessionStates(sectionCode: string): Promise<Record<string, SessionState>> {
+  try {
+    const rows = await callOp<any[]>("sessions.states", { sectionCode });
+    const map: Record<string, SessionState> = {};
+    rows.forEach((r) => {
+      if (!r.session_code) return;
+      map[r.session_code] = {
+        estado: r.status === "cancelada" || r.status === "realizada" ? r.status : "programada",
+        motivoCancelacion: r.motivo_cancelacion || undefined,
+        modalidad: r.modality === "online" ? "online" : "presencial",
+        esOpcional: r.is_optional === undefined ? undefined : r.is_optional === true,
+      };
+    });
+    return map;
+  } catch {
+    return {};
+  }
+}
+
+// ------------------------------------------------------------------------------
+// Parámetros de décimas por sección (docente)
 // ------------------------------------------------------------------------------
 
 export async function fetchSectionWorkSettings(
   sectionCode: string
 ): Promise<{ totalTrabajos?: number; decimasPorTrabajo?: number } | null> {
-  const supabase = getSupabaseClient();
-  if (!supabase) return null;
-  const { data, error } = await supabase
-    .from("sections")
-    .select("total_trabajos, decimas_por_trabajo")
-    .eq("code", sectionCode)
-    .limit(1);
-  if (error || !data?.[0]) return null;
-  const row = data[0];
-  return {
-    totalTrabajos: row.total_trabajos ?? undefined,
-    decimasPorTrabajo: row.decimas_por_trabajo !== null && row.decimas_por_trabajo !== undefined ? Number(row.decimas_por_trabajo) : undefined,
-  };
+  try {
+    const row = await callOp<{ total_trabajos: number | null; decimas_por_trabajo: number | null } | null>("sections.workSettings.get", { sectionCode });
+    if (!row) return null;
+    return {
+      totalTrabajos: row.total_trabajos ?? undefined,
+      decimasPorTrabajo: row.decimas_por_trabajo !== null && row.decimas_por_trabajo !== undefined ? Number(row.decimas_por_trabajo) : undefined,
+    };
+  } catch {
+    return null;
+  }
 }
 
 export async function saveSectionWorkSettings(
   sectionCode: string,
   settings: { totalTrabajos?: number; decimasPorTrabajo?: number }
 ): Promise<void> {
-  const supabase = getSupabaseClient();
-  if (!supabase) return;
-  const payload: Record<string, number> = {};
-  if (settings.totalTrabajos !== undefined) payload.total_trabajos = settings.totalTrabajos;
-  if (settings.decimasPorTrabajo !== undefined) payload.decimas_por_trabajo = settings.decimasPorTrabajo;
-  const { error } = await supabase.from("sections").update(payload).eq("code", sectionCode);
-  if (error) console.warn("Aviso guardando parámetros de décimas:", error.message);
+  try {
+    await callOp("sections.workSettings.save", { sectionCode, ...settings });
+  } catch (e) {
+    console.warn("Aviso guardando parámetros de décimas:", messageOf(e));
+  }
 }
 
 // ------------------------------------------------------------------------------
@@ -220,66 +142,98 @@ const mapAppeal = (r: any): AttendanceAppeal => ({
   studentName: r.student_name,
   studentRut: r.student_rut || undefined,
   date: r.appeal_date,
-  motivo: "asistencia",
-  comentario: r.comentario,
+  motivo: r.kind === "decimas" ? "decimas" : "asistencia",
+  comentario: r.comentario || "",
+  requestId: r.request_id || undefined,
   status: r.status,
   createdAt: r.created_at,
   resolvedAt: r.resolved_at || undefined,
   resolvedBy: r.resolved_by || undefined,
 });
 
+/** Docente: todas las apelaciones de la sección. */
 export async function fetchAppeals(sectionCode: string): Promise<AttendanceAppeal[]> {
-  const supabase = getSupabaseClient();
-  if (!supabase) return [];
-  const { data, error } = await supabase
-    .from("attendance_appeals")
-    .select("*")
-    .eq("section_code", sectionCode)
-    .order("created_at", { ascending: false });
-  if (error || !data) {
-    if (error) console.warn("Aviso cargando apelaciones:", error.message);
+  try {
+    return (await callOp<any[]>("appeals.listAll", { sectionCode })).map(mapAppeal);
+  } catch {
     return [];
   }
-  return data.map(mapAppeal);
 }
 
-export async function insertAppeal(data: {
+/** Alumno: solo las apelaciones del alumno indicado (sin RUT). */
+export async function fetchMyAppeals(sectionCode: string, studentCanvasId: number): Promise<AttendanceAppeal[]> {
+  try {
+    return (await callOp<any[]>("appeals.listMine", { sectionCode, studentCanvasId })).map(mapAppeal);
+  } catch {
+    return [];
+  }
+}
+
+export interface InsertAppealsResult {
+  ok: boolean;
+  inserted: string[];
+  duplicates: string[];
+  invalid: string[];
+  alreadyPresent: string[];
+  message?: string;
+}
+
+/** Apelación de asistencia con varias fechas. El servidor valida las fechas, la matrícula y los duplicados. */
+export async function insertAppeals(data: {
   sectionCode: string;
   studentCanvasId: number;
-  studentName: string;
-  studentRut?: string;
-  date: string;
-  comentario: string;
-}): Promise<{ ok: boolean; duplicate?: boolean }> {
-  const supabase = getSupabaseClient();
-  if (!supabase) return { ok: false };
-  const { error } = await supabase.from("attendance_appeals").insert({
-    section_code: data.sectionCode,
-    student_canvas_id: data.studentCanvasId,
-    student_name: data.studentName.trim().slice(0, 255),
-    student_rut: data.studentRut?.trim().slice(0, 20) || null,
-    appeal_date: data.date,
-    comentario: data.comentario.trim().slice(0, 300),
-  });
-  if (error) {
-    console.warn("Aviso enviando apelación:", error.message);
-    return { ok: false, duplicate: error.code === "23505" };
+  dates: string[];
+}): Promise<InsertAppealsResult> {
+  try {
+    const res = await callOp<Omit<InsertAppealsResult, "ok">>("appeals.create", data);
+    return { ok: true, ...res };
+  } catch (e) {
+    return { ok: false, inserted: [], duplicates: [], invalid: [], alreadyPresent: [], message: messageOf(e) };
   }
-  return { ok: true };
 }
 
-export async function updateAppealsStatus(
-  appealIds: string[],
-  status: "resuelta" | "rechazada",
-  resolvedBy: string
-): Promise<boolean> {
-  const supabase = getSupabaseClient();
-  if (!supabase || appealIds.length === 0) return false;
-  const { error } = await supabase
-    .from("attendance_appeals")
-    .update({ status, resolved_by: resolvedBy, resolved_at: new Date().toISOString() })
-    .in("id", appealIds)
-    .eq("status", "pendiente");
-  if (error) console.warn("Aviso resolviendo apelaciones:", error.message);
-  return !error;
+/** Apelación de décimas: una descripción breve; una sola pendiente por alumno y sección. */
+export async function insertDecimasAppeal(data: {
+  sectionCode: string;
+  studentCanvasId: number;
+  descripcion: string;
+}): Promise<{ ok: boolean; duplicate?: boolean; message?: string }> {
+  try {
+    const res = await callOp<{ duplicate: boolean }>("appeals.createDecimas", data);
+    return { ok: !res.duplicate, duplicate: res.duplicate };
+  } catch (e) {
+    return { ok: false, message: messageOf(e) };
+  }
+}
+
+/**
+ * Resuelve apelaciones de asistencia de forma ATÓMICA en la base: marca presente, deja constancia
+ * en el historial y resuelve. Las fechas sin clase válida quedan pendientes (devueltas en `failed`).
+ * Devuelve null si la llamada falla (nada se modificó).
+ */
+export async function resolveAttendanceAppealsAtomic(
+  appealIds: string[]
+): Promise<{ resolvedIds: string[]; failed: Array<{ id: string; outcome: string }> } | null> {
+  if (appealIds.length === 0) return null;
+  try {
+    const rows = await callOp<Array<{ appeal_id: string; outcome: string }>>("appeals.resolve", { ids: appealIds });
+    return {
+      resolvedIds: rows.filter((r) => r.outcome === "resuelta").map((r) => r.appeal_id),
+      failed: rows.filter((r) => r.outcome !== "resuelta").map((r) => ({ id: r.appeal_id, outcome: r.outcome })),
+    };
+  } catch (e) {
+    console.warn("Aviso resolviendo apelaciones:", messageOf(e));
+    return null;
+  }
+}
+
+export async function updateAppealsStatus(appealIds: string[], status: "resuelta" | "rechazada"): Promise<boolean> {
+  if (appealIds.length === 0) return false;
+  try {
+    await callOp("appeals.setStatus", { ids: appealIds, status });
+    return true;
+  } catch (e) {
+    console.warn("Aviso actualizando apelaciones:", messageOf(e));
+    return false;
+  }
 }

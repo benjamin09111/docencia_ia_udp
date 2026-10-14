@@ -14,6 +14,7 @@ import {
   mergeRemoteSessionOverrides,
 } from "@/services/attendanceStore";
 import { fetchSectionSessionStates } from "@/services/attendanceCloudService";
+import { BOARD_LOCKED_EVENT, hasBoardToken } from "@/services/dataGateway";
 import { computeAttendanceStats, isAttendanceAtRisk } from "@/utils/attendanceMetrics";
 import {
   fetchAttendanceMapFromSupabase,
@@ -64,15 +65,18 @@ export const PublicAttendanceVisualView: React.FC<PublicAttendanceVisualViewProp
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [hasCheckedUnlock, setHasCheckedUnlock] = useState(false);
 
+  // Desbloqueo = token firmado por el servidor (ya no una bandera editable en localStorage).
+  // Si el servidor lo rechaza (vencido o inválido), la planilla vuelve a pedir el PIN.
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const unlocked =
-        localStorage.getItem(`udp_visual_unlocked_${selectedSection.codigo}`) === "true" ||
-        localStorage.getItem(`udp_visual_unlocked_${selectedSection.id}`) === "true";
-      setIsUnlocked(unlocked);
-      setHasCheckedUnlock(true);
-    }
-  }, [selectedSection.codigo, selectedSection.id]);
+    if (typeof window === "undefined") return;
+    setIsUnlocked(hasBoardToken(selectedSection.codigo));
+    setHasCheckedUnlock(true);
+    const onLocked = (e: Event) => {
+      if ((e as CustomEvent<string>).detail === selectedSection.codigo) setIsUnlocked(false);
+    };
+    window.addEventListener(BOARD_LOCKED_EVENT, onLocked);
+    return () => window.removeEventListener(BOARD_LOCKED_EVENT, onLocked);
+  }, [selectedSection.codigo]);
 
   // Estados de clase compartidos (canceladas / online / opcionales) desde la nube:
   // el alumno debe ver el mismo porcentaje que el docente.

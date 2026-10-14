@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { Lock, ShieldCheck, KeyRound, AlertCircle, ArrowRight } from "lucide-react";
 import { CourseSection } from "@/types/attendance";
-import { getSectionVisualPin } from "@/services/attendanceStore";
+import { unlockBoard } from "@/services/boardService";
 
 interface PublicAttendancePinLockScreenProps {
   section: CourseSection;
@@ -16,9 +16,9 @@ export const PublicAttendancePinLockScreen: React.FC<PublicAttendancePinLockScre
 }) => {
   const [pinInput, setPinInput] = useState("");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const correctPin = getSectionVisualPin(section);
+  const [isChecking, setIsChecking] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const clean = pinInput.trim();
     if (!clean) {
@@ -26,13 +26,17 @@ export const PublicAttendancePinLockScreen: React.FC<PublicAttendancePinLockScre
       return;
     }
 
-    if (clean === correctPin) {
-      if (typeof window !== "undefined") {
-        localStorage.setItem(`udp_visual_unlocked_${section.codigo}`, "true");
-        localStorage.setItem(`udp_visual_unlocked_${section.id}`, "true");
-      }
+    // El PIN se valida en el servidor, que entrega un token firmado válido solo para esta sección
+    setIsChecking(true);
+    const result = await unlockBoard(section.codigo, clean);
+    setIsChecking(false);
+    if (result === "ok") {
       setErrorMsg(null);
       onUnlocked();
+    } else if (result === "rate_limited") {
+      setErrorMsg("Demasiados intentos. Espera unos minutos e inténtalo nuevamente.");
+    } else if (result === "error") {
+      setErrorMsg("No se pudo verificar el PIN. Revisa tu conexión e inténtalo nuevamente.");
     } else {
       setErrorMsg("PIN incorrecto. Consulta el PIN oficial de planilla con tu profesor o ayudante.");
     }

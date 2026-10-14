@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { safeNextPath } from "@/utils/safeRedirect";
 import { useRouter } from "next/navigation";
 import { GraduationCap, ShieldCheck, Lock, ArrowRight, AlertCircle, Loader2 } from "lucide-react";
 import Link from "next/link";
@@ -38,7 +39,7 @@ export default function LoginPage() {
 
       // Redirigir al inicio o página previa
       const params = new URLSearchParams(window.location.search);
-      const nextUrl = params.get("next") || "/";
+      const nextUrl = safeNextPath(params.get("next"));
       router.push(nextUrl);
       router.refresh();
     } catch {
