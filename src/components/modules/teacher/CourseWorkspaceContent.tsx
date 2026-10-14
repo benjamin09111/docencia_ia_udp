@@ -99,6 +99,7 @@ export const CourseWorkspaceContent: React.FC<CourseWorkspaceContentProps> = ({
     case "asistencia":
       return (
         <TeacherAttendanceWorkspace
+          key={`${course.code}_${course.id}`}
           courseCode={course.code}
           courseName={course.name}
           canvasCourseId={course.id}

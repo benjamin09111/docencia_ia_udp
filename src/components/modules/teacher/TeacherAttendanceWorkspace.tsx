@@ -243,7 +243,11 @@ export const TeacherAttendanceWorkspace: React.FC<TeacherAttendanceWorkspaceProp
         if (raw) {
           const parsed = JSON.parse(raw);
           if (Array.isArray(parsed) && parsed.length > 0) {
-            map[key] = parsed;
+            const uniqueMap = new Map<number, StudentRosterItem>();
+            parsed.forEach((st: StudentRosterItem) => {
+              if (st && st.canvas_id && !uniqueMap.has(st.canvas_id)) uniqueMap.set(st.canvas_id, st);
+            });
+            map[key] = Array.from(uniqueMap.values());
           }
         }
       });
@@ -510,15 +514,24 @@ export const TeacherAttendanceWorkspace: React.FC<TeacherAttendanceWorkspaceProp
     const fromApi =
       canvasStudentsBySection[selectedSectionId] ||
       canvasStudentsBySection[selectedSection?.codigo || ""];
-    if (fromApi && fromApi.length > 0) return fromApi;
+    const baseList =
+      fromApi && fromApi.length > 0
+        ? fromApi
+        : INITIAL_STUDENTS_ROSTER.filter(
+            (s) =>
+              s.seccionId === selectedSectionId ||
+              s.seccionId === selectedSection?.codigo ||
+              s.codigo === selectedSectionId ||
+              s.codigo === selectedSection?.codigo
+          );
 
-    return INITIAL_STUDENTS_ROSTER.filter(
-      (s) =>
-        s.seccionId === selectedSectionId ||
-        s.seccionId === selectedSection?.codigo ||
-        s.codigo === selectedSectionId ||
-        s.codigo === selectedSection?.codigo
-    );
+    const uniqueMap = new Map<number, StudentRosterItem>();
+    baseList.forEach((st) => {
+      if (st && st.canvas_id && !uniqueMap.has(st.canvas_id)) {
+        uniqueMap.set(st.canvas_id, st);
+      }
+    });
+    return Array.from(uniqueMap.values());
   }, [canvasStudentsBySection, selectedSectionId, selectedSection?.codigo]);
 
   const sectionStudents = useMemo(() => {

@@ -433,13 +433,13 @@ export const AttendanceMatrixTable: React.FC<AttendanceMatrixTableProps> = ({
           </thead>
 
           <tbody className="divide-y divide-gray-200">
-            {summaries.map((sum) => {
+            {summaries.map((sum, sumIdx) => {
               const asist = isAyud ? sum.ayudantiasAsistidas : sum.catedrasAsistidas;
               const val = isAyud ? sum.ayudantiasValidas : sum.catedrasValidas;
               const pct = isAyud ? sum.ayudantiasPct : sum.totalPct;
 
               return (
-                <tr key={sum.canvas_id} className="hover:bg-blue-50/20 transition-colors">
+                <tr key={`${sum.canvas_id}_${sum.seccionId || ""}_${sumIdx}`} className="hover:bg-blue-50/20 transition-colors">
                   {/* Nombre Estudiante (Sticky) */}
                   <td className="p-1.5 px-2 sticky left-0 z-10 bg-white border-r border-gray-200 w-[150px] min-w-[140px] max-w-[160px]">
                     <div
@@ -465,7 +465,7 @@ export const AttendanceMatrixTable: React.FC<AttendanceMatrixTableProps> = ({
 
                       return (
                         <td
-                          key={grp.key}
+                          key={`${sum.canvas_id}_grp_${grp.key}`}
                           className="p-1 text-center bg-gray-50/70 border-l border-gray-200 w-[46px] min-w-[44px]"
                           title={`${grp.name}: ${mesAsistidas} de ${mesTotal} asistencias (${mesPct}%)`}
                         >
@@ -492,7 +492,7 @@ export const AttendanceMatrixTable: React.FC<AttendanceMatrixTableProps> = ({
                       if (isCancelled) {
                         return (
                           <td
-                            key={s.id}
+                            key={`${sum.canvas_id}_sess_${s.id}`}
                             className="p-0.5 text-center border-l border-gray-100 w-[42px] bg-gray-50/80"
                             title={`Sesión cancelada (${s.motivoCancelacion || "Sin clase"}). Clic para reactivar y registrar asistencia.`}
                           >
@@ -516,7 +516,7 @@ export const AttendanceMatrixTable: React.FC<AttendanceMatrixTableProps> = ({
                       const val = getAttendanceValue(attendanceMap, s.id, sum.canvas_id);
 
                       return (
-                        <td key={s.id} className="p-0.5 text-center border-l border-gray-100 w-[42px]">
+                        <td key={`${sum.canvas_id}_sess_${s.id}`} className="p-0.5 text-center border-l border-gray-100 w-[42px]">
                           <button
                             type="button"
                             onClick={() => onToggleAttendance(s.id, sum.canvas_id, val)}
