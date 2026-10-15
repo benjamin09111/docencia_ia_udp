@@ -76,8 +76,10 @@ export const CourseWorkspaceContent: React.FC<CourseWorkspaceContentProps> = ({
       return <CourseEvaluacionesView courseCode={course.code} courseName={course.name} />;
     case "actividades":
       return (
-        <CourseActivitiesView
-          courseId={course.id}
+          <CourseActivitiesView
+            courseId={course.id}
+            courseCode={course.code}
+            courseName={course.name}
           entregables={entregables}
           entregasAlumnos={entregasAlumnos}
           onAddDeliverable={onAddDeliverable}

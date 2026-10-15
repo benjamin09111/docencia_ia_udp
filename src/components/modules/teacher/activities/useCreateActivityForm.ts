@@ -11,6 +11,7 @@ import { ChatMessageItem } from "./ActivityAssistantChat";
 import { sendAgentQuery } from "@/services/aiAgentService";
 import { InstruccionItem, ActivityAttachment } from "@/types/actividadesFormativas";
 import { generateUniqueActivityPin } from "@/utils/activityPinHelpers";
+import { ActivityAgentDraft } from "@/types/activityAgent";
 import {
   buildDefaultInstructionsForActivity,
   buildRubricFromInstructions,
@@ -20,38 +21,37 @@ import {
 export function useCreateActivityForm(
   courseId: number,
   initialActivityId: string | undefined,
-  onPublish: (activity: CourseDeliverable) => void
+  onPublish: (activity: CourseDeliverable) => void,
+  agentDraft?: ActivityAgentDraft
 ) {
   const initialMet =
     catalogoMetodologiasDocentes.find((m) => m.id === initialActivityId) ||
     catalogoMetodologiasDocentes[0];
 
-  const [pasoActual, setPasoActual] = useState<number>(1);
+  const [pasoActual, setPasoActual] = useState<number>(agentDraft ? 2 : 1);
   const [isActividadConfirmada, setIsActividadConfirmada] = useState<boolean>(
-    Boolean(initialActivityId)
+    Boolean(initialActivityId || agentDraft)
   );
   const [metodologia, setMetodologia] = useState<MetodologiaDocente>(initialMet);
-  const [titulo, setTitulo] = useState(initialMet.tituloDefecto);
-  const [descripcion, setDescripcion] = useState(initialMet.descripcionDefecto);
-  const [contenidoSeleccionado, setContenidoSeleccionado] = useState(initialMet.contenidoSugerido);
+  const [titulo, setTitulo] = useState(agentDraft?.title || initialMet.tituloDefecto);
+  const [descripcion, setDescripcion] = useState(agentDraft?.description || initialMet.descripcionDefecto);
+  const [contenidoSeleccionado, setContenidoSeleccionado] = useState(agentDraft?.content || initialMet.contenidoSugerido);
   const [contenidoManual, setContenidoManual] = useState("");
   const [fecha, setFecha] = useState(initialMet.fechaDefecto);
   const [instruccionesItems, setInstruccionesItems] = useState<InstruccionItem[]>(() =>
-    buildDefaultInstructionsForActivity(initialMet.nombreCorto, initialMet.descripcionDefecto)
+    agentDraft?.instructions || buildDefaultInstructionsForActivity(initialMet.nombreCorto, initialMet.descripcionDefecto)
   );
   const [instrucciones, setInstrucciones] = useState(() =>
     formatInstructionsToMarkdown(
-      buildDefaultInstructionsForActivity(initialMet.nombreCorto, initialMet.descripcionDefecto)
+      agentDraft?.instructions || buildDefaultInstructionsForActivity(initialMet.nombreCorto, initialMet.descripcionDefecto)
     )
   );
 
-  const [modalidad, setModalidad] = useState<"decimas" | "nota">(initialMet.modalidadDefecto);
-  const [decimas, setDecimas] = useState(initialMet.valorDefecto);
+  const [modalidad, setModalidad] = useState<"decimas" | "nota">(agentDraft?.assessment || initialMet.modalidadDefecto);
+  const [decimas, setDecimas] = useState(agentDraft?.decimas || initialMet.valorDefecto);
   const [targetEvaluacion, setTargetEvaluacion] = useState(initialMet.targetDefecto);
   const [matrizRubros, setMatrizRubros] = useState<RubricMatrixRubro[]>(() =>
-    buildRubricFromInstructions(
-      buildDefaultInstructionsForActivity(initialMet.nombreCorto, initialMet.descripcionDefecto)
-    )
+    buildRubricFromInstructions(agentDraft?.instructions || buildDefaultInstructionsForActivity(initialMet.nombreCorto, initialMet.descripcionDefecto))
   );
 
   // PIN de 6 caracteres alfanuméricos único para acceso del estudiante
@@ -71,14 +71,14 @@ export function useCreateActivityForm(
   const [isGeneratingInstructions, setIsGeneratingInstructions] = useState(false);
 
   // Parámetros técnicos oficiales de Canvas LMS (Paso 2)
-  const [pointsPossible, setPointsPossible] = useState<number>(60.0);
+  const [pointsPossible, setPointsPossible] = useState<number>(agentDraft?.pointsPossible || 60.0);
   const [gradingType, setGradingType] = useState<"points" | "percentage" | "letter_grade" | "pass_fail">("points");
   const [assignmentGroup, setAssignmentGroup] = useState<string>("Talleres y Actividades Formativas");
   const [omitFromFinalGrade, setOmitFromFinalGrade] = useState<boolean>(false);
   const [submissionType, setSubmissionType] = useState<"online_upload" | "online_text_entry" | "online_url" | "on_paper" | "none">("online_upload");
   const [allowedExtensions, setAllowedExtensions] = useState<string>("pdf, docx, zip");
   const [allowedAttempts, setAllowedAttempts] = useState<number>(-1);
-  const [isGroupAssignment, setIsGroupAssignment] = useState<boolean>(false);
+  const [isGroupAssignment, setIsGroupAssignment] = useState<boolean>(agentDraft?.isGroupAssignment || false);
   const [unlockAt, setUnlockAt] = useState<string>(new Date().toISOString().split("T")[0]);
   const [lockAt, setLockAt] = useState<string>("");
   const [syncToCanvas, setSyncToCanvas] = useState<boolean>(true);

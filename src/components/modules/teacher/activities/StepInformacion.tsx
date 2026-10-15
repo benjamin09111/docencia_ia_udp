@@ -8,6 +8,7 @@ import { ActivitySecurityPinCard } from "./info/ActivitySecurityPinCard";
 import { ActivityCanvasTechnicalSettings } from "./info/ActivityCanvasTechnicalSettings";
 
 export interface StepInformacionProps {
+  courseCode: string;
   titulo: string;
   setTitulo: (v: string) => void;
   descripcion: string;
@@ -50,6 +51,7 @@ export interface StepInformacionProps {
 }
 
 export const StepInformacion: React.FC<StepInformacionProps> = ({
+  courseCode,
   titulo,
   setTitulo,
   descripcion,
@@ -115,6 +117,7 @@ export const StepInformacion: React.FC<StepInformacionProps> = ({
 
       {/* 1. Datos Generales de la Tarea */}
       <ActivityBasicInfoForm
+        courseCode={courseCode}
         titulo={titulo}
         setTitulo={setTitulo}
         descripcion={descripcion}

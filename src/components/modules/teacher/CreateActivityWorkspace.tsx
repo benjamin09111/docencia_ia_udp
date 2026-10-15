@@ -11,21 +11,26 @@ import { StepResumen } from "./activities/StepResumen";
 import { ActivityAssistantChat } from "./activities/ActivityAssistantChat";
 import { useCreateActivityForm } from "./activities/useCreateActivityForm";
 import { StudentActivityPreviewModal } from "./activities/preview/StudentActivityPreviewModal";
+import { ActivityAgentDraft } from "@/types/activityAgent";
 
 interface CreateActivityWorkspaceProps {
   courseId: number;
+  courseCode: string;
   initialActivityId?: string;
+  agentDraft?: ActivityAgentDraft;
   onBack: () => void;
   onPublish: (activity: CourseDeliverable) => void;
 }
 
 export const CreateActivityWorkspace: React.FC<CreateActivityWorkspaceProps> = ({
   courseId,
+  courseCode,
   initialActivityId,
+  agentDraft,
   onBack,
   onPublish,
 }) => {
-  const form = useCreateActivityForm(courseId, initialActivityId, onPublish);
+  const form = useCreateActivityForm(courseId, initialActivityId, onPublish, agentDraft);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
 
   return (
@@ -54,6 +59,7 @@ export const CreateActivityWorkspace: React.FC<CreateActivityWorkspaceProps> = (
           {form.pasoActual === 2 && (
             <div className="flex-1 min-h-0 bg-white border border-[#C7CDD1] rounded-[3px] p-5 shadow-2xs overflow-y-auto space-y-4">
               <StepInformacion
+                courseCode={courseCode}
                 titulo={form.titulo}
                 setTitulo={form.setTitulo}
                 descripcion={form.descripcion}

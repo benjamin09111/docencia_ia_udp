@@ -2,9 +2,11 @@
 
 import React from "react";
 import { FileText, BookOpen } from "lucide-react";
-import { CONTENIDOS_OFICIALES } from "@/constants/metodologiasDocentes";
+import { getOfficialCourseContents } from "@/constants/courseOfficialContents";
+import { CanvasSelect } from "@/components/canvas/CanvasSelect";
 
 interface ActivityBasicInfoFormProps {
+  courseCode: string;
   titulo: string;
   setTitulo: (v: string) => void;
   descripcion: string;
@@ -16,6 +18,7 @@ interface ActivityBasicInfoFormProps {
 }
 
 export const ActivityBasicInfoForm: React.FC<ActivityBasicInfoFormProps> = ({
+  courseCode,
   titulo,
   setTitulo,
   descripcion,
@@ -25,6 +28,7 @@ export const ActivityBasicInfoForm: React.FC<ActivityBasicInfoFormProps> = ({
   contenidoManual,
   setContenidoManual,
 }) => {
+  const officialContents = getOfficialCourseContents(courseCode);
   return (
     <div className="bg-white border border-[#C7CDD1] rounded-[4px] p-4 sm:p-5 shadow-2xs space-y-4">
       <div className="border-b border-[#E0E3E6] pb-2 flex items-center justify-between">
@@ -68,23 +72,25 @@ export const ActivityBasicInfoForm: React.FC<ActivityBasicInfoFormProps> = ({
       <div className="bg-[#F5F6F8] p-4 rounded-[4px] border border-[#C7CDD1] space-y-2">
         <label className="text-sm font-bold text-[#2D3B45] flex items-center gap-1.5">
           <BookOpen size={16} className="text-[#B71C1C]" />
-          Contenidos del Curso Evaluados en la Dinámica
+          Escoger contenido del curso (opcional)
         </label>
         <p className="text-xs text-[#6B7780]">
-          Selecciona la unidad temática del programa oficial a evaluar o define un contenido personalizado.
+          Contenidos indexados desde el programa oficial de esta asignatura.
         </p>
 
-        <select
+        <CanvasSelect
           value={contenidoSeleccionado}
           onChange={(e) => setContenidoSeleccionado(e.target.value)}
-          className="w-full text-sm border border-[#C7CDD1] rounded-[3px] p-2.5 bg-white font-medium text-[#2D3B45] focus:outline-none focus:border-[#B71C1C] focus:ring-1 focus:ring-[#B71C1C]"
+          className="text-sm font-medium"
         >
-          {CONTENIDOS_OFICIALES.map((c) => (
+          <option value="">Sin contenido específico</option>
+          {officialContents.map((c) => (
             <option key={c} value={c}>
               {c}
             </option>
           ))}
-        </select>
+          <option value="Personalizado (Definir manualmente)">Personalizado (Definir manualmente)</option>
+        </CanvasSelect>
 
         {contenidoSeleccionado.startsWith("Personalizado") && (
           <div className="pt-2">

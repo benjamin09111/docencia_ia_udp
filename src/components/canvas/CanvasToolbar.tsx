@@ -13,6 +13,8 @@ interface CanvasToolbarProps {
   onPrimaryClick?: () => void;
   secondaryButtonLabel?: string;
   onSecondaryClick?: () => void;
+  tertiaryButtonLabel?: string;
+  onTertiaryClick?: () => void;
   menuItems?: ActionMenuItem[];
 }
 
@@ -24,6 +26,8 @@ export const CanvasToolbar: React.FC<CanvasToolbarProps> = ({
   onPrimaryClick,
   secondaryButtonLabel = "+ Grupo",
   onSecondaryClick,
+  tertiaryButtonLabel,
+  onTertiaryClick,
   menuItems,
 }) => {
   return (
@@ -52,6 +56,12 @@ export const CanvasToolbar: React.FC<CanvasToolbarProps> = ({
             onClick={onSecondaryClick}
           >
             {secondaryButtonLabel}
+          </CanvasButton>
+        )}
+
+        {tertiaryButtonLabel && onTertiaryClick && (
+          <CanvasButton variant="secondary" size="md" onClick={onTertiaryClick}>
+            {tertiaryButtonLabel}
           </CanvasButton>
         )}
 

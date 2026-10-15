@@ -11,9 +11,13 @@ import { CatalogoActividadesModal } from "./activities/CatalogoActividadesModal"
 import { ActivitySubmissionsModal } from "./activities/ActivitySubmissionsModal";
 import { ActivityPautaModal } from "./activities/ActivityPautaModal";
 import { FileText, Award, Edit3, EyeOff, Globe, Trash2, CheckCircle2 } from "lucide-react";
+import { CreateWithAgentModal } from "./activities/CreateWithAgentModal";
+import { ActivityAgentDraft } from "@/types/activityAgent";
 
 interface CourseActivitiesViewProps {
   courseId: number;
+  courseCode: string;
+  courseName: string;
   entregables: CourseDeliverable[];
   entregasAlumnos?: StudentSubmission[];
   onAddDeliverable: (d: CourseDeliverable) => void;
@@ -22,6 +26,8 @@ interface CourseActivitiesViewProps {
 
 export const CourseActivitiesView: React.FC<CourseActivitiesViewProps> = ({
   courseId,
+  courseCode,
+  courseName,
   entregables,
   entregasAlumnos = [],
   onAddDeliverable,
@@ -42,6 +48,8 @@ export const CourseActivitiesView: React.FC<CourseActivitiesViewProps> = ({
   const [viewingPautaActivity, setViewingPautaActivity] = useState<CourseDeliverable | null>(null);
   const [isCatalogModalOpen, setIsCatalogModalOpen] = useState(false);
   const [selectedCatalogActivityId, setSelectedCatalogActivityId] = useState<string | undefined>(undefined);
+  const [agentDraft, setAgentDraft] = useState<ActivityAgentDraft | undefined>(undefined);
+  const [isAgentModalOpen, setIsAgentModalOpen] = useState(false);
 
   const filteredActivities = useMemo(() => {
     if (!searchQuery.trim()) return activitiesList;
@@ -55,11 +63,14 @@ export const CourseActivitiesView: React.FC<CourseActivitiesViewProps> = ({
     return (
       <CreateActivityWorkspace
         courseId={courseId}
+        courseCode={courseCode}
         initialActivityId={selectedCatalogActivityId}
+        agentDraft={agentDraft}
         onBack={() => setIsCreatingWorkspace(false)}
         onPublish={(activity) => {
           onAddDeliverable(activity);
           setActivitiesList((prev) => [activity, ...prev]);
+          setAgentDraft(undefined);
           setIsCreatingWorkspace(false);
           setToastMessage(`Actividad "${activity.titulo}" publicada en el curso.`);
           setTimeout(() => setToastMessage(null), 3000);
@@ -96,9 +107,12 @@ export const CourseActivitiesView: React.FC<CourseActivitiesViewProps> = ({
         searchPlaceholder="Buscar actividad formativa..."
         secondaryButtonLabel="Catálogo Formativo (21)"
         onSecondaryClick={() => setIsCatalogModalOpen(true)}
+        tertiaryButtonLabel="Crear con agente"
+        onTertiaryClick={() => setIsAgentModalOpen(true)}
         primaryButtonLabel="+ Actividad"
         onPrimaryClick={() => {
           setSelectedCatalogActivityId(undefined);
+          setAgentDraft(undefined);
           setIsCreatingWorkspace(true);
         }}
       />
@@ -244,6 +258,18 @@ export const CourseActivitiesView: React.FC<CourseActivitiesViewProps> = ({
         onClose={() => setIsCatalogModalOpen(false)}
         onSelectForCreation={(id) => {
           setSelectedCatalogActivityId(id);
+          setAgentDraft(undefined);
+          setIsCreatingWorkspace(true);
+        }}
+      />
+      <CreateWithAgentModal
+        isOpen={isAgentModalOpen}
+        courseCode={courseCode}
+        courseName={courseName}
+        onClose={() => setIsAgentModalOpen(false)}
+        onCreate={(draft) => {
+          setAgentDraft(draft);
+          setSelectedCatalogActivityId(undefined);
           setIsCreatingWorkspace(true);
         }}
       />
