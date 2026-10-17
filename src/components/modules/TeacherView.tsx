@@ -58,6 +58,12 @@ export const TeacherView: React.FC<TeacherViewProps> = ({
   const [openedCourseId, setOpenedCourseId] = useState<number | null>(null);
   const [showImportModal, setShowImportModal] = useState<boolean>(false);
   const [sections, setSections] = useState<CourseSection[]>(INITIAL_SECTIONS);
+  const [preselectedAnnounceIds, setPreselectedAnnounceIds] = useState<number[] | null>(null);
+
+  const handleAnnounceForCourses = (courseIds: number[]) => {
+    setPreselectedAnnounceIds(courseIds);
+    setActiveTab("quick_announcements");
+  };
 
   useEffect(() => {
     if (!openedCourseId) {
@@ -111,6 +117,7 @@ export const TeacherView: React.FC<TeacherViewProps> = ({
       <AutomatedCourseWorkspace
         course={openedCourse}
         section={openedSection}
+        allCourses={mergedCourses}
         entregables={entregables}
         estudiantesExcel={estudiantesExcel}
         entregasAlumnos={entregasAlumnos}
@@ -118,6 +125,7 @@ export const TeacherView: React.FC<TeacherViewProps> = ({
           onActiveCourseChange?.(null);
           setOpenedCourseId(null);
         }}
+        onSwitchCourse={(id) => setOpenedCourseId(id)}
         onAddDeliverable={onAddDeliverable}
         onUpdateGrade={onUpdateGrade}
         onResolveAppeal={onResolveAppeal}
@@ -152,6 +160,7 @@ export const TeacherView: React.FC<TeacherViewProps> = ({
             sections={sections}
             onOpenCourse={(id) => setOpenedCourseId(id)}
             onOpenImportModal={() => setShowImportModal(true)}
+            onAnnounceCourses={handleAnnounceForCourses}
           />
         )}
 
@@ -160,7 +169,10 @@ export const TeacherView: React.FC<TeacherViewProps> = ({
         )}
 
         {activeTab === "quick_announcements" && (
-          <TeacherQuickAnnouncementsView courses={mergedCourses} />
+          <TeacherQuickAnnouncementsView
+            courses={mergedCourses}
+            initialSelectedCourseIds={preselectedAnnounceIds}
+          />
         )}
 
         {activeTab === "my_agent" && <TeacherAgentProfileView />}

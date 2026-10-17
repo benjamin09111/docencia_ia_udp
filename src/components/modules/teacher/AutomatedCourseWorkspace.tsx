@@ -13,20 +13,21 @@ import {
   StudentRosterItem,
   INITIAL_STUDENTS_ROSTER,
 } from "@/services/attendanceStore";
-import { fetchSectionsFromSupabase, isSupabaseConfigured } from "@/services/attendanceDbService";
-
 import {
   LayoutDashboard, FileText, Sparkles, Zap, Calendar, Megaphone,
   CalendarCheck, Users, FileSpreadsheet, BarChart3, GraduationCap, Home
 } from "lucide-react";
+import { CourseSisterSectionsBar } from "./workspace/CourseSisterSectionsBar";
 
 interface AutomatedCourseWorkspaceProps {
   course: CanvasCourse;
   section?: CourseSection;
+  allCourses?: CanvasCourse[];
   entregables: CourseDeliverable[];
   estudiantesExcel: StudentExcelRow[];
   entregasAlumnos?: StudentSubmission[];
   onBack: () => void;
+  onSwitchCourse?: (courseId: number) => void;
   onAddDeliverable: (d: CourseDeliverable) => void;
   onUpdateGrade: (canvasId: number, field: keyof StudentExcelRow, value: number) => void;
   onResolveAppeal?: (submissionId: string, action: "aceptar" | "ratificar") => void;
@@ -42,10 +43,12 @@ interface AutomatedCourseWorkspaceProps {
 export const AutomatedCourseWorkspace: React.FC<AutomatedCourseWorkspaceProps> = ({
   course,
   section: propSection,
+  allCourses = [],
   entregables,
   estudiantesExcel,
   entregasAlumnos = [],
   onBack,
+  onSwitchCourse,
   onAddDeliverable,
   onUpdateGrade,
   onResolveAppeal,
@@ -165,6 +168,12 @@ export const AutomatedCourseWorkspace: React.FC<AutomatedCourseWorkspaceProps> =
 
       {/* Área Principal de Contenido del Curso */}
       <div className="flex-1 min-w-0 w-full">
+        <CourseSisterSectionsBar
+          currentCourse={course}
+          allCourses={allCourses}
+          onSwitchCourse={onSwitchCourse}
+        />
+
         <CourseWorkspaceContent
           activeTab={activeTab}
           course={course}

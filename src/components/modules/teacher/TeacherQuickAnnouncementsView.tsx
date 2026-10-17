@@ -1,29 +1,27 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { CanvasCourse } from "@/types";
 import { CanvasButton } from "@/components/canvas/CanvasButton";
-import {
-  Megaphone,
-  Send,
-  Copy,
-  Check,
-  CheckCircle2,
-  Clock,
-  Layers,
-  MapPin,
-  AlertOctagon,
-  FileSpreadsheet,
-} from "lucide-react";
+import { Megaphone, Send, Copy, Check, CheckCircle2, Clock, MapPin, AlertOctagon, FileSpreadsheet } from "lucide-react";
+import { QuickAnnouncementRecipientSelector } from "./announcements/QuickAnnouncementRecipientSelector";
 
 interface TeacherQuickAnnouncementsViewProps {
   courses: CanvasCourse[];
+  initialSelectedCourseIds?: number[] | null;
 }
 
 export const TeacherQuickAnnouncementsView: React.FC<TeacherQuickAnnouncementsViewProps> = ({
   courses,
+  initialSelectedCourseIds,
 }) => {
-  const [selectedCourseIds, setSelectedCourseIds] = useState<number[]>(courses.map((c) => c.id));
+  const [selectedCourseIds, setSelectedCourseIds] = useState<number[]>(() => {
+    if (initialSelectedCourseIds && initialSelectedCourseIds.length > 0) {
+      return initialSelectedCourseIds;
+    }
+    return courses.map((c) => c.id);
+  });
+
   const [selectedType, setSelectedType] = useState<"suspension" | "sala" | "entrega" | "notas">("suspension");
   const [paramFecha, setParamFecha] = useState("la sesión de hoy");
   const [paramDetalle, setParamDetalle] = useState("motivos de fuerza mayor e imprevistos de salud");
@@ -31,14 +29,11 @@ export const TeacherQuickAnnouncementsView: React.FC<TeacherQuickAnnouncementsVi
   const [publishSuccess, setPublishSuccess] = useState<string | null>(null);
   const [copiedText, setCopiedText] = useState(false);
 
-  const toggleCourse = (id: number) => {
-    setSelectedCourseIds((prev) =>
-      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
-    );
-  };
-
-  const selectAll = () => setSelectedCourseIds(courses.map((c) => c.id));
-  const deselectAll = () => setSelectedCourseIds([]);
+  useEffect(() => {
+    if (initialSelectedCourseIds && initialSelectedCourseIds.length > 0) {
+      setSelectedCourseIds(initialSelectedCourseIds);
+    }
+  }, [initialSelectedCourseIds]);
 
   const templates = {
     suspension: {
@@ -67,7 +62,7 @@ export const TeacherQuickAnnouncementsView: React.FC<TeacherQuickAnnouncementsVi
     setTimeout(() => {
       setIsPublishing(false);
       setPublishSuccess(
-        `¡Anuncio publicado con éxito en ${selectedCourseIds.length} cursos seleccionados vía Canvas API!`
+        `¡Anuncio publicado con éxito en ${selectedCourseIds.length} secciones seleccionadas vía Canvas API en paralelo!`
       );
       setTimeout(() => setPublishSuccess(null), 5000);
     }, 1200);
@@ -94,7 +89,7 @@ export const TeacherQuickAnnouncementsView: React.FC<TeacherQuickAnnouncementsVi
               Anuncios Rápidos Automatizados
             </h2>
             <p className="text-xs text-[#6B7780]">
-              Emisión simultánea de comunicados prioritarios a todos tus cursos en 1 clic.
+              Emisión simultánea de comunicados prioritarios a una o múltiples secciones en 1 clic.
             </p>
           </div>
         </div>
@@ -107,48 +102,12 @@ export const TeacherQuickAnnouncementsView: React.FC<TeacherQuickAnnouncementsVi
         </div>
       )}
 
-      {/* Cursos Destinatarios */}
-      <div className="bg-white border border-[#E0E3E6] rounded-[4px] p-4 shadow-canvas-card space-y-3">
-        <div className="flex justify-between items-center border-b border-gray-100 pb-2">
-          <span className="text-xs font-bold text-[#2D3B45] uppercase tracking-wide flex items-center gap-1.5">
-            <Layers size={14} className="text-[#008EE2]" /> Cursos Destino ({selectedCourseIds.length} de {courses.length})
-          </span>
-          <div className="flex gap-2 text-xs">
-            <button type="button" onClick={selectAll} className="text-[#008EE2] hover:underline font-semibold">
-              Seleccionar todos
-            </button>
-            <span className="text-gray-300">•</span>
-            <button type="button" onClick={deselectAll} className="text-[#6B7780] hover:underline font-medium">
-              Desmarcar
-            </button>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-          {courses.map((course) => {
-            const isChecked = selectedCourseIds.includes(course.id);
-            return (
-              <label
-                key={course.id}
-                className={`flex items-center gap-2.5 p-2 rounded border text-xs cursor-pointer transition-colors ${
-                  isChecked ? "bg-red-50/50 border-red-200 text-[#2D3B45]" : "bg-gray-50 border-gray-200 text-[#6B7780]"
-                }`}
-              >
-                <input
-                  type="checkbox"
-                  checked={isChecked}
-                  onChange={() => toggleCourse(course.id)}
-                  className="rounded text-[#B71C1C] focus:ring-[#B71C1C]"
-                />
-                <div className="min-w-0">
-                  <span className="font-semibold block truncate">{course.code}</span>
-                  <span className="text-[11px] text-gray-500 block truncate">{course.name}</span>
-                </div>
-              </label>
-            );
-          })}
-        </div>
-      </div>
+      {/* Selector Multisección Agrupado por Asignaturas */}
+      <QuickAnnouncementRecipientSelector
+        courses={courses}
+        selectedCourseIds={selectedCourseIds}
+        onChange={setSelectedCourseIds}
+      />
 
       {/* Selector de Plantilla Rápida */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -246,7 +205,7 @@ export const TeacherQuickAnnouncementsView: React.FC<TeacherQuickAnnouncementsVi
 
         <div className="border border-gray-200 rounded p-4 bg-gray-50/70 space-y-2">
           <span className="text-[10px] font-bold uppercase tracking-wider text-[#6B7780] block">
-            Vista Previa del Anuncio Canvas
+            Vista Previa del Comunicado
           </span>
           <h4 className="text-sm font-bold text-[#2D3B45]">{currentAnnouncement.title}</h4>
           <p className="text-xs text-[#55636E] whitespace-pre-line leading-relaxed font-sans bg-white p-3 rounded border border-gray-200">
@@ -272,7 +231,9 @@ export const TeacherQuickAnnouncementsView: React.FC<TeacherQuickAnnouncementsVi
           >
             {isPublishing
               ? "Publicando en Canvas..."
-              : `Publicar en ${selectedCourseIds.length} Cursos (1 Clic)`}
+              : `Publicar en ${selectedCourseIds.length} ${
+                  selectedCourseIds.length === 1 ? "Sección" : "Secciones"
+                } (1 Clic)`}
           </CanvasButton>
         </div>
       </div>
