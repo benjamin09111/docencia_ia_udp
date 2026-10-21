@@ -1,19 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createHmac } from "node:crypto";
 import { clientIp } from "@/lib/server/auth";
 import { AdminConfigError, getSupabaseAdmin } from "@/lib/server/supabaseAdmin";
 import { computeDailyPin, pinMatches } from "@/lib/server/dailyPin";
 import { checkRateLimit } from "@/lib/server/rateLimit";
 import { checkGeo, checkWindow, chileNow, sessionCodeFor } from "@/lib/server/checkinRules";
+import { verifyAndConsumeCheckinTicket } from "@/lib/server/checkinTicket";
 
 const SECTION_RE = /^[A-Za-z0-9_-]{3,40}$/;
-const DEVICE_RE = /^[a-f0-9]{32,128}$/;
 const WINDOW_MS = 10 * 60 * 1000;
 
 type Code =
   | "invalid" | "rate_limited" | "section_not_found" | "window_closed" | "pin_invalid"
   | "geo_required" | "geo_out_of_range" | "cancelled" | "session_not_found"
-  | "not_enrolled" | "student_not_found" | "device_conflict" | "server_error";
+  | "not_enrolled" | "student_not_found" | "device_conflict" | "ticket_invalid" | "server_error";
 
 const FAIL: Record<Code, { status: number; message: string }> = {
   invalid: { status: 400, message: "Datos inválidos." },
@@ -28,29 +27,34 @@ const FAIL: Record<Code, { status: number; message: string }> = {
   not_enrolled: { status: 403, message: "No figuras matriculado en esta sección. Avisa al equipo docente." },
   student_not_found: { status: 404, message: "No se encontró al estudiante." },
   device_conflict: { status: 409, message: "Este dispositivo ya registró la asistencia de otro estudiante en esta clase. Si es un error, usa Apelar." },
+  ticket_invalid: { status: 403, message: "Ticket de dispositivo inválido o expirado. Actualiza la página e inténtalo de nuevo." },
   server_error: { status: 500, message: "No se pudo procesar la solicitud en este momento." },
 };
 
 const fail = (code: Code, extra?: Record<string, unknown>) =>
   NextResponse.json({ ok: false, code, message: FAIL[code].message, ...extra }, { status: FAIL[code].status });
 
-/** Marcaje de asistencia del alumno. Toda la validación ocurre aquí, nunca en el navegador. */
+/** Marcaje de asistencia del alumno con validación atómica y ticket firmado de hardware */
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json().catch(() => null);
     const section = typeof body?.section === "string" ? body.section : "";
     const studentCanvasId = Number(body?.studentCanvasId);
-    const deviceId = typeof body?.deviceId === "string" ? body.deviceId : "";
+    const ticket = typeof body?.ticket === "string" ? body.ticket : "";
     const pin = typeof body?.pin === "string" ? body.pin : "";
-    if (!SECTION_RE.test(section) || !Number.isSafeInteger(studentCanvasId) || studentCanvasId <= 0 || !DEVICE_RE.test(deviceId)) {
+
+    if (!SECTION_RE.test(section) || !Number.isSafeInteger(studentCanvasId) || studentCanvasId <= 0 || !ticket) {
       return fail("invalid");
     }
 
-    // Límites: por IP (alta: muchos alumnos comparten el WiFi del campus) y por alumno (frena adivinar el PIN)
+    const ip = clientIp(req);
+    const ua = req.headers.get("user-agent") || "unknown";
+
+    // Rate limits: por IP general, por alumno individual y anti-ráfaga por cliente (IP+UA)
     if (
-      !checkRateLimit(`ci:ip:${clientIp(req)}`, 300, WINDOW_MS).allowed ||
+      !checkRateLimit(`ci:ip:${ip}`, 300, WINDOW_MS).allowed ||
       !checkRateLimit(`ci:stu:${section}:${studentCanvasId}`, 10, WINDOW_MS).allowed ||
-      !checkRateLimit(`ci:dev:${deviceId}`, 20, WINDOW_MS).allowed
+      !checkRateLimit(`ci:cli:${ip}:${ua.slice(0, 40)}`, 2, 5_000).allowed
     ) {
       return fail("rate_limited");
     }
@@ -64,12 +68,19 @@ export async function POST(req: NextRequest) {
     if (secErr) throw secErr;
     if (!sec) return fail("section_not_found");
 
-    // Hora de Chile del servidor: cambiar el reloj del celular no sirve
     const now = chileNow();
     const window = checkWindow(sec, now);
     if (!window.open) return fail("window_closed", { horaInicio: window.horaInicio, horaFin: window.horaFin });
 
     if (sec.requiere_pin && !pinMatches(computeDailyPin(section, now.dateStr), pin)) return fail("pin_invalid");
+
+    const sessionCode = sessionCodeFor(section, now.dateStr);
+
+    // Verificación y consumo criptográfico de ticket de un solo uso
+    const ticketCheck = verifyAndConsumeCheckinTicket(ticket, section, sessionCode);
+    if (!ticketCheck.valid) {
+      return fail("ticket_invalid");
+    }
 
     let distancia: number | undefined;
     if (sec.requiere_geo) {
@@ -78,14 +89,12 @@ export async function POST(req: NextRequest) {
       distancia = geo.distancia;
     }
 
-    // La huella del cliente se vuelve a firmar con un secreto: lo guardado no es reversible
-    const deviceHash = createHmac("sha256", process.env.SESSION_SECRET || "").update(`device|${deviceId}`).digest("hex");
-
+    // El deviceHash proviene exclusivamente del ticket firmado por el servidor (no falsificable)
     const { data, error } = await admin.rpc("checkin_attendance", {
       p_section_code: section,
-      p_session_code: sessionCodeFor(section, now.dateStr),
+      p_session_code: sessionCode,
       p_student_canvas_id: studentCanvasId,
-      p_device_hash: deviceHash,
+      p_device_hash: ticketCheck.deviceHash,
       p_method: sec.requiere_geo ? "PIN + GPS" : "PIN",
       p_schedule_label: window.horaInicio ? `${window.horaInicio} - ${window.horaFin}` : null,
       p_distancia: distancia ?? null,

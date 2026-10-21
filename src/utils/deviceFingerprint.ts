@@ -1,24 +1,32 @@
-/**
- * Huella del dispositivo para la regla "un dispositivo = un alumno por clase".
- *
- * Usa solo señales de HARDWARE y NAVEGADOR que NO cambian entre una ventana normal y una de incógnito
- * (a diferencia de cookies y localStorage, que el incógnito vacía). El servidor la vuelve a firmar con un
- * secreto antes de guardarla.
- *
- * LIMITACIONES (hay que conocerlas):
- *  - Dos teléfonos idénticos (mismo modelo, mismo sistema y misma versión) pueden dar la misma huella:
- *    el segundo alumno recibe un bloqueo y debe usar "Apelar".
- *  - Navegadores que aleatorizan el canvas (p. ej. Brave) pueden generar una huella distinta en incógnito.
- *  - Detiene el truco casual del incógnito; un atacante técnico con herramientas de falsificación
- *    podría evadirla. Es una capa disuasiva, no infalible.
- */
+export interface DeviceSignals {
+  canvas: string;
+  webgl: string;
+  audio: string;
+  screen: {
+    w: number;
+    h: number;
+    availW: number;
+    availH: number;
+    colorDepth: number;
+    pixelRatio: number;
+  };
+  hardware: {
+    cores: number;
+    memory?: number;
+    touchPoints: number;
+    platform: string;
+  };
+  locale: {
+    timezone: string;
+    languages: string;
+  };
+}
 
 async function sha256Hex(text: string): Promise<string> {
   if (typeof crypto !== "undefined" && crypto.subtle) {
     const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
     return Array.from(new Uint8Array(buf), (b) => b.toString(16).padStart(2, "0")).join("");
   }
-  // Respaldo (contexto no seguro): hash FNV-1a repetido hasta 64 hex
   let h = 0x811c9dc5;
   let out = "";
   for (let round = 0; round < 8; round++) {
@@ -60,24 +68,80 @@ function webglSignal(): string {
   }
 }
 
-/** Huella de 64 caracteres hexadecimales, estable entre ventana normal e incógnito. */
+async function audioSignal(): Promise<string> {
+  try {
+    const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+    if (!AudioCtx) return "no-audio";
+    const ctx = new OfflineAudioContext(1, 44100, 44100);
+    const osc = ctx.createOscillator();
+    osc.type = "triangle";
+    osc.frequency.setValueAtTime(10000, ctx.currentTime);
+
+    const comp = ctx.createDynamicsCompressor();
+    comp.threshold.setValueAtTime(-50, ctx.currentTime);
+    comp.knee.setValueAtTime(40, ctx.currentTime);
+    comp.ratio.setValueAtTime(12, ctx.currentTime);
+    comp.attack.setValueAtTime(0, ctx.currentTime);
+    comp.release.setValueAtTime(0.25, ctx.currentTime);
+
+    osc.connect(comp);
+    comp.connect(ctx.destination);
+    osc.start(0);
+
+    const rendered = await ctx.startRendering();
+    let sum = 0;
+    const channel = rendered.getChannelData(0);
+    for (let i = 4500; i < 5000; i++) sum += Math.abs(channel[i] || 0);
+    return sum.toFixed(6);
+  } catch {
+    return "audio-error";
+  }
+}
+
+/** Recopila las señales de hardware inmutables entre ventana normal e incógnito */
+export async function getDeviceSignals(): Promise<DeviceSignals> {
+  const nav = (typeof navigator !== "undefined" ? navigator : {}) as Navigator & { deviceMemory?: number };
+  const scr = typeof screen !== "undefined" ? screen : ({} as Screen);
+  const audio = typeof window !== "undefined" ? await audioSignal() : "ssr";
+
+  return {
+    canvas: typeof document !== "undefined" ? canvasSignal() : "ssr",
+    webgl: typeof document !== "undefined" ? webglSignal() : "ssr",
+    audio,
+    screen: {
+      w: scr.width || 0,
+      h: scr.height || 0,
+      availW: scr.availWidth || 0,
+      availH: scr.availHeight || 0,
+      colorDepth: scr.colorDepth || 0,
+      pixelRatio: typeof window !== "undefined" ? window.devicePixelRatio || 1 : 1,
+    },
+    hardware: {
+      cores: nav.hardwareConcurrency || 2,
+      memory: nav.deviceMemory,
+      touchPoints: nav.maxTouchPoints || 0,
+      platform: nav.platform || "unknown",
+    },
+    locale: {
+      timezone: typeof Intl !== "undefined" ? Intl.DateTimeFormat().resolvedOptions().timeZone : "America/Santiago",
+      languages: (nav.languages || [nav.language || "es"]).join(","),
+    },
+  };
+}
+
+/** Huella SHA-256 única para el dispositivo */
 export async function getDeviceFingerprint(): Promise<string> {
-  const nav = navigator as Navigator & { deviceMemory?: number };
-  const signals = [
-    nav.userAgent,
-    nav.language,
-    (nav.languages || []).join(","),
-    nav.platform,
-    nav.hardwareConcurrency,
-    nav.deviceMemory,
-    nav.maxTouchPoints,
-    screen.width,
-    screen.height,
-    screen.colorDepth,
-    window.devicePixelRatio,
-    Intl.DateTimeFormat().resolvedOptions().timeZone,
-    canvasSignal(),
-    webglSignal(),
-  ];
-  return sha256Hex(signals.join("||"));
+  const sig = await getDeviceSignals();
+  const raw = [
+    sig.canvas,
+    sig.webgl,
+    sig.audio,
+    sig.screen.w,
+    sig.screen.h,
+    sig.hardware.cores,
+    sig.hardware.touchPoints,
+    sig.hardware.platform,
+    sig.locale.timezone,
+  ].join("||");
+  return sha256Hex(raw);
 }

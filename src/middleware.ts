@@ -9,6 +9,7 @@ const PUBLIC_API = [
   "/api/auth/login",
   "/api/auth/logout",
   "/api/attendance/checkin",
+  "/api/attendance/ticket",
   "/api/data", // cada operación declara su acceso (público / tablero / docente) y la ruta lo verifica
   "/api/canvas/courses/", // solo .../students (nómina mínima sin sesión; el resto se valida en la ruta)
 ];
