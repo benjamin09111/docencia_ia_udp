@@ -83,6 +83,21 @@ export async function syncStudentsAndSessionsToSupabase(
   }
 }
 
+const REVERSE_FRIENDLY_IDS: Record<string, string> = {
+  sec_1: "CIT3203_CA01",
+  sec_2: "CIT3203_CA02",
+  sec_3: "CIT3203_CA03",
+  sec_arq_emergentes: "CIT3100_CA02",
+};
+
+export function toCanonicalSessionCode(sessionCode: string): string {
+  let canonical = sessionCode;
+  for (const [fr, code] of Object.entries(REVERSE_FRIENDLY_IDS)) {
+    if (canonical.includes(fr)) canonical = canonical.replace(fr, code);
+  }
+  return canonical;
+}
+
 /** Guarda una marcación individual (1 o 0) por código semántico */
 export async function saveAttendanceMarkToSupabase(
   sessionCode: string,
@@ -94,7 +109,8 @@ export async function saveAttendanceMarkToSupabase(
     return { success: false, message: "Parámetros incompletos para registrar asistencia" };
   }
   try {
-    await callOp("attendance.mark", { sessionCode, studentCanvasId: Number(studentCanvasId), value: value === 1 ? 1 : 0, markedBy: teacherMarker(markedBy) });
+    const canonical = toCanonicalSessionCode(sessionCode);
+    await callOp("attendance.mark", { sessionCode: canonical, studentCanvasId: Number(studentCanvasId), value: value === 1 ? 1 : 0, markedBy: teacherMarker(markedBy) });
     return { success: true };
   } catch (error) {
     return failure(error);
@@ -108,7 +124,7 @@ export async function saveAttendanceBatchToSupabase(
   const safe = (records || [])
     .filter((r) => r.session_code && r.student_canvas_id && !isNaN(Number(r.student_canvas_id)))
     .map((r) => ({
-      session_code: r.session_code,
+      session_code: toCanonicalSessionCode(r.session_code),
       student_canvas_id: Number(r.student_canvas_id),
       value: r.value === 1 ? 1 : 0,
       marked_by: teacherMarker(r.marked_by),

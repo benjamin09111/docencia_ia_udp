@@ -2,20 +2,12 @@
 
 import React, { useState, useMemo } from "react";
 import { ClassSession, AttendanceValue } from "@/types/attendance";
+import { getAttendanceValue } from "@/services/attendanceStore";
 import { StudentVisualRow } from "./PublicAttendanceRosterMatrix";
 import { CanvasSearchableSelect, CanvasSearchOption } from "@/components/canvas/CanvasSearchableSelect";
 import { CanvasBadge } from "@/components/canvas/CanvasBadge";
-import { CanvasButton } from "@/components/canvas/CanvasButton";
 import {
-  Search,
-  CheckCircle2,
-  XCircle,
-  Award,
-  Calendar,
-  AlertTriangle,
-  FileText,
-  UserCheck,
-  Zap,
+  Search, CheckCircle2, XCircle, Award, Calendar, AlertTriangle, FileText, UserCheck,
 } from "lucide-react";
 
 interface PublicMobileStudentViewProps {
@@ -107,23 +99,15 @@ export const PublicMobileStudentView: React.FC<PublicMobileStudentViewProps> = (
             <div className={`p-2.5 rounded-[4px] border ${selectedStudent.ok ? "bg-emerald-50/60 border-emerald-200" : "bg-red-50/60 border-red-200"}`}>
               <span className="text-[10px] uppercase font-bold text-[#6B7780] block">Asistencia</span>
               <div className="flex items-baseline gap-1 mt-0.5">
-                <span className={`text-lg font-extrabold ${selectedStudent.ok ? "text-emerald-800" : "text-red-800"}`}>
-                  {selectedStudent.pct}%
-                </span>
-                <span className="text-[10px] text-gray-500 font-mono">
-                  ({selectedStudent.asistidas}/{selectedStudent.validas})
-                </span>
+                <span className={`text-lg font-extrabold ${selectedStudent.ok ? "text-emerald-800" : "text-red-800"}`}>{selectedStudent.pct}%</span>
+                <span className="text-[10px] text-gray-500 font-mono">({selectedStudent.asistidas}/{selectedStudent.validas})</span>
               </div>
             </div>
 
             <div className="p-2.5 rounded-[4px] border bg-amber-50/60 border-amber-200">
-              <span className="text-[10px] uppercase font-bold text-amber-900 flex items-center gap-1">
-                <Award size={11} /> Trabajos
-              </span>
+              <span className="text-[10px] uppercase font-bold text-amber-900 flex items-center gap-1"><Award size={11} /> Trabajos</span>
               <div className="flex items-baseline gap-1 mt-0.5">
-                <span className="text-lg font-extrabold text-amber-900">
-                  {selectedStudent.trabajosRealizados}/{totalTrabajos}
-                </span>
+                <span className="text-lg font-extrabold text-amber-900">{selectedStudent.trabajosRealizados}/{totalTrabajos}</span>
                 <span className="text-[10px] text-amber-800 font-mono">entregados</span>
               </div>
             </div>
@@ -131,9 +115,7 @@ export const PublicMobileStudentView: React.FC<PublicMobileStudentViewProps> = (
             <div className="p-2.5 rounded-[4px] border bg-purple-50/60 border-purple-200">
               <span className="text-[10px] uppercase font-bold text-purple-900 block">Décimas Acum.</span>
               <div className="flex items-baseline gap-1 mt-0.5">
-                <span className="text-lg font-extrabold text-purple-900">
-                  +{selectedStudent.decimas.toFixed(1)}d
-                </span>
+                <span className="text-lg font-extrabold text-purple-900">+{selectedStudent.decimas.toFixed(1)}d</span>
               </div>
             </div>
 
@@ -141,13 +123,9 @@ export const PublicMobileStudentView: React.FC<PublicMobileStudentViewProps> = (
               <span className="text-[10px] uppercase font-bold text-[#6B7780] block">Requisito 75%</span>
               <div className="flex items-center gap-1 mt-1 text-xs font-bold text-[#2D3B45]">
                 {selectedStudent.ok ? (
-                  <span className="text-emerald-700 flex items-center gap-1">
-                    <CheckCircle2 size={13} /> OK
-                  </span>
+                  <span className="text-emerald-700 flex items-center gap-1"><CheckCircle2 size={13} /> OK</span>
                 ) : (
-                  <span className="text-red-700 flex items-center gap-1">
-                    <AlertTriangle size={13} /> Peligro RI
-                  </span>
+                  <span className="text-red-700 flex items-center gap-1"><AlertTriangle size={13} /> Peligro RI</span>
                 )}
               </div>
             </div>
@@ -165,7 +143,7 @@ export const PublicMobileStudentView: React.FC<PublicMobileStudentViewProps> = (
                 <div className="p-3 text-center text-xs text-gray-500">No hay sesiones evaluadas aún.</div>
               ) : (
                 sessions.map((sess) => {
-                  const val = attendanceMap[`${sess.id}_${selectedStudent.canvas_id}`] ?? 0;
+                  const val = getAttendanceValue(attendanceMap, sess.id, selectedStudent.canvas_id);
                   const isPresent = val === 1;
                   const parts = sess.fecha.split("-");
                   const dateFormatted = parts.length === 3 ? `${parts[2]}/${parts[1]}/${parts[0]}` : sess.fecha;

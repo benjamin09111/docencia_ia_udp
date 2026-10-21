@@ -17,6 +17,21 @@ async function fetchAll<T>(page: (from: number, to: number) => PromiseLike<{ dat
   return out;
 }
 
+const REVERSE_FRIENDLY_IDS: Record<string, string> = {
+  sec_1: "CIT3203_CA01",
+  sec_2: "CIT3203_CA02",
+  sec_3: "CIT3203_CA03",
+  sec_arq_emergentes: "CIT3100_CA02",
+};
+
+function toCanonical(code: string): string {
+  let out = code;
+  for (const [fr, real] of Object.entries(REVERSE_FRIENDLY_IDS)) {
+    if (out.includes(fr)) out = out.replace(fr, real);
+  }
+  return out;
+}
+
 export const attendanceOps: Record<string, DataOp> = {
   // Planilla de asistencia: docente o alumno con el token del tablero de esa sección
   "attendance.map": {
@@ -30,8 +45,9 @@ export const attendanceOps: Record<string, DataOp> = {
   "attendance.mark": {
     access: "teacher",
     run: async ({ admin }, args) => {
+      const canonicalCode = toCanonical(v.sessionCode(args.sessionCode));
       const { error } = await admin.rpc("upsert_attendance_by_code", {
-        p_session_code: v.sessionCode(args.sessionCode),
+        p_session_code: canonicalCode,
         p_student_canvas_id: v.int(args.studentCanvasId, "alumno"),
         p_value: v.oneOf(String(args.value), ["0", "1"] as const, "valor") === "1" ? 1 : 0,
         p_marked_by: args.markedBy === undefined ? "profesor" : v.oneOf(args.markedBy, TEACHER_MARKERS, "origen"),
@@ -47,7 +63,7 @@ export const attendanceOps: Record<string, DataOp> = {
       const records = v.array(args.records, "registros", 3000).map((item) => {
         const r = item as Record<string, unknown>;
         return {
-          session_code: v.sessionCode(r.session_code),
+          session_code: toCanonical(v.sessionCode(r.session_code)),
           student_canvas_id: v.int(r.student_canvas_id, "alumno"),
           value: v.oneOf(String(r.value), ["0", "1"] as const, "valor") === "1" ? 1 : 0,
           marked_by: r.marked_by === undefined ? "profesor" : v.oneOf(r.marked_by, TEACHER_MARKERS, "origen"),

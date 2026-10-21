@@ -2,6 +2,7 @@
 
 import React from "react";
 import { ClassSession, AttendanceValue } from "@/types/attendance";
+import { getAttendanceValue } from "@/services/attendanceStore";
 import { Building2, Award } from "lucide-react";
 
 export interface StudentVisualRow {
@@ -140,7 +141,7 @@ export const PublicAttendanceRosterMatrix: React.FC<PublicAttendanceRosterMatrix
                         </td>
                       );
                     }
-                    const val = attendanceMap[`${sess.id}_${st.canvas_id}`] ?? 0;
+                    const val = getAttendanceValue(attendanceMap, sess.id, st.canvas_id);
                     return (
                       <td
                         key={sess.id}

@@ -2,34 +2,24 @@
 
 import React, { useState, useMemo, useEffect } from "react";
 import {
-  StudentRosterItem,
-  getSavedSections,
-  getSectionByCourseCode,
-  getTodayDateStr,
-  getSavedAttendanceMap,
-  getSavedStudentWorkRecords,
-  getSavedTotalTrabajos,
-  generateSemesterSessions,
-  saveSections,
-  mergeRemoteSessionOverrides,
+  StudentRosterItem, getSavedSections, getSectionByCourseCode, getTodayDateStr,
+  getSavedAttendanceMap, getSavedStudentWorkRecords, getSavedTotalTrabajos,
+  generateSemesterSessions, saveSections, mergeRemoteSessionOverrides,
 } from "@/services/attendanceStore";
 import { fetchSectionSessionStates } from "@/services/attendanceCloudService";
 import { BOARD_LOCKED_EVENT, hasBoardToken } from "@/services/dataGateway";
-import { computeAttendanceStats, isAttendanceAtRisk } from "@/utils/attendanceMetrics";
+import { usePublicAttendanceSummaries } from "@/hooks/usePublicAttendanceSummaries";
 import {
-  fetchAttendanceMapFromSupabase,
-  fetchStudentWorkRecordsFromSupabase,
-  fetchSectionsFromSupabase,
-  isSupabaseConfigured,
+  fetchAttendanceMapFromSupabase, fetchStudentWorkRecordsFromSupabase,
+  fetchSectionsFromSupabase, isSupabaseConfigured,
 } from "@/services/attendanceDbService";
 import { CourseSection, ClassSession, StudentWorkRecord, AttendanceValue } from "@/types/attendance";
 import { PublicAttendancePinLockScreen } from "./PublicAttendancePinLockScreen";
 import { PublicAttendanceVisualHeader } from "./PublicAttendanceVisualHeader";
-import { PublicAttendanceRosterMatrix, StudentVisualRow } from "./PublicAttendanceRosterMatrix";
+import { PublicAttendanceRosterMatrix } from "./PublicAttendanceRosterMatrix";
 import { PublicStudentPortalNav, PublicMainModule, PublicAttendanceSubmodule } from "./PublicStudentPortalNav";
 import { PublicLockedModuleCard } from "./PublicLockedModuleCard";
 import { PublicStudentAppealModal } from "./PublicStudentAppealModal";
-
 import { PublicMobileStudentView } from "./PublicMobileStudentView";
 
 interface PublicAttendanceVisualViewProps {
@@ -114,51 +104,28 @@ export const PublicAttendanceVisualView: React.FC<PublicAttendanceVisualViewProp
       .then((data) => { if (Array.isArray(data) && data.length > 0) setStudents(data); })
       .catch(() => {});
 
-    if (isSupabaseConfigured()) {
+    if (isSupabaseConfigured() && isUnlocked) {
       const secCode = selectedSection.codigo || courseCode;
-      fetchAttendanceMapFromSupabase(secCode).then((map) => { if (Object.keys(map).length > 0) setAttendanceMap((prev) => ({ ...prev, ...map })); });
-      fetchStudentWorkRecordsFromSupabase(secCode).then((rec) => { if (Object.keys(rec).length > 0) setStudentWorkRecords((prev) => ({ ...prev, ...rec })); });
+      fetchAttendanceMapFromSupabase(secCode).then((map) => {
+        if (map && Object.keys(map).length > 0) setAttendanceMap((prev) => ({ ...prev, ...map }));
+      });
+      fetchStudentWorkRecordsFromSupabase(secCode).then((rec) => {
+        if (rec && Object.keys(rec).length > 0) setStudentWorkRecords((prev) => ({ ...prev, ...rec }));
+      });
     }
-  }, [selectedSection, courseCode]);
+  }, [selectedSection, courseCode, isUnlocked]);
 
   const [searchTerm, setSearchTerm] = useState("");
   const [conditionFilter, setConditionFilter] = useState<"all" | "ok" | "risk">("all");
 
-  const studentSummaries: StudentVisualRow[] = useMemo(() => {
-    const query = searchTerm.trim().toLowerCase();
-    return students
-      .map((st) => {
-        const stats = computeAttendanceStats(sessions, (id) => attendanceMap[`${id}_${st.canvas_id}`] === 1);
-        const { asistidas, validas, pct } = stats;
-        const work = studentWorkRecords[st.canvas_id];
-        const trabCount = work ? (work.trabajosRealizados ?? 0) : 0;
-        const fullName = `${st.nombres || ""} ${st.apellidos || ""}`.trim() || (st as any).name || st.rut || `Estudiante ${st.canvas_id}`;
-        return {
-          canvas_id: st.canvas_id,
-          nombreCompleto: fullName,
-          nombres: st.nombres,
-          apellidos: st.apellidos,
-          rut: st.rut || "",
-          asistidas,
-          validas,
-          pct,
-          ok: !isAttendanceAtRisk(stats),
-          decimas: Math.round(trabCount * 0.2 * 10) / 10,
-          trabajosRealizados: trabCount,
-        };
-      })
-      .filter((st) => {
-        if (query && !st.nombreCompleto.toLowerCase().includes(query)) return false;
-        if (conditionFilter === "ok" && !st.ok) return false;
-        if (conditionFilter === "risk" && st.ok) return false;
-        return true;
-      });
-  }, [students, sessions, attendanceMap, studentWorkRecords, searchTerm, conditionFilter]);
-
-  const highlightedStudent = useMemo(() => {
-    if (searchTerm.trim().length >= 3 && studentSummaries.length === 1) return studentSummaries[0];
-    return null;
-  }, [searchTerm, studentSummaries]);
+  const { studentSummaries, highlightedStudent } = usePublicAttendanceSummaries({
+    students,
+    sessions,
+    attendanceMap,
+    studentWorkRecords,
+    searchTerm,
+    conditionFilter,
+  });
 
   if (!hasCheckedUnlock) return null;
   if (!isUnlocked) return <PublicAttendancePinLockScreen section={selectedSection} onUnlocked={() => setIsUnlocked(true)} />;
