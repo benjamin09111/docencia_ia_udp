@@ -1,32 +1,62 @@
 import { SubjectCourseGroup, EnrichedCourseSection } from "./courseGrouping";
 import { getPublicCheckinUrl, getPublicVisualUrl } from "./urlHelper";
-import { getSectionVisualPin } from "@/services/attendanceStore";
+import { getSectionVisualPin, getTodayDateStr } from "@/services/attendanceStore";
 import { publishAnnouncement } from "@/services/announcementsService";
 
 /**
- * Genera el texto estándar con links de asistencia, pin y plantilla de una sección.
+ * Consulta el PIN diario dinámico de asistencia para una sección específica desde la API protegida del servidor.
  */
-export function formatSectionAttendanceInfo(sec: EnrichedCourseSection, subjectName: string): string {
+export async function fetchDailyPinForSection(sectionCode: string, dateStr?: string): Promise<string> {
+  try {
+    const date = dateStr || getTodayDateStr();
+    const res = await fetch(
+      `/api/teacher/pin?section=${encodeURIComponent(sectionCode)}&date=${encodeURIComponent(date)}`,
+      { cache: "no-store" }
+    );
+    if (!res.ok) return "Disponible en clase";
+    const data = await res.json();
+    return typeof data?.pin === "string" ? data.pin : "Disponible en clase";
+  } catch {
+    return "Disponible en clase";
+  }
+}
+
+/**
+ * Genera el texto estándar con links de asistencia, pin dinámico y planilla de una sección.
+ */
+export function formatSectionAttendanceInfo(
+  sec: EnrichedCourseSection,
+  subjectName: string,
+  dailyPin?: string
+): string {
   const code = sec.code;
   const secName = sec.sectionName;
   const checkinUrl = getPublicCheckinUrl(code);
   const visualUrl = getPublicVisualUrl(code);
   const details = sec.sectionDetails;
-  const pin = details?.pinActivo || "Disponible en clase";
-  const visualPin = details ? getSectionVisualPin(details) : "4821";
+  const visualPin = details ? getSectionVisualPin(details) : (details?.pinActivo || "4821");
+  const pinAsistencia = dailyPin || "Disponible en clase";
 
   return `${subjectName} - ${secName}
-ASISTENCIA: ${checkinUrl}
-Pin: ${pin}
-PLANTILLA (${visualPin}): ${visualUrl}`;
+ASISTENCIA (Check-in hoy): ${checkinUrl}
+Pin de Asistencia: ${pinAsistencia}
+
+PLANILLA DE NOTAS (Tablero): ${visualUrl}
+Pin de Planilla: ${visualPin}`;
 }
 
 /**
- * Copia al portapapeles la información consolidada de asistencia de todas las secciones del grupo.
+ * Copia al portapapeles la información consolidada de asistencia de todas las secciones del grupo,
+ * obteniendo el PIN diario dinámico real de cada sección.
  */
 export async function copyGroupAttendanceInfo(group: SubjectCourseGroup): Promise<boolean> {
+  const today = getTodayDateStr();
+  const pins = await Promise.all(
+    group.sections.map((s) => fetchDailyPinForSection(s.code, today))
+  );
+
   const allText = group.sections
-    .map((s) => formatSectionAttendanceInfo(s, group.subjectName))
+    .map((s, idx) => formatSectionAttendanceInfo(s, group.subjectName, pins[idx]))
     .join("\n\n--------------------\n\n");
 
   try {
@@ -48,12 +78,18 @@ export async function copyGroupAttendanceInfo(group: SubjectCourseGroup): Promis
 }
 
 /**
- * Publica automáticamente un comunicado oficial de asistencia de hoy en cada sección del grupo.
+ * Publica automáticamente un comunicado oficial de asistencia de hoy en cada sección del grupo,
+ * con el PIN dinámico de cada una.
  */
-export function publishGroupAttendanceAnnouncement(group: SubjectCourseGroup): number {
+export async function publishGroupAttendanceAnnouncement(group: SubjectCourseGroup): Promise<number> {
+  const today = getTodayDateStr();
+  const pins = await Promise.all(
+    group.sections.map((s) => fetchDailyPinForSection(s.code, today))
+  );
+
   let count = 0;
-  group.sections.forEach((sec) => {
-    const text = formatSectionAttendanceInfo(sec, group.subjectName);
+  group.sections.forEach((sec, idx) => {
+    const text = formatSectionAttendanceInfo(sec, group.subjectName, pins[idx]);
     publishAnnouncement(sec.code, {
       titulo: "Asistencia de la clase de hoy",
       mensaje: `Estimadas y estimados estudiantes:\n\nComparto los accesos para la sesión de hoy:\n\n${text}\n\nPor favor registrar su asistencia dentro del horario estipulado.`,

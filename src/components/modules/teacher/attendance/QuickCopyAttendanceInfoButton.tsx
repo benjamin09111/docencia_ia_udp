@@ -10,6 +10,7 @@ import {
   CanvasAnnouncement,
 } from "@/services/announcementsService";
 import { Copy, Check, Megaphone, ExternalLink, KeyRound, Sparkles } from "lucide-react";
+import { fetchDailyPinForSection } from "@/utils/courseAttendanceAnnounceHelper";
 
 interface QuickCopyAttendanceInfoButtonProps {
   courseCode: string;
@@ -37,18 +38,26 @@ export const QuickCopyAttendanceInfoButton: React.FC<QuickCopyAttendanceInfoButt
   const checkinUrl = getPublicCheckinUrl(targetCode);
   const visualUrl = getPublicVisualUrl(targetCode);
 
-  const formattedInfoText = `${courseDisplayName} - ${sectionName}
-ASISTENCIA: ${checkinUrl}
-Pin: ${effectivePin}
-PLANTILLA (${visualPin}): ${visualUrl}`;
+  const buildText = (pin: string) => `${courseDisplayName} - ${sectionName}
+ASISTENCIA (Check-in hoy): ${checkinUrl}
+Pin de Asistencia: ${pin}
+
+PLANILLA DE NOTAS (Tablero): ${visualUrl}
+Pin de Planilla: ${visualPin}`;
 
   const handleCopyAndPrompt = async () => {
+    let pinToUse = effectivePin;
+    if (!pinToUse || pinToUse === "····") {
+      pinToUse = await fetchDailyPinForSection(targetCode);
+    }
+    const text = buildText(pinToUse);
+
     try {
       if (navigator.clipboard?.writeText) {
-        await navigator.clipboard.writeText(formattedInfoText);
+        await navigator.clipboard.writeText(text);
       } else {
         const ta = document.createElement("textarea");
-        ta.value = formattedInfoText;
+        ta.value = text;
         document.body.appendChild(ta);
         ta.select();
         document.execCommand("copy");
@@ -63,10 +72,16 @@ PLANTILLA (${visualPin}): ${visualUrl}`;
     setPublishedSuccess(false);
   };
 
-  const handlePublishAsAnnouncement = () => {
+  const handlePublishAsAnnouncement = async () => {
+    let pinToUse = effectivePin;
+    if (!pinToUse || pinToUse === "····") {
+      pinToUse = await fetchDailyPinForSection(targetCode);
+    }
+    const text = buildText(pinToUse);
+
     publishAnnouncement(targetCode, {
       titulo: "Asistencia de la clase de hoy",
-      mensaje: `Estimadas y estimados estudiantes:\n\nComparto los accesos para la sesión de hoy:\n\n${courseDisplayName} - ${sectionName}\nASISTENCIA: ${checkinUrl}\nPin: ${effectivePin}\nPLANTILLA (${visualPin}): ${visualUrl}\n\nPor favor registrar su asistencia dentro del horario estipulado.`,
+      mensaje: `Estimadas y estimados estudiantes:\n\nComparto los accesos para la sesión de hoy:\n\n${text}\n\nPor favor registrar su asistencia dentro del horario estipulado.`,
       categoria: "general",
       autor: selectedSection?.profesor || selectedSection?.ayudante || "Docente UDP",
     });
@@ -143,20 +158,24 @@ PLANTILLA (${visualPin}): ${visualUrl}`;
               {courseDisplayName} - {sectionName}
             </div>
             <div>
-              <span className="font-bold text-[#B71C1C]">ASISTENCIA: </span>
+              <span className="font-bold text-[#B71C1C]">ASISTENCIA (Check-in hoy): </span>
               <a href={checkinUrl} target="_blank" rel="noopener noreferrer" className="text-[#008EE2] hover:underline break-all">
                 {checkinUrl}
               </a>
             </div>
             <div>
-              <span className="font-bold text-[#2D3B45]">Pin: </span>
+              <span className="font-bold text-[#2D3B45]">Pin de Asistencia: </span>
               <span className="bg-amber-100 text-amber-900 font-bold px-1.5 py-0.5 rounded">{effectivePin}</span>
             </div>
-            <div>
-              <span className="font-bold text-[#2D3B45]">PLANTILLA ({visualPin}): </span>
+            <div className="pt-1 border-t border-gray-200">
+              <span className="font-bold text-[#2D3B45]">PLANILLA DE NOTAS (Tablero): </span>
               <a href={visualUrl} target="_blank" rel="noopener noreferrer" className="text-[#008EE2] hover:underline break-all">
                 {visualUrl}
               </a>
+            </div>
+            <div>
+              <span className="font-bold text-[#2D3B45]">Pin de Planilla: </span>
+              <span className="bg-gray-100 text-[#2D3B45] font-bold px-1.5 py-0.5 rounded border border-gray-300">{visualPin}</span>
             </div>
           </div>
 

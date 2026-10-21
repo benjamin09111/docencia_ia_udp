@@ -36,8 +36,8 @@ export const TeacherSubjectGroupCard: React.FC<TeacherSubjectGroupCardProps> = (
     if (ok) showToast("✓ Información de asistencia de hoy copiada al portapapeles.");
   };
 
-  const handlePublishAttendanceAnnouncement = () => {
-    const count = publishGroupAttendanceAnnouncement(group);
+  const handlePublishAttendanceAnnouncement = async () => {
+    const count = await publishGroupAttendanceAnnouncement(group);
     showToast(`✓ Anuncio de asistencia de hoy publicado con éxito en las ${count} secciones.`);
   };
 
