@@ -1,9 +1,11 @@
 "use client";
 
-import React from "react";
-import { BookOpen, Sparkles, Layers, Megaphone, Users } from "lucide-react";
+import React, { useState } from "react";
+import { BookOpen, Sparkles, Layers, Megaphone, Users, Download } from "lucide-react";
 import { CanvasItemGroup, CanvasItemRow } from "@/components/canvas/CanvasItemGroup";
 import { SubjectCourseGroup, EnrichedCourseSection } from "@/utils/courseGrouping";
+import { ExportAttendanceSummaryModal } from "@/components/modules/common/ExportAttendanceSummaryModal";
+import { getSectionByCourseCode } from "@/services/attendanceStore";
 
 interface TeacherSubjectGroupCardProps {
   group: SubjectCourseGroup;
@@ -16,6 +18,7 @@ export const TeacherSubjectGroupCard: React.FC<TeacherSubjectGroupCardProps> = (
   onOpenCourse,
   onAnnounceCourses,
 }) => {
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const isMultiSection = group.sectionsCount > 1;
 
   const headerActions = [
@@ -25,6 +28,13 @@ export const TeacherSubjectGroupCard: React.FC<TeacherSubjectGroupCardProps> = (
         : "Enviar anuncio a esta sección",
       icon: <Megaphone size={14} className="text-[#B71C1C]" />,
       onClick: () => onAnnounceCourses(group.sections.map((s) => s.id)),
+    },
+    {
+      label: isMultiSection
+        ? `Descargar resumen de asistencia (${group.sectionsCount} secciones)`
+        : "Descargar resumen de asistencia",
+      icon: <Download size={14} className="text-[#008EE2]" />,
+      onClick: () => setIsExportModalOpen(true),
     },
   ];
 
@@ -107,6 +117,15 @@ export const TeacherSubjectGroupCard: React.FC<TeacherSubjectGroupCardProps> = (
           ]}
         />
       ))}
+
+      {/* Modal Canónico de Exportación de Asistencia Multisección */}
+      <ExportAttendanceSummaryModal
+        isOpen={isExportModalOpen}
+        onClose={() => setIsExportModalOpen(false)}
+        title={isMultiSection ? `Resumen de Asistencia Multisección` : `Resumen de Asistencia`}
+        subjectName={group.subjectName}
+        sections={group.sections.map((s) => s.sectionDetails || getSectionByCourseCode(s.code))}
+      />
     </CanvasItemGroup>
   );
 };
