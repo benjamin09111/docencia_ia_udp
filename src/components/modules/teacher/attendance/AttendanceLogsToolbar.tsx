@@ -48,8 +48,8 @@ export const AttendanceLogsToolbar: React.FC<AttendanceLogsToolbarProps> = ({
           <div>
             <div className="flex items-center gap-2 flex-wrap">
               <h3 className="text-sm font-bold text-[#2D3B45]">Marcajes de Asistencia</h3>
-              <span className="px-2 py-0.5 bg-gray-100 text-[#2D3B45] border border-gray-300 text-[11px] font-bold rounded">
-                Total: {total}
+              <span className="px-2 py-0.5 bg-gray-100 text-[#2D3B45] border border-gray-300 text-[11px] font-bold rounded" title="Total de marcajes registrados por alumnos que asistieron a la clase">
+                Total: {total} presentes registrados
               </span>
               {scheduleStats && (
                 <>
@@ -70,7 +70,9 @@ export const AttendanceLogsToolbar: React.FC<AttendanceLogsToolbarProps> = ({
                 </span>
               )}
             </div>
-            <p className="text-xs text-[#6B7780]">Historial inalterable de quién marcó en {sectionName}, con fecha y hora exacta.</p>
+            <p className="text-xs text-[#6B7780]">
+              Bitácora de marcajes reales de alumnos vía PIN. (Los ausentes no registran marcajes aquí).
+            </p>
           </div>
         </div>
 

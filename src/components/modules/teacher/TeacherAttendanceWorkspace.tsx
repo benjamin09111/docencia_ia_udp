@@ -51,6 +51,7 @@ import {
   isSupabaseConfigured,
   updateSectionOnlineStatusInSupabase,
   fetchSectionsFromSupabase,
+  fetchAttendanceMapFromSupabase,
 } from "@/services/attendanceDbService";
 import { computeAttendanceStats, isAttendanceAtRisk } from "@/utils/attendanceMetrics";
 import { useTeacherDailyPin } from "@/hooks/useTeacherDailyPin";
@@ -398,6 +399,16 @@ export const TeacherAttendanceWorkspace: React.FC<TeacherAttendanceWorkspaceProp
         saveDecimasPorTrabajo(settings.decimasPorTrabajo, selectedSectionId);
       } else {
         saveSectionWorkSettings(selectedSectionCode, { decimasPorTrabajo: getSavedDecimasPorTrabajo(selectedSectionId) });
+      }
+
+      // Sincronizar el mapa de asistencia real desde Supabase para reflejar los marcajes y ausencias oficiales
+      const cloudMap = await fetchAttendanceMapFromSupabase(selectedSectionCode);
+      if (isMounted && cloudMap && Object.keys(cloudMap).length > 0) {
+        setAttendanceMap((prev) => {
+          const next = { ...prev, ...cloudMap };
+          saveAttendanceMap(next);
+          return next;
+        });
       }
     })();
     return () => {
