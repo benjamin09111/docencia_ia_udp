@@ -8,7 +8,7 @@ export function exportSummaryToCSV(reports: SectionAttendanceSummaryReport[], fi
   lines.push("");
 
   lines.push("=== RESUMEN EJECUTIVO POR SECCIÓN ===");
-  lines.push("Código Sección;Nombre Sección;Profesor;Ayudante;Estudiantes;Clases Realizadas;Asistencia Promedio;Regulares;En Riesgo (RI)");
+  lines.push("Código Sección;Nombre Sección;Profesor;Ayudante;Estudiantes;Clases Realizadas;Asist. Horario 1;Asist. Horario 2;Asistencia Promedio;Regulares;En Riesgo (RI)");
   for (const rep of reports) {
     lines.push([
       `"${rep.seccionCodigo}"`,
@@ -17,6 +17,8 @@ export function exportSummaryToCSV(reports: SectionAttendanceSummaryReport[], fi
       `"${rep.ayudante}"`,
       rep.totalEstudiantes,
       rep.clasesRealizadas,
+      rep.totalAsistenciasH1 ?? 0,
+      rep.totalAsistenciasH2 ?? 0,
       `${rep.asistenciaPromedio}%`,
       rep.alumnosRegulares,
       rep.alumnosEnRiesgo,
@@ -25,7 +27,7 @@ export function exportSummaryToCSV(reports: SectionAttendanceSummaryReport[], fi
 
   lines.push("");
   lines.push("=== NÓMINA DETALLADA DE ESTUDIANTES ===");
-  lines.push("Sección;RUT;Canvas ID;Estudiante;Clases Asistidas;Clases Válidas;% Asistencia;Condición");
+  lines.push("Sección;RUT;Canvas ID;Estudiante;Asistencias H1;Asistencias H2;Total Asistidas;Clases Válidas;% Asistencia;Condición");
   for (const rep of reports) {
     for (const est of rep.estudiantes) {
       lines.push([
@@ -33,6 +35,8 @@ export function exportSummaryToCSV(reports: SectionAttendanceSummaryReport[], fi
         `"${est.rut || "—"}"`,
         est.canvasId,
         `"${est.nombreCompleto}"`,
+        est.asistidasH1 ?? 0,
+        est.asistidasH2 ?? 0,
         est.asistidas,
         est.validas,
         `${est.porcentaje}%`,
@@ -62,10 +66,10 @@ export function exportSummaryToExcel(reports: SectionAttendanceSummaryReport[], 
 </head>
 <body>
   <table>
-    <tr><td colspan="9" class="header-main">REPORTE CONSOLIDADO DE ASISTENCIA — UNIVERSIDAD DIEGO PORTALES</td></tr>
-    <tr><td colspan="9">Fecha de Generación: ${new Date().toLocaleDateString("es-CL")} • Total Secciones: ${reports.length}</td></tr>
-    <tr><td colspan="9"></td></tr>
-    <tr><td colspan="9" class="header-sec">RESUMEN EJECUTIVO POR SECCIÓN</td></tr>
+    <tr><td colspan="11" class="header-main">REPORTE CONSOLIDADO DE ASISTENCIA — UNIVERSIDAD DIEGO PORTALES</td></tr>
+    <tr><td colspan="11">Fecha de Generación: ${new Date().toLocaleDateString("es-CL")} • Total Secciones: ${reports.length}</td></tr>
+    <tr><td colspan="11"></td></tr>
+    <tr><td colspan="11" class="header-sec">RESUMEN EJECUTIVO POR SECCIÓN</td></tr>
     <tr>
       <th class="th-col">Código</th>
       <th class="th-col">Sección</th>
@@ -73,6 +77,8 @@ export function exportSummaryToExcel(reports: SectionAttendanceSummaryReport[], 
       <th class="th-col">Ayudante</th>
       <th class="th-col">Estudiantes</th>
       <th class="th-col">Clases</th>
+      <th class="th-col">Asist. Horario 1</th>
+      <th class="th-col">Asist. Horario 2</th>
       <th class="th-col">Promedio Asistencia</th>
       <th class="th-col">Alumnos Regulares</th>
       <th class="th-col">Alumnos En Riesgo (RI)</th>
@@ -86,20 +92,24 @@ export function exportSummaryToExcel(reports: SectionAttendanceSummaryReport[], 
       <td class="td-cell">${rep.ayudante}</td>
       <td class="td-num">${rep.totalEstudiantes}</td>
       <td class="td-num">${rep.clasesRealizadas}</td>
+      <td class="td-num">${rep.totalAsistenciasH1 ?? 0}</td>
+      <td class="td-num">${rep.totalAsistenciasH2 ?? 0}</td>
       <td class="td-num">${rep.asistenciaPromedio}%</td>
       <td class="td-num td-ok">${rep.alumnosRegulares}</td>
       <td class="td-num ${rep.alumnosEnRiesgo > 0 ? "td-risk" : ""}">${rep.alumnosEnRiesgo}</td>
     </tr>`;
   }
 
-  html += `<tr><td colspan="9"></td></tr>
-    <tr><td colspan="9" class="header-sec">NÓMINA DETALLADA DE ESTUDIANTES</td></tr>
+  html += `<tr><td colspan="11"></td></tr>
+    <tr><td colspan="11" class="header-sec">NÓMINA DETALLADA DE ESTUDIANTES</td></tr>
     <tr>
       <th class="th-col">Sección</th>
       <th class="th-col">RUT</th>
       <th class="th-col">Canvas ID</th>
       <th class="th-col">Estudiante</th>
-      <th class="th-col">Clases Asistidas</th>
+      <th class="th-col">Asist. Horario 1</th>
+      <th class="th-col">Asist. Horario 2</th>
+      <th class="th-col">Total Asistidas</th>
       <th class="th-col">Clases Válidas</th>
       <th class="th-col">% Asistencia</th>
       <th class="th-col">Estado</th>
@@ -114,7 +124,9 @@ export function exportSummaryToExcel(reports: SectionAttendanceSummaryReport[], 
         <td class="td-cell">${est.rut || "—"}</td>
         <td class="td-cell">${est.canvasId}</td>
         <td class="td-cell">${est.nombreCompleto}</td>
-        <td class="td-num">${est.asistidas}</td>
+        <td class="td-num">${est.asistidasH1 ?? 0}</td>
+        <td class="td-num">${est.asistidasH2 ?? 0}</td>
+        <td class="td-num font-bold">${est.asistidas}</td>
         <td class="td-num">${est.validas}</td>
         <td class="td-num ${isRisk ? "td-risk" : "td-ok"}">${est.porcentaje}%</td>
         <td class="td-cell ${isRisk ? "td-risk" : "td-ok"}">${est.estado}</td>

@@ -43,6 +43,28 @@ export const AnnouncementsHistoryList: React.FC<AnnouncementsHistoryListProps> =
     }
   };
 
+  const renderMessage = (text: string) => {
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    const parts = text.split(urlRegex);
+    return parts.map((part, i) => {
+      if (part.match(urlRegex)) {
+        return (
+          <a
+            key={i}
+            href={part}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[#008EE2] hover:text-[#0077BE] underline font-semibold break-all"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {part}
+          </a>
+        );
+      }
+      return part;
+    });
+  };
+
   return (
     <div className="bg-white border border-[#E0E3E6] rounded-[4px] p-5 shadow-canvas-card space-y-4">
       <div className="flex justify-between items-center border-b border-gray-100 pb-3">
@@ -74,16 +96,16 @@ export const AnnouncementsHistoryList: React.FC<AnnouncementsHistoryListProps> =
                     type="button"
                     onClick={() => onDelete(ann.id)}
                     title="Eliminar registro"
-                    className="text-gray-400 hover:text-rose-600 p-1 rounded"
+                    className="text-gray-400 hover:text-rose-600 p-1 rounded cursor-pointer"
                   >
                     <Trash2 size={13} />
                   </button>
                 </div>
               </div>
 
-              <p className="text-[11px] text-gray-600 whitespace-pre-line bg-gray-50 p-2.5 rounded border border-gray-200 max-h-28 overflow-y-auto leading-relaxed">
-                {ann.mensaje}
-              </p>
+              <div className="text-[11px] text-gray-600 whitespace-pre-line bg-gray-50 p-2.5 rounded border border-gray-200 max-h-28 overflow-y-auto leading-relaxed">
+                {renderMessage(ann.mensaje)}
+              </div>
 
               <div className="text-[10px] text-gray-400 flex items-center gap-2">
                 <span>Autor: {ann.autor}</span>

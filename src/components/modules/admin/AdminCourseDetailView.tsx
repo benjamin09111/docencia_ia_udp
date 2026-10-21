@@ -61,6 +61,7 @@ export const AdminCourseDetailView: React.FC<AdminCourseDetailViewProps> = ({
     profesor: string;
     ayudante: string;
     horarioAyudantia: any;
+    horarioAyudantia2?: any;
   }) => {
     setProfesorTitular(updatedData.profesor);
     setAyudanteTitular(updatedData.ayudante);
@@ -70,6 +71,7 @@ export const AdminCourseDetailView: React.FC<AdminCourseDetailViewProps> = ({
         profesor: updatedData.profesor,
         ayudante: updatedData.ayudante,
         horarioAyudantia: updatedData.horarioAyudantia,
+        horarioAyudantia2: updatedData.horarioAyudantia2,
       });
     }
     setSaveSuccess(true);

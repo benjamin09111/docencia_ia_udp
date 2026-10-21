@@ -756,5 +756,35 @@ export function formatSectionSchedule(section: CourseSection) {
   };
 }
 
+const ATTENDANCE_SCHEDULE_STORAGE_KEY = "udp_attendance_schedule_map_v1";
 
+export function getSavedAttendanceScheduleMap(): Record<string, "H1" | "H2"> {
+  if (typeof window === "undefined") return {};
+  try {
+    const raw = localStorage.getItem(ATTENDANCE_SCHEDULE_STORAGE_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+}
 
+export function saveAttendanceScheduleMap(map: Record<string, "H1" | "H2">): void {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(ATTENDANCE_SCHEDULE_STORAGE_KEY, JSON.stringify(map));
+    window.dispatchEvent(new CustomEvent("udp_attendance_schedule_updated", { detail: map }));
+  } catch (e) {
+    console.error("Error saving attendance schedule map", e);
+  }
+}
+
+export function recordAttendanceSchedule(key: string, schedule: "H1" | "H2"): void {
+  const current = getSavedAttendanceScheduleMap();
+  current[key] = schedule;
+  saveAttendanceScheduleMap(current);
+}
+
+export function getAttendanceSchedule(key: string): "H1" | "H2" {
+  const current = getSavedAttendanceScheduleMap();
+  return current[key] || "H1";
+}

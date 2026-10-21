@@ -188,6 +188,12 @@ export interface Database {
           horario_ayudantia_inicio: string;
           horario_ayudantia_fin: string;
           horario_ayudantia_sala: string;
+          horario_ayudantia2: {
+            dias?: number[];
+            horaInicio?: string;
+            horaFin?: string;
+            sala?: string;
+          } | null;
           pin_activo: string;
           requiere_pin: boolean;
           requiere_geo: boolean;
@@ -213,6 +219,12 @@ export interface Database {
           horario_ayudantia_inicio?: string;
           horario_ayudantia_fin?: string;
           horario_ayudantia_sala?: string;
+          horario_ayudantia2?: {
+            dias?: number[];
+            horaInicio?: string;
+            horaFin?: string;
+            sala?: string;
+          } | null;
           pin_activo?: string;
           requiere_pin?: boolean;
           requiere_geo?: boolean;
@@ -238,6 +250,12 @@ export interface Database {
           horario_ayudantia_inicio?: string;
           horario_ayudantia_fin?: string;
           horario_ayudantia_sala?: string;
+          horario_ayudantia2?: {
+            dias?: number[];
+            horaInicio?: string;
+            horaFin?: string;
+            sala?: string;
+          } | null;
           pin_activo?: string;
           requiere_pin?: boolean;
           requiere_geo?: boolean;

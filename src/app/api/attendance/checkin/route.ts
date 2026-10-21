@@ -3,7 +3,7 @@ import { clientIp } from "@/lib/server/auth";
 import { AdminConfigError, getSupabaseAdmin } from "@/lib/server/supabaseAdmin";
 import { computeDailyPin, pinMatches } from "@/lib/server/dailyPin";
 import { checkRateLimit } from "@/lib/server/rateLimit";
-import { checkGeo, checkWindow, chileNow, sessionCodeFor } from "@/lib/server/checkinRules";
+import { checkGeo, checkWindow, chileNow, canonicalSessionCode } from "@/lib/server/checkinRules";
 import { verifyAndConsumeCheckinTicket } from "@/lib/server/checkinTicket";
 
 const SECTION_RE = /^[A-Za-z0-9_-]{3,40}$/;
@@ -62,7 +62,7 @@ export async function POST(req: NextRequest) {
     const admin = getSupabaseAdmin();
     const { data: sec, error: secErr } = await admin
       .from("sections")
-      .select("code, requiere_pin, requiere_geo, horario_ayudantia_dias, horario_ayudantia_inicio, horario_ayudantia_fin")
+      .select("code, requiere_pin, requiere_geo, horario_ayudantia_dias, horario_ayudantia_inicio, horario_ayudantia_fin, horario_ayudantia2")
       .eq("code", section)
       .maybeSingle();
     if (secErr) throw secErr;
@@ -74,7 +74,7 @@ export async function POST(req: NextRequest) {
 
     if (sec.requiere_pin && !pinMatches(computeDailyPin(section, now.dateStr), pin)) return fail("pin_invalid");
 
-    const sessionCode = sessionCodeFor(section, now.dateStr);
+    const sessionCode = canonicalSessionCode(section, sec, now, Boolean(window.isSecondary));
 
     // Verificación y consumo criptográfico de ticket de un solo uso
     const ticketCheck = verifyAndConsumeCheckinTicket(ticket, section, sessionCode);
@@ -96,7 +96,9 @@ export async function POST(req: NextRequest) {
       p_student_canvas_id: studentCanvasId,
       p_device_hash: ticketCheck.deviceHash,
       p_method: sec.requiere_geo ? "PIN + GPS" : "PIN",
-      p_schedule_label: window.horaInicio ? `${window.horaInicio} - ${window.horaFin}` : null,
+      p_schedule_label: window.horaInicio
+        ? `${window.horaInicio} - ${window.horaFin} (${window.isSecondary ? "Horario 2" : "Horario 1"})`
+        : window.isSecondary ? "Horario 2" : "Horario 1",
       p_distancia: distancia ?? null,
     });
     if (error) throw error;

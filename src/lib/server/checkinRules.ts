@@ -39,6 +39,12 @@ export interface SectionScheduleRow {
   horario_ayudantia_dias: number[] | null;
   horario_ayudantia_inicio: string | null; // "16:00:00"
   horario_ayudantia_fin: string | null;
+  horario_ayudantia2?: {
+    dias?: number[];
+    horaInicio?: string;
+    horaFin?: string;
+    sala?: string;
+  } | null;
 }
 
 const toMinutes = (t: string) => {
@@ -50,17 +56,35 @@ export interface WindowCheck {
   open: boolean;
   horaInicio?: string;
   horaFin?: string;
+  isSecondary?: boolean;
 }
 
 /** ¿Está abierta la ventana de marcaje de la ayudantía en este momento (hora de Chile)? */
 export function checkWindow(section: SectionScheduleRow, now: ChileNow): WindowCheck {
   const { horario_ayudantia_dias: dias, horario_ayudantia_inicio: ini, horario_ayudantia_fin: fin } = section;
-  if (!dias || !ini || !fin) return { open: false };
-  const horaInicio = ini.slice(0, 5);
-  const horaFin = fin.slice(0, 5);
-  if (!dias.includes(now.dow)) return { open: false, horaInicio, horaFin };
-  const open = now.minutes >= toMinutes(horaInicio) - WINDOW_MARGIN_MIN && now.minutes <= toMinutes(horaFin) + WINDOW_MARGIN_MIN;
-  return { open, horaInicio, horaFin };
+  if (dias && ini && fin) {
+    const horaInicio = ini.slice(0, 5);
+    const horaFin = fin.slice(0, 5);
+    if (dias.includes(now.dow)) {
+      const open = now.minutes >= toMinutes(horaInicio) - WINDOW_MARGIN_MIN && now.minutes <= toMinutes(horaFin) + WINDOW_MARGIN_MIN;
+      if (open) return { open: true, horaInicio, horaFin, isSecondary: false };
+    }
+  }
+
+  // Horario secundario opcional: permite marcar la misma ayudantía en un segundo bloque semanal
+  const ayu2 = section.horario_ayudantia2;
+  if (ayu2?.dias && ayu2?.horaInicio && ayu2?.horaFin) {
+    const horaInicio2 = ayu2.horaInicio.slice(0, 5);
+    const horaFin2 = ayu2.horaFin.slice(0, 5);
+    if (ayu2.dias.includes(now.dow)) {
+      const open = now.minutes >= toMinutes(horaInicio2) - WINDOW_MARGIN_MIN && now.minutes <= toMinutes(horaFin2) + WINDOW_MARGIN_MIN;
+      if (open) return { open: true, horaInicio: horaInicio2, horaFin: horaFin2, isSecondary: true };
+    }
+  }
+
+  const fallbackIni = ini?.slice(0, 5);
+  const fallbackFin = fin?.slice(0, 5);
+  return { open: false, horaInicio: fallbackIni, horaFin: fallbackFin };
 }
 
 export interface GeoCheck {
@@ -84,3 +108,35 @@ export function checkGeo(lat: unknown, lng: unknown): GeoCheck {
 
 /** Código de la sesión de ayudantía de una sección en una fecha (mismo formato que el resto de la app). */
 export const sessionCodeFor = (sectionCode: string, dateStr: string) => `sess_${sectionCode}_ayu_${dateStr}`;
+
+/**
+ * Dada una fecha y día actual, calcula la fecha (YYYY-MM-DD) del día oficial principal de la misma semana (lunes-domingo).
+ */
+export function canonicalWeeklyDateStr(dateStr: string, currentDow: number, targetDow: number): string {
+  if (currentDow === targetDow) return dateStr;
+  const [y, m, d] = dateStr.split("-").map(Number);
+  const curUtc = Date.UTC(y, m - 1, d);
+  const curOffset = currentDow === 0 ? 6 : currentDow - 1;
+  const targetOffset = targetDow === 0 ? 6 : targetDow - 1;
+  const diffDays = targetOffset - curOffset;
+  const targetDate = new Date(curUtc + diffDays * 86_400_000);
+  return targetDate.toISOString().slice(0, 10);
+}
+
+/**
+ * Código de sesión canónico: si el marcaje ocurre durante el horario alternativo/secundario,
+ * se vincula a la sesión oficial semanal de la sección para evitar duplicar columnas en la planilla.
+ */
+export function canonicalSessionCode(
+  sectionCode: string,
+  section: SectionScheduleRow,
+  now: ChileNow,
+  isSecondary: boolean
+): string {
+  if (!isSecondary) {
+    return sessionCodeFor(sectionCode, now.dateStr);
+  }
+  const primaryDow = section.horario_ayudantia_dias?.[0] ?? now.dow;
+  const canonicalDate = canonicalWeeklyDateStr(now.dateStr, now.dow, primaryDow);
+  return sessionCodeFor(sectionCode, canonicalDate);
+}

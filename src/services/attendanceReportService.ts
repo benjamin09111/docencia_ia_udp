@@ -1,5 +1,5 @@
 import { CourseSection, ClassSession, AttendanceValue } from "@/types/attendance";
-import { StudentRosterItem, generateSemesterSessions, getTodayDateStr, getAttendanceValue } from "./attendanceStore";
+import { StudentRosterItem, generateSemesterSessions, getTodayDateStr, getAttendanceValue, getSavedAttendanceScheduleMap } from "./attendanceStore";
 import { fetchAttendanceMapFromSupabase } from "./attendanceDbService";
 import { computeAttendanceStats, isAttendanceAtRisk } from "@/utils/attendanceMetrics";
 import { INITIAL_STUDENTS_ROSTER } from "@/constants/initialStudentRoster";
@@ -12,6 +12,8 @@ export interface StudentAttendanceExportRow {
   canvasId: number;
   rut: string;
   nombreCompleto: string;
+  asistidasH1: number;
+  asistidasH2: number;
   asistidas: number;
   validas: number;
   porcentaje: number;
@@ -28,6 +30,8 @@ export interface SectionAttendanceSummaryReport {
   alumnosEnRiesgo: number;
   alumnosRegulares: number;
   clasesRealizadas: number;
+  totalAsistenciasH1: number;
+  totalAsistenciasH2: number;
   estudiantes: StudentAttendanceExportRow[];
 }
 
@@ -69,6 +73,8 @@ export async function generateSectionsAttendanceSummary(
   const todayStr = getTodayDateStr();
   const reports: SectionAttendanceSummaryReport[] = [];
 
+  const scheduleMap = getSavedAttendanceScheduleMap();
+
   for (const section of sections) {
     const [students, attendanceMap] = await Promise.all([
       fetchRosterForSection(section),
@@ -80,6 +86,19 @@ export async function generateSectionsAttendanceSummary(
     );
 
     const studentRows: StudentAttendanceExportRow[] = students.map((st) => {
+      let asistidasH1 = 0;
+      let asistidasH2 = 0;
+      validSessions.forEach((sess) => {
+        if (getAttendanceValue(attendanceMap, sess.id, st.canvas_id) === 1) {
+          const sched =
+            scheduleMap[`${sess.id}_${st.canvas_id}`] ||
+            scheduleMap[`${section.codigo}_${st.canvas_id}_${sess.fecha}`] ||
+            "H1";
+          if (sched === "H2") asistidasH2++;
+          else asistidasH1++;
+        }
+      });
+
       const stats = computeAttendanceStats(
         validSessions,
         (sId) => getAttendanceValue(attendanceMap, sId, st.canvas_id) === 1,
@@ -95,6 +114,8 @@ export async function generateSectionsAttendanceSummary(
         canvasId: st.canvas_id,
         rut: st.rut || "",
         nombreCompleto: fullName,
+        asistidasH1,
+        asistidasH2,
         asistidas: stats.asistidas,
         validas: stats.validas,
         porcentaje: stats.pct,
@@ -107,6 +128,8 @@ export async function generateSectionsAttendanceSummary(
       ? Math.round(studentRows.reduce((acc, r) => acc + r.porcentaje, 0) / totalStudents)
       : 0;
     const riskCount = studentRows.filter((r) => r.estado === "En Riesgo (RI)").length;
+    const totalAsistenciasH1 = studentRows.reduce((acc, r) => acc + r.asistidasH1, 0);
+    const totalAsistenciasH2 = studentRows.reduce((acc, r) => acc + r.asistidasH2, 0);
 
     reports.push({
       seccionCodigo: section.codigo,
@@ -118,6 +141,8 @@ export async function generateSectionsAttendanceSummary(
       alumnosEnRiesgo: riskCount,
       alumnosRegulares: totalStudents - riskCount,
       clasesRealizadas: validSessions.length,
+      totalAsistenciasH1,
+      totalAsistenciasH2,
       estudiantes: studentRows,
     });
   }

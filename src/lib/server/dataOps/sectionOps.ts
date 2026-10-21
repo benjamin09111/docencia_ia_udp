@@ -7,7 +7,7 @@ const PIN_RE = /^\d{4,8}$/;
 const PUBLIC_SECTION_COLUMNS =
   "id, course_id, code, name, teacher_name, assistant_name, horario_catedra_dias, horario_catedra_inicio, " +
   "horario_catedra_fin, horario_catedra_sala, horario_ayudantia_dias, horario_ayudantia_inicio, " +
-  "horario_ayudantia_fin, horario_ayudantia_sala, requiere_pin, requiere_geo";
+  "horario_ayudantia_fin, horario_ayudantia_sala, horario_ayudantia2, requiere_pin, requiere_geo";
 
 const time = (x: unknown, what: string) => {
   if (typeof x !== "string" || !TIME_RE.test(x)) throw new OpError(400, "invalid", `Dato inválido: ${what}.`);
@@ -40,6 +40,17 @@ function sectionRow(raw: unknown) {
     requiere_pin: v.bool(s.requierePin, "requierePin"),
     requiere_geo: v.bool(s.requiereGeolocalizacion, "requiereGeolocalizacion"),
   };
+  if (s.horarioAyudantia2) {
+    const ayu2 = schedule(s.horarioAyudantia2, "horarioAyudantia2");
+    row.horario_ayudantia2 = {
+      dias: ayu2.dias,
+      horaInicio: ayu2.inicio,
+      horaFin: ayu2.fin,
+      sala: ayu2.sala,
+    };
+  } else if (s.horarioAyudantia2 === null) {
+    row.horario_ayudantia2 = null;
+  }
   if (s.pinActivo !== undefined && s.pinActivo !== null && s.pinActivo !== "") {
     if (typeof s.pinActivo !== "string" || !PIN_RE.test(s.pinActivo)) throw new OpError(400, "invalid", "Dato inválido: PIN.");
     row.pin_activo = s.pinActivo;

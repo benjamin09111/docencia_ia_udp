@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { clientIp } from "@/lib/server/auth";
 import { getSupabaseAdmin } from "@/lib/server/supabaseAdmin";
 import { checkRateLimit } from "@/lib/server/rateLimit";
-import { checkWindow, chileNow, sessionCodeFor } from "@/lib/server/checkinRules";
+import { checkWindow, chileNow, canonicalSessionCode } from "@/lib/server/checkinRules";
 import {
   validateDeviceSignals,
   computeServerDeviceHash,
@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
     const admin = getSupabaseAdmin();
     const { data: sec, error: secErr } = await admin
       .from("sections")
-      .select("code, requiere_pin, requiere_geo, horario_ayudantia_dias, horario_ayudantia_inicio, horario_ayudantia_fin")
+      .select("code, requiere_pin, requiere_geo, horario_ayudantia_dias, horario_ayudantia_inicio, horario_ayudantia_fin, horario_ayudantia2")
       .eq("code", section)
       .maybeSingle();
 
@@ -56,7 +56,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const sessionCode = sessionCodeFor(section, now.dateStr);
+    const sessionCode = canonicalSessionCode(section, sec, now, Boolean(window.isSecondary));
     const deviceHash = computeServerDeviceHash(signals!);
 
     // Regla anti-incógnito: si el hardware ya registró a otro alumno en esta clase, rechazar de inmediato

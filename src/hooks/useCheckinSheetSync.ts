@@ -3,7 +3,12 @@
 import { useState, useCallback, useMemo } from "react";
 import { AttendanceValue } from "@/types/attendance";
 import { CloudCheckinLog } from "@/services/attendanceCloudService";
-import { getAttendanceValue, getSavedAttendanceMap, saveAttendanceMap } from "@/services/attendanceStore";
+import {
+  getAttendanceValue,
+  getSavedAttendanceMap,
+  saveAttendanceMap,
+  recordAttendanceSchedule,
+} from "@/services/attendanceStore";
 import { saveAttendanceMarkToSupabase, saveAttendanceBatchToSupabase } from "@/services/attendanceDbService";
 
 interface UseCheckinSheetSyncParams {
@@ -42,6 +47,8 @@ export function useCheckinSheetSync({
   const handleMarkSingle = async (log: CloudCheckinLog) => {
     setMarkingLogIds((prev) => new Set(prev).add(log.id));
     try {
+      const isH2 = Boolean(log.scheduleLabel?.includes("Horario 2") || log.scheduleLabel?.includes("Secundario"));
+      recordAttendanceSchedule(`${log.sessionCode}_${log.studentCanvasId}`, isH2 ? "H2" : "H1");
       if (onMarkPresent) {
         await onMarkPresent(log.sessionCode, log.studentCanvasId);
       } else {
@@ -65,6 +72,10 @@ export function useCheckinSheetSync({
     if (missingInSheetLogs.length === 0) return;
     setIsSyncingAll(true);
     try {
+      missingInSheetLogs.forEach((l) => {
+        const isH2 = Boolean(l.scheduleLabel?.includes("Horario 2") || l.scheduleLabel?.includes("Secundario"));
+        recordAttendanceSchedule(`${l.sessionCode}_${l.studentCanvasId}`, isH2 ? "H2" : "H1");
+      });
       const items = missingInSheetLogs.map((l) => ({
         sessionCode: l.sessionCode,
         studentCanvasId: l.studentCanvasId,

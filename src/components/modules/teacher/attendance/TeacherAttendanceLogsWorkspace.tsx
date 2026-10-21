@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { CourseSection, AttendanceValue } from "@/types/attendance";
 import {
   CloudCheckinLog,
@@ -69,6 +69,20 @@ export const TeacherAttendanceLogsWorkspace: React.FC<TeacherAttendanceLogsWorks
       enabled: date !== "",
     });
 
+  const [scheduleFilter, setScheduleFilter] = useState<"all" | "h1" | "h2">("all");
+
+  const scheduleStats = useMemo(() => {
+    const h2Count = rows.filter((r) => r.scheduleLabel?.includes("Horario 2") || r.scheduleLabel?.includes("Secundario")).length;
+    const h1Count = rows.length - h2Count;
+    return { total: rows.length, h1Count, h2Count };
+  }, [rows]);
+
+  const displayedRows = useMemo(() => {
+    if (scheduleFilter === "h1") return rows.filter((r) => !r.scheduleLabel?.includes("Horario 2") && !r.scheduleLabel?.includes("Secundario"));
+    if (scheduleFilter === "h2") return rows.filter((r) => r.scheduleLabel?.includes("Horario 2") || r.scheduleLabel?.includes("Secundario"));
+    return rows;
+  }, [rows, scheduleFilter]);
+
   const {
     isStudentPresentInSheet,
     missingInSheetLogs,
@@ -76,7 +90,7 @@ export const TeacherAttendanceLogsWorkspace: React.FC<TeacherAttendanceLogsWorks
     isSyncingAll,
     handleMarkSingle,
     handleSyncAllMissing,
-  } = useCheckinSheetSync({ rows, attendanceMap, onMarkPresent, onSyncBatch });
+  } = useCheckinSheetSync({ rows: displayedRows, attendanceMap, onMarkPresent, onSyncBatch });
 
   const handleCopy = useCallback(async (log: CloudCheckinLog) => {
     const text = `[ASISTENCIA UDP] ${log.studentName} marcó presente en la clase del ${log.date} (${sectionCode}) el ${formatDateTime(log.createdAt)} vía ${log.method}${log.scheduleLabel ? `, horario ${log.scheduleLabel}` : ""}.`;
@@ -128,6 +142,9 @@ export const TeacherAttendanceLogsWorkspace: React.FC<TeacherAttendanceLogsWorks
         missingInSheetCount={missingInSheetLogs.length}
         onSyncAllMissing={handleSyncAllMissing}
         isSyncingAll={isSyncingAll}
+        scheduleStats={scheduleStats}
+        scheduleFilter={scheduleFilter}
+        onScheduleFilterChange={setScheduleFilter}
       />
 
       <div className="bg-white border border-[#E0E3E6] rounded-[4px] overflow-hidden shadow-xs">
@@ -135,7 +152,7 @@ export const TeacherAttendanceLogsWorkspace: React.FC<TeacherAttendanceLogsWorks
           <div className="p-8 text-center text-xs text-rose-700 font-semibold">
             No se pudo cargar el historial. Revisa tu conexión y pulsa recargar.
           </div>
-        ) : rows.length === 0 && !loading ? (
+        ) : displayedRows.length === 0 && !loading ? (
           <div className="p-8 text-center space-y-2">
             <ShieldCheck size={32} className="mx-auto text-emerald-600" />
             <p className="text-xs font-bold text-[#2D3B45]">Sin marcajes para este filtro</p>
@@ -144,7 +161,7 @@ export const TeacherAttendanceLogsWorkspace: React.FC<TeacherAttendanceLogsWorks
         ) : (
           <div className={loading ? "opacity-60 transition-opacity" : "transition-opacity"}>
             <CheckinHistoryTable
-              logs={rows}
+              logs={displayedRows}
               copiedLogId={copiedLogId}
               onCopy={handleCopy}
               isStudentPresentInSheet={isStudentPresentInSheet}

@@ -40,11 +40,24 @@ export const CheckinHistoryTable: React.FC<CheckinHistoryTableProps> = ({
         {logs.map((log) => {
           const isPresent = isStudentPresentInSheet ? isStudentPresentInSheet(log.sessionCode, log.studentCanvasId) : true;
           const isMarking = markingLogIds?.has(log.id);
+          const isH2 = Boolean(log.scheduleLabel?.includes("Horario 2") || log.scheduleLabel?.includes("Secundario"));
 
           return (
             <tr key={log.id} className="hover:bg-[#F5F6F8] transition-colors">
               <td className="p-2 font-mono font-bold text-[#2D3B45]">{log.date}</td>
-              <td className="p-2 font-mono text-[#2D3B45]">{formatTime(log.createdAt)}</td>
+              <td className="p-2 font-mono text-[#2D3B45]">
+                <div>{formatTime(log.createdAt)}</div>
+                <span
+                  className={`inline-flex items-center px-1.5 py-0.5 rounded text-[9.5px] font-bold mt-0.5 ${
+                    isH2
+                      ? "bg-blue-50 text-[#008EE2] border border-blue-200"
+                      : "bg-emerald-50 text-emerald-800 border border-emerald-200"
+                  }`}
+                  title={log.scheduleLabel || (isH2 ? "Horario Secundario (H2)" : "Horario Principal (H1)")}
+                >
+                  {isH2 ? "Horario 2" : "Horario 1"}
+                </span>
+              </td>
               <td className="p-2">
                 <div className="font-semibold text-[#2D3B45]">{log.studentName}</div>
                 <div className="text-[10px] text-[#6B7780] truncate max-w-[220px]">{log.studentEmail || "Estudiante UDP"}</div>

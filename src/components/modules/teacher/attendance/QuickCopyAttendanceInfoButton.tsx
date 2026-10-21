@@ -6,8 +6,7 @@ import { getPublicCheckinUrl, getPublicVisualUrl } from "@/utils/urlHelper";
 import { CanvasModal } from "@/components/canvas/CanvasModal";
 import { CanvasButton } from "@/components/canvas/CanvasButton";
 import {
-  getStoredAnnouncements,
-  saveStoredAnnouncements,
+  publishAnnouncement,
   CanvasAnnouncement,
 } from "@/services/announcementsService";
 import { Copy, Check, Megaphone, ExternalLink, KeyRound, Sparkles } from "lucide-react";
@@ -65,21 +64,12 @@ PLANTILLA (${visualPin}): ${visualUrl}`;
   };
 
   const handlePublishAsAnnouncement = () => {
-    const newAnnouncement: CanvasAnnouncement = {
-      id: `ann_asistencia_${Date.now()}`,
-      courseCode: targetCode,
-      titulo: `[ASISTENCIA Y PLANTILLA] Enlaces y PIN de la sesión - ${sectionName}`,
+    publishAnnouncement(targetCode, {
+      titulo: "Asistencia de la clase de hoy",
       mensaje: `Estimadas y estimados estudiantes:\n\nComparto los accesos para la sesión de hoy:\n\n${courseDisplayName} - ${sectionName}\nASISTENCIA: ${checkinUrl}\nPin: ${effectivePin}\nPLANTILLA (${visualPin}): ${visualUrl}\n\nPor favor registrar su asistencia dentro del horario estipulado.`,
       categoria: "general",
-      fechaPublicacion: new Date().toLocaleDateString("es-CL", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }),
       autor: selectedSection?.profesor || selectedSection?.ayudante || "Docente UDP",
-      estado: "publicado",
-    };
-    const existing = getStoredAnnouncements(targetCode);
-    saveStoredAnnouncements(targetCode, [newAnnouncement, ...existing]);
-    if (typeof window !== "undefined") {
-      window.dispatchEvent(new CustomEvent("udp_announcements_updated", { detail: { courseCode: targetCode } }));
-    }
+    });
     setPublishedSuccess(true);
     setTimeout(() => { setIsModalOpen(false); setPublishedSuccess(false); }, 1800);
   };

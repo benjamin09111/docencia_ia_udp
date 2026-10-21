@@ -37,6 +37,7 @@ const sectionPayload = (section: CourseSection) => ({
   ayudante: section.ayudante,
   horarioCatedra: section.horarioCatedra,
   horarioAyudantia: section.horarioAyudantia,
+  horarioAyudantia2: section.horarioAyudantia2 ?? null,
   pinActivo: section.pinActivo,
   requierePin: section.requierePin,
   requiereGeolocalizacion: section.requiereGeolocalizacion,
@@ -237,6 +238,14 @@ export async function fetchSectionsFromSupabase(): Promise<CourseSection[] | nul
           horaFin: sec.horario_ayudantia_fin?.slice(0, 5) || "17:20",
           sala: sec.horario_ayudantia_sala || "SALA X",
         },
+        horarioAyudantia2: sec.horario_ayudantia2
+          ? {
+              dias: sec.horario_ayudantia2.dias || [3],
+              horaInicio: sec.horario_ayudantia2.horaInicio?.slice(0, 5) || "16:00",
+              horaFin: sec.horario_ayudantia2.horaFin?.slice(0, 5) || "17:20",
+              sala: sec.horario_ayudantia2.sala || "SALA X",
+            }
+          : matchLocal?.horarioAyudantia2,
         horarioCatedra2: matchLocal?.horarioCatedra2,
         pinActivo: sec.pin_activo || undefined, // undefined para el público: nunca se inventa un PIN por defecto
         requierePin: Boolean(sec.requiere_pin),

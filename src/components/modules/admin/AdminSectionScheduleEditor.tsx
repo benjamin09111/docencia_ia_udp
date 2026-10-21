@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { CourseSection, SectionSchedule } from "@/types/attendance";
 import { CanvasButton } from "@/components/canvas/CanvasButton";
-import { Calendar, Building2, Save, PlusCircle, Trash2, Clock } from "lucide-react";
+import { Calendar, Building2, Save, Clock } from "lucide-react";
 
 interface AdminSectionScheduleEditorProps {
   section: CourseSection;
@@ -11,6 +11,7 @@ interface AdminSectionScheduleEditorProps {
     profesor: string;
     ayudante: string;
     horarioAyudantia: SectionSchedule;
+    horarioAyudantia2?: SectionSchedule | null;
   }) => void;
   saveSuccess?: boolean;
 }
@@ -30,6 +31,12 @@ export const AdminSectionScheduleEditor: React.FC<AdminSectionScheduleEditorProp
   const [fin1, setFin1] = useState(section.horarioAyudantia?.horaFin || "16:00");
   const [sala1, setSala1] = useState(section.horarioAyudantia?.sala || "SALA X");
 
+  const [hasHorario2, setHasHorario2] = useState<boolean>(Boolean(section.horarioAyudantia2));
+  const [dia2, setDia2] = useState<number>(section.horarioAyudantia2?.dias?.[0] ?? 4);
+  const [inicio2, setInicio2] = useState(section.horarioAyudantia2?.horaInicio || "20:10");
+  const [fin2, setFin2] = useState(section.horarioAyudantia2?.horaFin || "21:30");
+  const [sala2, setSala2] = useState(section.horarioAyudantia2?.sala || "SALA X");
+
   const [profesor, setProfesor] = useState(section.profesor || "Prof. Titular UDP");
   const [ayudante, setAyudante] = useState(section.ayudante || "Ayudante UDP");
 
@@ -39,6 +46,12 @@ export const AdminSectionScheduleEditor: React.FC<AdminSectionScheduleEditorProp
     setFin1(section.horarioAyudantia?.horaFin || "16:00");
     setSala1(section.horarioAyudantia?.sala || "SALA X");
 
+    setHasHorario2(Boolean(section.horarioAyudantia2));
+    setDia2(section.horarioAyudantia2?.dias?.[0] ?? 4);
+    setInicio2(section.horarioAyudantia2?.horaInicio || "20:10");
+    setFin2(section.horarioAyudantia2?.horaFin || "21:30");
+    setSala2(section.horarioAyudantia2?.sala || "SALA X");
+
     setProfesor(section.profesor || "Prof. Titular UDP");
     setAyudante(section.ayudante || "Ayudante UDP");
   }, [section]);
@@ -46,7 +59,10 @@ export const AdminSectionScheduleEditor: React.FC<AdminSectionScheduleEditorProp
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const horario1: SectionSchedule = { ...section.horarioAyudantia, dias: [dia1], horaInicio: inicio1, horaFin: fin1, sala: sala1 };
-    onSave({ profesor, ayudante, horarioAyudantia: horario1 });
+    const horario2: SectionSchedule | null = hasHorario2
+      ? { dias: [dia2], horaInicio: inicio2, horaFin: fin2, sala: sala2 }
+      : null;
+    onSave({ profesor, ayudante, horarioAyudantia: horario1, horarioAyudantia2: horario2 });
   };
 
   return (
@@ -59,7 +75,7 @@ export const AdminSectionScheduleEditor: React.FC<AdminSectionScheduleEditorProp
         <p className="text-xs text-[#6B7780] mt-0.5">Configura hasta 2 horarios semanales independientes para abrir la asistencia.</p>
       </div>
 
-      {/* BLOQUE HORARIO 1 */}
+      {/* BLOQUE HORARIO 1 (PRINCIPAL) */}
       <div className="p-3 bg-[#F8FAFC] border border-[#E2E8F0] rounded-[4px] space-y-3">
         <div className="flex items-center justify-between">
           <span className="text-xs font-bold text-[#1E293B] flex items-center gap-1.5"><Clock size={13} className="text-[#008EE2]" /> Horario 1 (Principal)</span>
@@ -88,6 +104,58 @@ export const AdminSectionScheduleEditor: React.FC<AdminSectionScheduleEditorProp
             <input type="text" value={sala1} onChange={(e) => setSala1(e.target.value)} placeholder="Ej: LAB-COMP 2" className="w-full pl-7 pr-2 py-1.5 text-xs border border-gray-300 rounded bg-white text-[#2D3B45]" />
           </div>
         </div>
+      </div>
+
+      {/* BLOQUE HORARIO 2 (SECUNDARIO / ALTERNATIVO) */}
+      <div className="p-3 bg-[#F8FAFC] border border-[#E2E8F0] rounded-[4px] space-y-3">
+        <div className="flex items-center justify-between">
+          <span className="text-xs font-bold text-[#1E293B] flex items-center gap-1.5">
+            <Clock size={13} className="text-[#008EE2]" /> Horario 2 (Alternativo / Misma clase)
+          </span>
+          <button
+            type="button"
+            onClick={() => setHasHorario2(!hasHorario2)}
+            className={`text-[10px] px-2 py-0.5 rounded font-bold uppercase cursor-pointer transition-colors ${
+              hasHorario2 ? "bg-emerald-100 text-emerald-800" : "bg-gray-200 text-gray-600 hover:bg-gray-300"
+            }`}
+          >
+            {hasHorario2 ? "✓ Habilitado" : "+ Activar"}
+          </button>
+        </div>
+        {hasHorario2 ? (
+          <>
+            <p className="text-[11px] text-[#6B7780]">
+              Abre la asistencia en este horario para alumnos que asistan al bloque alternativo. No altera la planilla oficial (1 clase/semana).
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div>
+                <label className="text-[11px] font-bold text-gray-600 block mb-1">Día Semanal</label>
+                <select value={dia2} onChange={(e) => setDia2(Number(e.target.value))} className="w-full text-xs border border-gray-300 rounded p-1.5 bg-white text-[#2D3B45]">
+                  {DIAS_OPCIONES.map((d) => (<option key={d.val} value={d.val}>{d.label}</option>))}
+                </select>
+              </div>
+              <div>
+                <label className="text-[11px] font-bold text-gray-600 block mb-1">Hora Inicio</label>
+                <input type="time" value={inicio2} onChange={(e) => setInicio2(e.target.value)} className="w-full text-xs border border-gray-300 rounded p-1.5 bg-white text-[#2D3B45]" />
+              </div>
+              <div>
+                <label className="text-[11px] font-bold text-gray-600 block mb-1">Hora Fin</label>
+                <input type="time" value={fin2} onChange={(e) => setFin2(e.target.value)} className="w-full text-xs border border-gray-300 rounded p-1.5 bg-white text-[#2D3B45]" />
+              </div>
+            </div>
+            <div>
+              <label className="text-[11px] font-bold text-gray-600 block mb-1">Sala Asignada</label>
+              <div className="relative">
+                <Building2 size={13} className="absolute left-2.5 top-2.5 text-gray-400" />
+                <input type="text" value={sala2} onChange={(e) => setSala2(e.target.value)} placeholder="Ej: LAB-COMP 2" className="w-full pl-7 pr-2 py-1.5 text-xs border border-gray-300 rounded bg-white text-[#2D3B45]" />
+              </div>
+            </div>
+          </>
+        ) : (
+          <p className="text-[11px] text-[#6B7780]">
+            Sin horario alternativo. Actívalo si realizas la misma ayudantía en un segundo bloque semanal.
+          </p>
+        )}
       </div>
 
       {/* PROFESOR Y AYUDANTE */}

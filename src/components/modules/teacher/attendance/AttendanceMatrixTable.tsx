@@ -2,7 +2,8 @@
 
 import React, { useState, useMemo, useEffect } from "react";
 import { ClassSession, StudentAttendanceSummary, AttendanceValue, TodaySessionInfo, StudentWorkRecord } from "@/types/attendance";
-import { getAttendanceValue } from "@/services/attendanceStore";
+import { getAttendanceValue, getSavedAttendanceScheduleMap } from "@/services/attendanceStore";
+import { AttendanceMatrixFooter } from "./AttendanceMatrixFooter";
 import { Check, X, AlertTriangle, ChevronDown, ChevronRight, ChevronsRight, ChevronsLeft, Calendar, Zap, Award, CalendarX, Ban, Star } from "lucide-react";
 import { computeAttendanceStats } from "@/utils/attendanceMetrics";
 
@@ -68,6 +69,14 @@ export const AttendanceMatrixTable: React.FC<AttendanceMatrixTableProps> = ({
 }) => {
   const isAyud = filterType === "ayudantias";
   const hasSessionToday = Boolean(todaySessionInfo?.todaySession);
+
+  const [scheduleMap, setScheduleMap] = useState<Record<string, "H1" | "H2">>(() => getSavedAttendanceScheduleMap());
+
+  useEffect(() => {
+    const handleUpdate = () => setScheduleMap(getSavedAttendanceScheduleMap());
+    window.addEventListener("udp_attendance_schedule_updated", handleUpdate);
+    return () => window.removeEventListener("udp_attendance_schedule_updated", handleUpdate);
+  }, []);
 
   // Agrupar sesiones por mes cronológico (deduplicando por fecha para la planilla)
   const monthGroups = useMemo(() => {
@@ -538,22 +547,39 @@ export const AttendanceMatrixTable: React.FC<AttendanceMatrixTableProps> = ({
                       }
 
                       const val = getAttendanceValue(attendanceMap, s.id, sum.canvas_id);
+                      const sched =
+                        scheduleMap[`${s.id}_${sum.canvas_id}`] ||
+                        scheduleMap[`${s.seccionId}_${sum.canvas_id}_${s.fecha}`];
+                      const isH2 = sched === "H2";
 
                       return (
                         <td key={`${sum.canvas_id}_sess_${s.id}`} className="p-0.5 text-center border-l border-gray-100 w-[42px]">
                           <button
                             type="button"
                             onClick={() => onToggleAttendance(s.id, sum.canvas_id, val)}
-                            className={`w-6 h-6 rounded-[2px] font-bold text-[11px] transition-all active:scale-90 inline-flex items-center justify-center cursor-pointer ${
+                            className={`w-6 h-6 rounded-[2px] font-bold text-[11px] transition-all active:scale-90 inline-flex items-center justify-center cursor-pointer relative ${
                               val === 1
-                                ? "bg-emerald-100 text-emerald-800 border border-emerald-300 hover:bg-emerald-200"
+                                ? isH2
+                                  ? "bg-blue-100 text-blue-900 border border-blue-400 hover:bg-blue-200"
+                                  : "bg-emerald-100 text-emerald-800 border border-emerald-300 hover:bg-emerald-200"
                                 : s.esOpcional
                                   ? "bg-gray-100 text-gray-500 border border-gray-300 hover:bg-gray-200"
                                   : "bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100"
                             }`}
-                            title={s.esOpcional ? "Clase opcional: faltar no resta" : undefined}
+                            title={
+                              val === 1
+                                ? isH2
+                                  ? "Presente en Horario Secundario (H2)"
+                                  : "Presente en Horario Principal (H1)"
+                                : s.esOpcional
+                                  ? "Clase opcional: faltar no resta"
+                                  : undefined
+                            }
                           >
                             {val === 1 ? "1" : "0"}
+                            {val === 1 && isH2 && (
+                              <span className="absolute top-0.5 right-0.5 w-1.5 h-1.5 bg-[#008EE2] rounded-full" title="Horario 2" />
+                            )}
                           </button>
                         </td>
                       );
@@ -636,69 +662,17 @@ export const AttendanceMatrixTable: React.FC<AttendanceMatrixTableProps> = ({
             })}
           </tbody>
 
-          {/* Fila Totalizadora Inferior */}
-          <tfoot>
-            <tr className="bg-gray-100 font-extrabold text-[#2D3B45] border-t border-gray-300">
-              <td className="p-1.5 px-2 sticky left-0 z-10 bg-gray-100 border-r border-gray-300 uppercase text-[10px] text-gray-600">
-                Total Presentes
-              </td>
-
-              {monthGroups.map((grp) => {
-                const isCollapsed = Boolean(collapsedMonths[grp.key]);
-
-                if (isCollapsed) {
-                  // Promedio de presentes en el mes contraído
-                  const totalPresentesMes = grp.sessions.reduce((acc, sess) => {
-                    return acc + summaries.filter((sum) => {
-                      const val = attendanceMap[`${sess.id}_${sum.canvas_id}`] ?? attendanceMap[`${sess.seccionId}_${sum.canvas_id}_${sess.fecha}`];
-                      return val === 1;
-                    }).length;
-                  }, 0);
-                  const promMes = grp.sessions.length > 0 ? Math.round(totalPresentesMes / grp.sessions.length) : 0;
-
-                  return (
-                    <td
-                      key={grp.key}
-                      className="p-1 text-center font-mono text-[10px] border-l border-gray-200 bg-gray-200/50"
-                      title={`Promedio de presentes por clase en ${grp.name}: ${promMes}`}
-                    >
-                      <span className="px-1 py-0.5 bg-white border border-gray-300 rounded text-[#2D3B45] font-bold">
-                        ~{promMes}
-                      </span>
-                    </td>
-                  );
-                }
-
-                return grp.sessions.map((s) => {
-                  const count = summaries.filter((sum) => {
-                    return getAttendanceValue(attendanceMap, s.id, sum.canvas_id) === 1;
-                  }).length;
-                  return (
-                    <td key={`tot_${s.id}`} className="p-1 text-center font-mono text-[11px] border-l border-gray-200">
-                      <span className="px-1.5 py-0.5 bg-white border border-gray-300 rounded text-emerald-800 font-bold">
-                        {count}
-                      </span>
-                    </td>
-                  );
-                });
-              })}
-
-              {isAyud && (
-                <>
-                  <td className="p-1 text-center font-mono text-[10px] border-l border-gray-300 bg-amber-50 text-amber-950 font-bold">
-                    {summaries.reduce((acc, s) => acc + (studentWorkRecords[s.canvas_id]?.trabajosRealizados || 0), 0)} trab.
-                  </td>
-                  <td className="p-1 text-center font-mono text-[10px] border-l border-gray-300 bg-emerald-50 text-emerald-950 font-bold">
-                    +{summaries.reduce((acc, s) => acc + ((studentWorkRecords[s.canvas_id]?.trabajosRealizados || 0) * decimasPorTrabajo), 0).toFixed(1)}d
-                  </td>
-                </>
-              )}
-
-              <td colSpan={3} className="p-1 text-center text-[10px] text-[#6B7780] font-medium border-l border-gray-300">
-                75% Mín. UDP
-              </td>
-            </tr>
-          </tfoot>
+          {/* Filas Totalizadoras Inferiores Separadas por Horario */}
+          <AttendanceMatrixFooter
+            monthGroups={monthGroups}
+            collapsedMonths={collapsedMonths}
+            summaries={summaries}
+            attendanceMap={attendanceMap}
+            scheduleMap={scheduleMap}
+            isAyud={isAyud}
+            studentWorkRecords={studentWorkRecords}
+            decimasPorTrabajo={decimasPorTrabajo}
+          />
         </table>
       </div>
     </div>

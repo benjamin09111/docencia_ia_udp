@@ -271,11 +271,76 @@ export function getStoredAnnouncements(courseCode: string): CanvasAnnouncement[]
   return getInitialAnnouncementsForCourse(courseCode);
 }
 
+export function isLocalhost(): boolean {
+  if (typeof window !== "undefined") {
+    const h = window.location.hostname;
+    return h === "localhost" || h === "127.0.0.1" || h.startsWith("192.168.") || h.endsWith(".local");
+  }
+  return process.env.NODE_ENV !== "production";
+}
+
+/**
+ * REGLA ESTRICTA: En localhost o entorno de desarrollo, el título de TODOS los anuncios
+ * de la plataforma llevará el prefijo obligatorio "(PRUEBA - IGNORAR)" para no confundir a los alumnos reales.
+ */
+export function formatAnnouncementTitle(title: string): string {
+  const t = (title || "").trim();
+  if (isLocalhost()) {
+    if (t.startsWith("(PRUEBA - IGNORAR)")) return t;
+    return `(PRUEBA - IGNORAR) ${t}`;
+  }
+  return t;
+}
+
 export function saveStoredAnnouncements(courseCode: string, list: CanvasAnnouncement[]): void {
   if (typeof window === "undefined") return;
   try {
-    localStorage.setItem(`${ANNOUNCEMENTS_STORAGE_KEY}_${courseCode}`, JSON.stringify(list));
+    const formatted = list.map((a) => ({
+      ...a,
+      titulo: formatAnnouncementTitle(a.titulo),
+    }));
+    localStorage.setItem(`${ANNOUNCEMENTS_STORAGE_KEY}_${courseCode}`, JSON.stringify(formatted));
   } catch (e) {
     console.error("Error saving announcements", e);
   }
+}
+
+/**
+ * Publica un nuevo anuncio para un curso/sección, formateando el título según el entorno
+ * y notificando en tiempo real a la interfaz vía CustomEvent.
+ */
+export function publishAnnouncement(
+  courseCode: string,
+  announcement: {
+    titulo: string;
+    mensaje: string;
+    categoria?: AnnouncementCategory;
+    autor?: string;
+    id?: string;
+    fechaPublicacion?: string;
+  }
+): CanvasAnnouncement {
+  const fullAnnouncement: CanvasAnnouncement = {
+    id: announcement.id || `ann_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+    courseCode,
+    titulo: formatAnnouncementTitle(announcement.titulo),
+    mensaje: announcement.mensaje,
+    categoria: announcement.categoria || "general",
+    fechaPublicacion:
+      announcement.fechaPublicacion ||
+      new Date().toLocaleDateString("es-CL", {
+        day: "numeric",
+        month: "short",
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
+    autor: announcement.autor || "Docente UDP",
+    estado: "publicado",
+  };
+  const existing = getStoredAnnouncements(courseCode);
+  saveStoredAnnouncements(courseCode, [fullAnnouncement, ...existing]);
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent("udp_announcements_updated", { detail: { courseCode } }));
+  }
+  return fullAnnouncement;
 }

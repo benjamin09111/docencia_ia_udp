@@ -59,6 +59,7 @@ import { AttendanceCancelClassModal } from "./attendance/AttendanceCancelClassMo
 import { TeacherAppealsWorkspace } from "./TeacherAppealsWorkspace";
 import { TeacherAttendanceLogsWorkspace } from "./attendance/TeacherAttendanceLogsWorkspace";
 import { QuickCopyAttendanceInfoButton } from "./attendance/QuickCopyAttendanceInfoButton";
+import { PublishClassLinkModal } from "./announcements/PublishClassLinkModal";
 import {
   fetchSectionSessionStates,
   fetchSectionWorkSettings,
@@ -78,6 +79,7 @@ import {
   Clock,
   FileSpreadsheet,
   History,
+  Video,
 } from "lucide-react";
 import { getPublicCheckinUrl, getPublicVisualUrl } from "@/utils/urlHelper";
 import { StudentExcelRow } from "@/types";
@@ -173,6 +175,7 @@ export const TeacherAttendanceWorkspace: React.FC<TeacherAttendanceWorkspaceProp
 
   // Modales y estados de copiado
   const [cancelModalSession, setCancelModalSession] = useState<ClassSession | null>(null);
+  const [isClassLinkModalOpen, setIsClassLinkModalOpen] = useState(false);
   const [copiedCheckin, setCopiedCheckin] = useState(false);
   const [copiedVisual, setCopiedVisual] = useState(false);
   const [copiedPin, setCopiedPin] = useState(false);
@@ -679,14 +682,30 @@ export const TeacherAttendanceWorkspace: React.FC<TeacherAttendanceWorkspaceProp
     const diaActualNombre = diasNombres[dayOfWeek];
 
     const ayudDias = selectedSection.horarioAyudantia?.dias || [3];
-    const isScheduledDay = ayudDias.includes(dayOfWeek);
+    const ayudDias2 = selectedSection.horarioAyudantia2?.dias || [];
+    const isPrimaryDay = ayudDias.includes(dayOfWeek);
+    const isSecondaryDay = ayudDias2.includes(dayOfWeek);
+    const isScheduledDay = isPrimaryDay || isSecondaryDay;
 
-    // Buscar sesión de ayudantía de hoy en las sesiones de la sección (solo si hoy es día oficial)
-    const todaySession = isScheduledDay
+    // Buscar sesión de ayudantía de hoy en las sesiones de la sección
+    let todaySession = isScheduledDay
       ? activeSessions.find(
           (s) => s.fecha === todayDateStr && s.tipo === "ayudantia" && s.estado !== "cancelada"
         )
       : null;
+
+    // Si hoy es el horario secundario/alternativo, vincular a la sesión oficial de esta misma semana
+    if (!todaySession && isSecondaryDay) {
+      const curOffset = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+      const monday = new Date(now.getTime() - curOffset * 86_400_000);
+      const sunday = new Date(monday.getTime() + 6 * 86_400_000);
+      const monStr = monday.toISOString().slice(0, 10);
+      const sunStr = sunday.toISOString().slice(0, 10);
+      todaySession =
+        activeSessions.find(
+          (s) => s.tipo === "ayudantia" && s.fecha >= monStr && s.fecha <= sunStr && s.estado !== "cancelada"
+        ) || null;
+    }
 
     // Próxima sesión cronológica de ayudantía
     const nextSession =
@@ -696,14 +715,16 @@ export const TeacherAttendanceWorkspace: React.FC<TeacherAttendanceWorkspaceProp
       activeSessions.find((s) => s.tipo === "ayudantia" && s.estado !== "cancelada") ||
       null;
 
+    const allDias = Array.from(new Set([...ayudDias, ...ayudDias2]));
+
     return {
       todayDateStr,
       diaActualNombre,
       isScheduledDay,
       todaySession: todaySession || null,
       nextSession,
-      horarioAyudantia: selectedSection.horarioAyudantia,
-      diasConfigurados: ayudDias.map((d) => diasNombres[d]).join(", "),
+      horarioAyudantia: isSecondaryDay && selectedSection.horarioAyudantia2 ? selectedSection.horarioAyudantia2 : selectedSection.horarioAyudantia,
+      diasConfigurados: allDias.map((d) => diasNombres[d]).join(", "),
     };
   }, [selectedSection, activeSessions]);
 
@@ -1338,6 +1359,17 @@ export const TeacherAttendanceWorkspace: React.FC<TeacherAttendanceWorkspaceProp
             visualPin={visualPin}
           />
 
+          {/* Publicar anuncio con link de la clase de hoy */}
+          <button
+            type="button"
+            onClick={() => setIsClassLinkModalOpen(true)}
+            className="px-3 py-1.5 rounded-[4px] text-xs font-semibold flex items-center gap-1.5 transition-all shadow-2xs border border-blue-300 bg-blue-50 hover:bg-blue-100 text-[#008EE2] cursor-pointer"
+            title="Publicar anuncio con el enlace de Zoom/Meet/Teams para los alumnos de esta sección"
+          >
+            <Video size={14} className="text-[#008EE2]" />
+            <span>Publicar anuncio con link de la clase de hoy</span>
+          </button>
+
           {/* 1. Copiar link para llenar asistencia del día */}
           <button
             type="button"
@@ -1538,6 +1570,21 @@ export const TeacherAttendanceWorkspace: React.FC<TeacherAttendanceWorkspaceProp
           onReactivateSession={handleReactivateSession}
         />
       )}
+
+      {/* Modal para Publicar Anuncio con Link de la Clase de Hoy */}
+      <PublishClassLinkModal
+        isOpen={isClassLinkModalOpen}
+        onClose={() => setIsClassLinkModalOpen(false)}
+        sections={[{ code: selectedSection?.codigo || courseCode, name: selectedSection?.nombre || "Esta sección" }]}
+        courseDisplayName={selectedSection?.cursoNombre || courseName}
+        onPublished={() => {
+          setQuickNotification({
+            type: "success",
+            message: "✓ Anuncio con el link de la clase de hoy publicado con éxito en el curso.",
+          });
+          setTimeout(() => setQuickNotification(null), 4000);
+        }}
+      />
     </div>
   );
 };

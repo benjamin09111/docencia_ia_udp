@@ -7,6 +7,7 @@ import {
   getSectionByCourseCode,
   getSavedAttendanceMap,
   saveAttendanceMap,
+  recordAttendanceSchedule,
   generateSemesterSessions,
   getTodayDateStr,
   saveSections,
@@ -268,9 +269,22 @@ export function usePublicAttendanceCheckin({
     // La clase de hoy (solo para mostrar el comprobante): el servidor es quien decide si se puede marcar
     // (horario en hora de Chile, PIN, GPS, clase vigente, matrícula y dispositivo).
     const todayStr = getTodayDateStr();
-    const targetSemesterSession =
-      generateSemesterSessions(currentSection).find((s) => s.fecha === todayStr && s.tipo === activeSessionType) ||
-      activeSession;
+    const semesterSessions = generateSemesterSessions(currentSection);
+    let targetSemesterSession = semesterSessions.find((s) => s.fecha === todayStr && s.tipo === activeSessionType);
+    if (!targetSemesterSession) {
+      const [y, m, d] = todayStr.split("-").map(Number);
+      const curDate = new Date(y, m - 1, d);
+      const dow = curDate.getDay();
+      const curOffset = dow === 0 ? 6 : dow - 1;
+      const monday = new Date(curDate.getTime() - curOffset * 86_400_000);
+      const sunday = new Date(monday.getTime() + 6 * 86_400_000);
+      const monStr = monday.toISOString().slice(0, 10);
+      const sunStr = sunday.toISOString().slice(0, 10);
+      targetSemesterSession = semesterSessions.find(
+        (s) => s.tipo === activeSessionType && s.fecha >= monStr && s.fecha <= sunStr
+      );
+    }
+    if (!targetSemesterSession) targetSemesterSession = activeSession;
 
     setIsSubmitting(true);
     try {
@@ -301,8 +315,10 @@ export function usePublicAttendanceCheckin({
       } catch {}
 
       const map = getSavedAttendanceMap();
-      map[`${targetSemesterSession.id}_${selectedStudent.canvas_id}`] = 1;
+      const schedKey = `${targetSemesterSession.id}_${selectedStudent.canvas_id}`;
+      map[schedKey] = 1;
       saveAttendanceMap(map);
+      recordAttendanceSchedule(schedKey, sessionStatus.isSecondary ? "H2" : "H1");
 
       if (typeof window !== "undefined" && "BroadcastChannel" in window) {
         try {

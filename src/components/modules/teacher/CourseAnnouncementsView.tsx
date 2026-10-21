@@ -7,6 +7,7 @@ import {
   CanvasAnnouncement,
   getStoredAnnouncements,
   saveStoredAnnouncements,
+  formatAnnouncementTitle,
 } from "@/services/announcementsService";
 import { CanvasButton } from "@/components/canvas/CanvasButton";
 import { Megaphone, CheckCircle2, Video } from "lucide-react";
@@ -39,17 +40,18 @@ export const CourseAnnouncementsView: React.FC<CourseAnnouncementsViewProps> = (
   };
 
   const handlePublish = (newAnn: CanvasAnnouncement) => {
-    const nextList = [newAnn, ...announcements];
+    const formattedAnn = { ...newAnn, titulo: formatAnnouncementTitle(newAnn.titulo) };
+    const nextList = [formattedAnn, ...announcements];
     setAnnouncements(nextList);
     saveStoredAnnouncements(courseCode, nextList);
-    showToast(`¡Anuncio "${newAnn.titulo}" publicado con éxito en Canvas!`);
+    showToast(`¡Anuncio "${formattedAnn.titulo}" publicado con éxito en Canvas!`);
   };
 
   const handlePublishOnlineClass = ({ titulo, mensaje }: { titulo: string; mensaje: string }) => {
     const newAnn: CanvasAnnouncement = {
       id: `ann_online_${Date.now()}`,
       courseCode,
-      titulo,
+      titulo: formatAnnouncementTitle(titulo),
       mensaje,
       categoria: "online",
       fechaPublicacion: new Date().toLocaleDateString("es-CL", {

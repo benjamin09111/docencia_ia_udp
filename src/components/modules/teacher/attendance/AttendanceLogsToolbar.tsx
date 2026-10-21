@@ -16,6 +16,9 @@ export interface AttendanceLogsToolbarProps {
   missingInSheetCount: number;
   onSyncAllMissing: () => void;
   isSyncingAll: boolean;
+  scheduleStats?: { total: number; h1Count: number; h2Count: number };
+  scheduleFilter?: "all" | "h1" | "h2";
+  onScheduleFilterChange?: (f: "all" | "h1" | "h2") => void;
 }
 
 export const AttendanceLogsToolbar: React.FC<AttendanceLogsToolbarProps> = ({
@@ -31,6 +34,9 @@ export const AttendanceLogsToolbar: React.FC<AttendanceLogsToolbarProps> = ({
   missingInSheetCount,
   onSyncAllMissing,
   isSyncingAll,
+  scheduleStats,
+  scheduleFilter = "all",
+  onScheduleFilterChange,
 }) => {
   return (
     <div className="space-y-2">
@@ -42,9 +48,21 @@ export const AttendanceLogsToolbar: React.FC<AttendanceLogsToolbarProps> = ({
           <div>
             <div className="flex items-center gap-2 flex-wrap">
               <h3 className="text-sm font-bold text-[#2D3B45]">Marcajes de Asistencia</h3>
-              <span className="px-2 py-0.5 bg-emerald-50 text-emerald-800 border border-emerald-200 text-[11px] font-bold rounded">
-                {total} {total === 1 ? "alumno" : "alumnos"}
+              <span className="px-2 py-0.5 bg-gray-100 text-[#2D3B45] border border-gray-300 text-[11px] font-bold rounded">
+                Total: {total}
               </span>
+              {scheduleStats && (
+                <>
+                  <span className="px-2 py-0.5 bg-emerald-50 text-emerald-800 border border-emerald-300 text-[11px] font-bold rounded flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
+                    H1: {scheduleStats.h1Count}
+                  </span>
+                  <span className="px-2 py-0.5 bg-blue-50 text-blue-800 border border-blue-300 text-[11px] font-bold rounded flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#008EE2]"></span>
+                    H2: {scheduleStats.h2Count}
+                  </span>
+                </>
+              )}
               {missingInSheetCount > 0 && (
                 <span className="px-2 py-0.5 bg-amber-50 text-amber-800 border border-amber-200 text-[11px] font-bold rounded flex items-center gap-1">
                   <AlertTriangle size={11} className="text-amber-600" />
@@ -83,6 +101,38 @@ export const AttendanceLogsToolbar: React.FC<AttendanceLogsToolbarProps> = ({
               <option value="all">Todos los días</option>
             </select>
           </div>
+
+          {onScheduleFilterChange && (
+            <div className="flex items-center bg-gray-100 p-0.5 rounded border border-[#C7CDD1] text-xs h-8">
+              <button
+                type="button"
+                onClick={() => onScheduleFilterChange("all")}
+                className={`px-2 py-1 rounded text-[11px] font-semibold transition-colors cursor-pointer ${
+                  scheduleFilter === "all" ? "bg-white text-[#2D3B45] shadow-xs" : "text-[#6B7780] hover:text-[#2D3B45]"
+                }`}
+              >
+                Todos
+              </button>
+              <button
+                type="button"
+                onClick={() => onScheduleFilterChange("h1")}
+                className={`px-2 py-1 rounded text-[11px] font-semibold transition-colors cursor-pointer ${
+                  scheduleFilter === "h1" ? "bg-emerald-600 text-white shadow-xs" : "text-[#6B7780] hover:text-emerald-800"
+                }`}
+              >
+                H1
+              </button>
+              <button
+                type="button"
+                onClick={() => onScheduleFilterChange("h2")}
+                className={`px-2 py-1 rounded text-[11px] font-semibold transition-colors cursor-pointer ${
+                  scheduleFilter === "h2" ? "bg-[#008EE2] text-white shadow-xs" : "text-[#6B7780] hover:text-blue-800"
+                }`}
+              >
+                H2
+              </button>
+            </div>
+          )}
 
           <div className="relative w-full sm:w-44">
             <Search size={13} className="absolute left-2.5 top-2.5 text-gray-400" />

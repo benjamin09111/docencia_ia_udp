@@ -130,6 +130,7 @@ export interface SessionActiveStatus {
   sala?: string;
   edificio?: string;
   motivo?: string;
+  isSecondary?: boolean;
   proximaSesion?: {
     diaNombre: string;
     tipo: ClassSessionType;
@@ -182,7 +183,7 @@ export function checkCurrentSessionActive(
     };
   }
 
-  // 1. Revisar si coincide con el horario único oficial de Ayudantía (abre 15 min antes y cierra 15 min después)
+  // 1. Revisar si coincide con el horario principal oficial de Ayudantía (abre 15 min antes y cierra 15 min después)
   if (section.horarioAyudantia?.dias?.includes(currentDay) && section.horarioAyudantia?.horaInicio && section.horarioAyudantia?.horaFin) {
     const start = toMinutes(section.horarioAyudantia.horaInicio) - 15;
     const end = toMinutes(section.horarioAyudantia.horaFin) + 15;
@@ -194,6 +195,25 @@ export function checkCurrentSessionActive(
         horaFin: section.horarioAyudantia.horaFin,
         sala: section.horarioAyudantia.sala || "No definida",
         edificio: "Edificio Informática UDP",
+        isSecondary: false,
+      };
+    }
+  }
+
+  // 2. Revisar si coincide con el horario alternativo/secundario de Ayudantía (segundo bloque para la misma clase)
+  const ayu2 = section.horarioAyudantia2;
+  if (ayu2?.dias?.includes(currentDay) && ayu2?.horaInicio && ayu2?.horaFin) {
+    const start2 = toMinutes(ayu2.horaInicio) - 15;
+    const end2 = toMinutes(ayu2.horaFin) + 15;
+    if (currentMinutes >= start2 && currentMinutes <= end2) {
+      return {
+        isActive: true,
+        tipo: "ayudantia",
+        horaInicio: ayu2.horaInicio,
+        horaFin: ayu2.horaFin,
+        sala: ayu2.sala || "No definida",
+        edificio: "Edificio Informática UDP",
+        isSecondary: true,
       };
     }
   }

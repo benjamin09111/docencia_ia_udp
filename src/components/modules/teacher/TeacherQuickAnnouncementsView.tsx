@@ -5,6 +5,7 @@ import { CanvasCourse } from "@/types";
 import { CanvasButton } from "@/components/canvas/CanvasButton";
 import { Megaphone, Send, Copy, Check, CheckCircle2, Clock, MapPin, AlertOctagon, FileSpreadsheet } from "lucide-react";
 import { QuickAnnouncementRecipientSelector } from "./announcements/QuickAnnouncementRecipientSelector";
+import { publishAnnouncement } from "@/services/announcementsService";
 
 interface TeacherQuickAnnouncementsViewProps {
   courses: CanvasCourse[];
@@ -59,13 +60,31 @@ export const TeacherQuickAnnouncementsView: React.FC<TeacherQuickAnnouncementsVi
   const handlePublish = () => {
     if (selectedCourseIds.length === 0) return;
     setIsPublishing(true);
+
+    selectedCourseIds.forEach((cId) => {
+      const match = courses.find((c) => c.id === cId);
+      const code = match?.code || `curso_${cId}`;
+      publishAnnouncement(code, {
+        titulo: currentAnnouncement.title,
+        mensaje: currentAnnouncement.body,
+        categoria:
+          selectedType === "suspension"
+            ? "cancelacion"
+            : selectedType === "sala"
+            ? "sala"
+            : selectedType === "entrega"
+            ? "entrega"
+            : "notas",
+      });
+    });
+
     setTimeout(() => {
       setIsPublishing(false);
       setPublishSuccess(
         `¡Anuncio publicado con éxito en ${selectedCourseIds.length} secciones seleccionadas vía Canvas API en paralelo!`
       );
       setTimeout(() => setPublishSuccess(null), 5000);
-    }, 1200);
+    }, 1000);
   };
 
   const handleCopy = () => {
