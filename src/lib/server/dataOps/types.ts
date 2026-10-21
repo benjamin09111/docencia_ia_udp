@@ -35,14 +35,31 @@ const SECTION_RE = /^[A-Za-z0-9_-]{3,40}$/;
 const SESSION_RE = /^[A-Za-z0-9_.:-]{5,120}$/;
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
+const REVERSE_FRIENDLY_IDS: Record<string, string> = {
+  sec_1: "CIT3203_CA01",
+  sec_2: "CIT3203_CA02",
+  sec_3: "CIT3203_CA03",
+  sec_arq_emergentes: "CIT3100_CA02",
+  sec_gestion_org: "CIT2206_CA01",
+  sec_arq_soft: "CIT3000_CA02",
+};
+
+export function toCanonicalCode(raw: string): string {
+  let out = raw;
+  for (const [fr, real] of Object.entries(REVERSE_FRIENDLY_IDS)) {
+    if (out === fr || out.includes(fr)) out = out.replace(fr, real);
+  }
+  return out;
+}
+
 export const v = {
   section: (x: unknown, what = "sección"): string => {
     if (typeof x !== "string" || !SECTION_RE.test(x)) throw bad(what);
-    return x;
+    return toCanonicalCode(x);
   },
   sessionCode: (x: unknown): string => {
     if (typeof x !== "string" || !SESSION_RE.test(x)) throw bad("sesión");
-    return x;
+    return toCanonicalCode(x);
   },
   date: (x: unknown, what = "fecha"): string => {
     if (typeof x !== "string" || !DATE_RE.test(x) || Number.isNaN(Date.parse(x))) throw bad(what);

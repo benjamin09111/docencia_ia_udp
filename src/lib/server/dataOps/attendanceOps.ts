@@ -1,8 +1,7 @@
 import { DataOp, v } from "./types";
 
-// El docente solo puede marcar como equipo docente o sistema: nunca "alumno_*" (eso solo lo escribe el check-in del servidor)
 const TEACHER_MARKERS = ["profesor", "ayudante", "sistema"] as const;
-const PAGE = 1000; // PostgREST corta en 1000 filas por consulta: se pagina para no perder datos en cursos grandes
+const PAGE = 1000;
 const MAX_ROWS = 30000;
 
 async function fetchAll<T>(page: (from: number, to: number) => PromiseLike<{ data: T[] | null; error: unknown }>): Promise<T[]> {
@@ -13,21 +12,6 @@ async function fetchAll<T>(page: (from: number, to: number) => PromiseLike<{ dat
     if (!data || data.length === 0) break;
     out.push(...data);
     if (data.length < PAGE) break;
-  }
-  return out;
-}
-
-const REVERSE_FRIENDLY_IDS: Record<string, string> = {
-  sec_1: "CIT3203_CA01",
-  sec_2: "CIT3203_CA02",
-  sec_3: "CIT3203_CA03",
-  sec_arq_emergentes: "CIT3100_CA02",
-};
-
-function toCanonical(code: string): string {
-  let out = code;
-  for (const [fr, real] of Object.entries(REVERSE_FRIENDLY_IDS)) {
-    if (out.includes(fr)) out = out.replace(fr, real);
   }
   return out;
 }
@@ -45,7 +29,7 @@ export const attendanceOps: Record<string, DataOp> = {
   "attendance.mark": {
     access: "teacher",
     run: async ({ admin }, args) => {
-      const canonicalCode = toCanonical(v.sessionCode(args.sessionCode));
+      const canonicalCode = v.sessionCode(args.sessionCode);
       const { error } = await admin.rpc("upsert_attendance_by_code", {
         p_session_code: canonicalCode,
         p_student_canvas_id: v.int(args.studentCanvasId, "alumno"),
@@ -63,7 +47,7 @@ export const attendanceOps: Record<string, DataOp> = {
       const records = v.array(args.records, "registros", 3000).map((item) => {
         const r = item as Record<string, unknown>;
         return {
-          session_code: toCanonical(v.sessionCode(r.session_code)),
+          session_code: v.sessionCode(r.session_code),
           student_canvas_id: v.int(r.student_canvas_id, "alumno"),
           value: v.oneOf(String(r.value), ["0", "1"] as const, "valor") === "1" ? 1 : 0,
           marked_by: r.marked_by === undefined ? "profesor" : v.oneOf(r.marked_by, TEACHER_MARKERS, "origen"),

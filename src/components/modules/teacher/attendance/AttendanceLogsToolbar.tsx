@@ -95,10 +95,10 @@ export const AttendanceLogsToolbar: React.FC<AttendanceLogsToolbarProps> = ({
               onChange={(e) => onDateChange(e.target.value)}
               className="text-xs font-semibold bg-transparent text-[#2D3B45] focus:outline-hidden cursor-pointer"
             >
+              <option value="all">Todos los días</option>
               {dates.map((d) => (
                 <option key={d.date} value={d.date}>{d.date} ({d.total})</option>
               ))}
-              <option value="all">Todos los días</option>
             </select>
           </div>
 
