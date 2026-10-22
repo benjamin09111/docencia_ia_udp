@@ -39,7 +39,7 @@ export const CaseReflectionViewer: React.FC<CaseReflectionViewerProps> = ({
       {/* Contexto del Caso de Negocio */}
       {contexto && (
         <div className="p-3 sm:p-4 rounded-[4px] bg-amber-50/70 border border-amber-200 text-xs text-amber-950 space-y-1.5">
-          <span className="font-bold flex items-center gap-1.5 text-amber-900 uppercase tracking-wider text-[10px]">
+          <span className="font-bold flex items-center gap-1.5 text-amber-900 uppercase tracking-wider text-xs">
             <Bookmark size={13} /> Escenario del Caso Práctico:
           </span>
           <p className="leading-relaxed text-amber-900">{contexto}</p>
@@ -50,12 +50,12 @@ export const CaseReflectionViewer: React.FC<CaseReflectionViewerProps> = ({
       {preguntas.map((p, pIdx) => (
         <div key={p.id} className="p-3 sm:p-4 rounded-[4px] border border-gray-200 bg-white space-y-2.5">
           <div className="flex items-start gap-2">
-            <span className="w-5 h-5 rounded-full bg-purple-100 text-purple-700 flex items-center justify-center text-[11px] font-bold shrink-0 mt-0.5">
+            <span className="w-5 h-5 rounded-full bg-blue-100 text-[#008EE2] flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">
               {pIdx + 1}
             </span>
             <div>
               <h4 className="text-xs font-bold text-[#2D3B45]">{p.pregunta}</h4>
-              <p className="text-[11px] text-[#6B7780] mt-0.5 italic">{p.guiaReflexion}</p>
+              <p className="text-xs text-[#6B7780] mt-0.5 italic">{p.guiaReflexion}</p>
             </div>
           </div>
 
@@ -73,17 +73,17 @@ export const CaseReflectionViewer: React.FC<CaseReflectionViewerProps> = ({
           {evaluated && (
             <div className="p-3 bg-blue-50/70 border border-blue-200 rounded-[4px] text-xs text-[#0277BD] space-y-1.5">
               <div className="flex items-center justify-between">
-                <span className="font-bold flex items-center gap-1 text-[11px]">
+                <span className="font-bold flex items-center gap-1 text-xs">
                   <Sparkles size={13} className="text-[#008EE2]" /> Evaluación del Agente de Cátedra:
                 </span>
-                <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded">
+                <span className="text-xs bg-emerald-50 border border-emerald-200 text-[#2E7D32] font-bold px-2 py-0.5 rounded">
                   Análisis Válido
                 </span>
               </div>
-              <p className="text-[11px] text-[#01579B] leading-relaxed">
+              <p className="text-xs text-[#01579B] leading-relaxed">
                 Buen enfoque. Tu propuesta aborda los trade-offs clave. En la prueba formal de la cátedra se valorará especialmente haber contrastado el impacto en latencia frente al esfuerzo de implementación.
               </p>
-              <div className="text-[10px] text-[#0277BD] pt-1 border-t border-blue-200/60">
+              <div className="text-xs text-[#0277BD] pt-1 border-t border-blue-200/60">
                 <strong>Puntos clave considerados:</strong> {p.puntosClave.join(" • ")}
               </div>
             </div>

@@ -79,3 +79,31 @@ class SubmissionEvaluationResponse(BaseModel):
     criterios_evaluados: List[CriteriaScore]
     sugerencias_mejora: List[str]
     profesor_revisor_pendiente: bool = True
+
+class ActivityInstructionStep(BaseModel):
+    paso: int
+    titulo: str
+    descripcion: str
+    tiempo_minutos: int
+    puntaje: float
+
+class ActivityDesignRequest(BaseModel):
+    objective: str
+    course_name: str = Field(default="Arquitectura de Software")
+    course_code: str = Field(default="CIT3000") # Curso sandbox
+    topic_content: str = Field(default="Patrones de Arquitectura y Microservicios")
+    duration_minutes: int = Field(default=45)
+    format: str = Field(default="grupal") # "individual" | "grupal"
+    assessment_type: str = Field(default="decimas") # "decimas" | "nota"
+    max_decimas: float = Field(default=0.3)
+
+class ActivityDesignResponse(BaseModel):
+    title: str
+    description: str
+    duration_minutes: int
+    format: str
+    instructions: List[ActivityInstructionStep]
+    rubric: List[RubricItem]
+    decimas_sugeridas: float
+    pauta_ayudante: str
+    model_used: str = "openrouter/auto"

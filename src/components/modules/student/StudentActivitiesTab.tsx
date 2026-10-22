@@ -89,7 +89,7 @@ export const StudentActivitiesTab: React.FC<StudentActivitiesTabProps> = ({
                       <strong className="text-xs text-[#2D3B45] block hover:text-[#008EE2] transition-colors">
                         {act.titulo}
                       </strong>
-                      <span className="text-[11px] text-[#6B7780] line-clamp-1">{act.descripcion}</span>
+                      <span className="text-xs text-[#6B7780] line-clamp-1">{act.descripcion}</span>
                     </div>
                   </CanvasTableCell>
 
@@ -105,11 +105,11 @@ export const StudentActivitiesTab: React.FC<StudentActivitiesTabProps> = ({
 
                   <CanvasTableCell align="center">
                     {sub ? (
-                      <span className="text-[11px] font-bold text-[#2E7D32] bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded flex items-center justify-center gap-1">
+                      <span className="text-xs font-bold text-[#2E7D32] bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded flex items-center justify-center gap-1">
                         <CheckCircle2 size={12} /> Revisado (+{sub.decimas_sugeridas || 0.3} décimas)
                       </span>
                     ) : (
-                      <span className="text-[11px] font-bold text-amber-800 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded flex items-center justify-center gap-1">
+                      <span className="text-xs font-bold text-amber-800 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded flex items-center justify-center gap-1">
                         <Clock size={12} /> Pendiente
                       </span>
                     )}

@@ -66,7 +66,7 @@ export const TeacherAgentProfileView: React.FC = () => {
             <Sliders size={14} className="text-[#008EE2]" />
             Perillas de Personalización Pedagógica
           </h3>
-          <span className="text-[11px] text-[#6B7780]">Configuración Global Docente</span>
+          <span className="text-xs text-[#6B7780]">Configuración Global Docente</span>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
@@ -75,13 +75,13 @@ export const TeacherAgentProfileView: React.FC = () => {
             <select
               value={exigencia}
               onChange={(e) => setExigencia(e.target.value)}
-              className="w-full p-2 border border-gray-300 rounded focus:ring-1 focus:ring-[#008EE2] bg-white"
+              className="w-full p-2 border border-gray-300 rounded focus:ring-1 focus:ring-[#008EE2] bg-white text-xs"
             >
               <option value="3">Moderada (3/5) • Énfasis formativo</option>
               <option value="4">Alta (4/5) • Estándar Ingeniería UDP</option>
               <option value="5">Muy Rigurosa (5/5) • Hitos Capstone</option>
             </select>
-            <span className="text-[10px] text-gray-500 mt-1 block">Afecta sugerencias de nota en corrección.</span>
+            <span className="text-xs text-gray-500 mt-1 block">Afecta sugerencias de nota en corrección.</span>
           </div>
 
           <div>
@@ -89,13 +89,13 @@ export const TeacherAgentProfileView: React.FC = () => {
             <select
               value={estilo}
               onChange={(e) => setEstilo(e.target.value)}
-              className="w-full p-2 border border-gray-300 rounded focus:ring-1 focus:ring-[#008EE2] bg-white"
+              className="w-full p-2 border border-gray-300 rounded focus:ring-1 focus:ring-[#008EE2] bg-white text-xs"
             >
               <option value="constructivo">Constructivo y Orientador</option>
               <option value="socratico">Preguntas Guía (Método Socrático)</option>
               <option value="rubrica">Estricto por Criterios de Rúbrica</option>
             </select>
-            <span className="text-[10px] text-gray-500 mt-1 block">Modo de redactar feedback al estudiante.</span>
+            <span className="text-xs text-gray-500 mt-1 block">Modo de redactar feedback al estudiante.</span>
           </div>
 
           <div>
@@ -103,13 +103,13 @@ export const TeacherAgentProfileView: React.FC = () => {
             <select
               value={tono}
               onChange={(e) => setTono(e.target.value)}
-              className="w-full p-2 border border-gray-300 rounded focus:ring-1 focus:ring-[#008EE2] bg-white"
+              className="w-full p-2 border border-gray-300 rounded focus:ring-1 focus:ring-[#008EE2] bg-white text-xs"
             >
               <option value="cercano">Cercano y Empático</option>
               <option value="formal">Formal y Académico</option>
               <option value="conciso">Técnico y Directo al Punto</option>
             </select>
-            <span className="text-[10px] text-gray-500 mt-1 block">Voz institucional con los estudiantes.</span>
+            <span className="text-xs text-gray-500 mt-1 block">Voz institucional con los estudiantes.</span>
           </div>
         </div>
 
@@ -117,8 +117,8 @@ export const TeacherAgentProfileView: React.FC = () => {
         <div className="space-y-1.5 pt-2">
           <label className="text-xs font-bold text-[#2D3B45] block flex items-center justify-between">
             <span>Directrices Específicas del Profesor (System Prompt Docente)</span>
-            <span className="text-[10px] text-[#008EE2] font-semibold flex items-center gap-1">
-              <Sparkles size={11} /> Criterio Docente Primario
+            <span className="text-xs text-[#008EE2] font-semibold flex items-center gap-1">
+              <Sparkles size={12} /> Criterio Docente Primario
             </span>
           </label>
           <textarea
@@ -150,12 +150,12 @@ export const TeacherAgentProfileView: React.FC = () => {
           </div>
           <div>
             <h4 className="text-xs font-bold text-[#2D3B45]">Base de Conocimiento Docente Centralizada</h4>
-            <p className="text-[11px] text-[#6B7780]">
+            <p className="text-xs text-[#6B7780]">
               El agente se nutre de tus programas, rúbricas de cursos y diapositivas oficiales de la Escuela.
             </p>
           </div>
         </div>
-        <span className="text-[11px] bg-gray-100 border border-gray-300 px-2.5 py-1 rounded text-gray-700 font-semibold shrink-0">
+        <span className="text-xs bg-gray-100 border border-gray-300 px-2.5 py-1 rounded text-gray-700 font-semibold shrink-0">
           Corpus Sincronizado
         </span>
       </div>

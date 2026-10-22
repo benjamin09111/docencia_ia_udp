@@ -63,8 +63,8 @@ export const CourseSisterSectionsBar: React.FC<CourseSisterSectionsBarProps> = (
               }`}
             >
               <span>{sectionPart}</span>
-              <span className={`text-[10px] flex items-center gap-0.5 ${isActive ? "text-red-100" : "text-gray-500"}`}>
-                <Users size={10} />
+              <span className={`text-xs flex items-center gap-0.5 ${isActive ? "text-red-100" : "text-gray-500"}`}>
+                <Users size={12} />
                 <span>{c.students_count || 0}</span>
               </span>
             </button>

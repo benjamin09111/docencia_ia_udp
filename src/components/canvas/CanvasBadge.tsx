@@ -24,7 +24,7 @@ export const CanvasBadge: React.FC<CanvasBadgeProps> = ({
     udp: "bg-[#FFEBEE] text-[#C8102E] border-[#FFCDD2] font-semibold",
   };
 
-  const sizeStyles = size === "sm" ? "px-2 py-0.5 text-[11px]" : "px-2.5 py-1 text-xs";
+  const sizeStyles = size === "sm" ? "px-2 py-0.5 text-xs" : "px-2.5 py-1 text-xs font-semibold";
 
   return (
     <span

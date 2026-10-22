@@ -2,6 +2,7 @@
 
 import React from "react";
 import { UserRole } from "@/types";
+import { useRouter, usePathname } from "next/navigation";
 import {
   User,
   Sparkles,
@@ -15,8 +16,8 @@ import {
 } from "lucide-react";
 
 interface CanvasSidebarProps {
-  currentRole: UserRole;
-  onRoleChange: (role: UserRole) => void;
+  currentRole?: UserRole;
+  onRoleChange?: (role: UserRole) => void;
   activeNav?: string;
   onNavClick?: (nav: string) => void;
   userName?: string;
@@ -24,17 +25,28 @@ interface CanvasSidebarProps {
 }
 
 export const CanvasSidebar: React.FC<CanvasSidebarProps> = ({
-  currentRole,
+  currentRole = "admin",
   onRoleChange,
   activeNav,
   onNavClick,
   userName = "Benjamín Morales",
   userAvatar,
 }) => {
-  const roleViews: { id: UserRole; label: string; icon: any; title: string }[] = [
-    { id: "admin", label: "UDP IA", icon: Sparkles, title: "Administración global & Gestión de agentes IA" },
-    { id: "teacher", label: "Docencia", icon: School, title: "Docencia: Profesores y Ayudantes" },
-    { id: "student", label: "Aprendizaje con IA", icon: GraduationCap, title: "Estudiantes: Aprendizaje guiado y retroalimentación IA" },
+  const router = useRouter();
+  const pathname = usePathname();
+
+  const effectiveRole: UserRole = pathname?.startsWith("/admin")
+    ? "admin"
+    : pathname?.startsWith("/docente")
+    ? "teacher"
+    : pathname?.startsWith("/estudiante")
+    ? "student"
+    : currentRole;
+
+  const roleViews: { id: UserRole; label: string; icon: any; title: string; route: string }[] = [
+    { id: "admin", label: "UDP IA", icon: Sparkles, title: "Administración global & Gestión de agentes IA", route: "/admin" },
+    { id: "teacher", label: "Docencia", icon: School, title: "Docencia: Profesores y Ayudantes", route: "/docente" },
+    { id: "student", label: "Aprendizaje con IA", icon: GraduationCap, title: "Estudiantes: Aprendizaje guiado y retroalimentación IA", route: "/estudiante" },
   ];
 
   // Utilidades institucionales estándar de Canvas LMS
@@ -45,9 +57,14 @@ export const CanvasSidebar: React.FC<CanvasSidebarProps> = ({
     { id: "help", label: "Ayuda", icon: HelpCircle, badge: "1" },
   ];
 
-  const handleRoleSelect = (role: UserRole) => {
-    onRoleChange(role);
-    onNavClick?.(role);
+  const handleRoleSelect = (roleOrItem: UserRole | (typeof roleViews)[0]) => {
+    const roleId = typeof roleOrItem === "string" ? roleOrItem : roleOrItem.id;
+    const targetRoute = typeof roleOrItem === "string"
+      ? (roleId === "admin" ? "/admin" : roleId === "teacher" ? "/docente" : "/estudiante")
+      : roleOrItem.route;
+    onRoleChange?.(roleId);
+    onNavClick?.(roleId);
+    router.push(targetRoute);
   };
 
   return (
@@ -97,12 +114,12 @@ export const CanvasSidebar: React.FC<CanvasSidebarProps> = ({
       <nav className="w-full flex flex-col mt-1 space-y-0.5" aria-label="Vistas del sistema">
         {roleViews.map((item) => {
           const Icon = item.icon;
-          const isActive = currentRole === item.id;
+          const isActive = effectiveRole === item.id;
           return (
             <button
               key={item.id}
               type="button"
-              onClick={() => handleRoleSelect(item.id)}
+              onClick={() => handleRoleSelect(item)}
               className={`w-full flex flex-col items-center py-2 px-1 transition-all relative group cursor-pointer ${
                 isActive
                   ? "bg-white text-[#B71C1C] shadow-xs font-semibold"

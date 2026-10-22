@@ -77,14 +77,14 @@ export const TeacherCoursesList: React.FC<TeacherCoursesListProps> = ({
           <span className="font-semibold text-[#2D3B45]">
             Mostrar solo cursos vinculados con agentes IA
           </span>
-          <span className="text-[10px] bg-red-50 text-[#B71C1C] font-bold px-2 py-0.5 rounded border border-red-200">
+          <span className="text-xs bg-red-50 text-[#B71C1C] font-semibold px-2 py-0.5 rounded border border-red-200">
             {filteredEnriched.length} secciones activas
           </span>
         </label>
 
         {/* Selector de modo de vista: Agrupado por Asignatura vs Lista Plana */}
         <div className="flex items-center gap-1.5 self-end sm:self-auto">
-          <span className="text-[#6B7780] text-[11px] font-medium mr-1">Vista:</span>
+          <span className="text-[#6B7780] text-xs font-medium mr-1">Vista:</span>
           <button
             type="button"
             onClick={() => setViewMode("grouped")}
@@ -144,12 +144,12 @@ export const TeacherCoursesList: React.FC<TeacherCoursesListProps> = ({
               indicatorColor="green"
               isPublished={true}
               title={
-                <span className="flex items-center gap-2">
-                  <span className="font-bold text-[#2D3B45]">{c.name}</span>
-                  <span className="text-xs font-semibold px-1.5 py-0.5 rounded bg-gray-100 text-[#55636E]">
+                <span className="flex items-center gap-2 flex-wrap">
+                  <span className="font-bold text-sm text-[#2D3B45]">{c.name}</span>
+                  <span className="text-xs font-semibold px-2 py-0.5 rounded bg-gray-100 text-[#55636E] border border-gray-200">
                     {c.code}
                   </span>
-                  <span className="text-[10px] bg-blue-50 text-[#008EE2] px-2 py-0.5 rounded font-medium border border-blue-200 flex items-center gap-1">
+                  <span className="text-xs bg-blue-50 text-[#008EE2] px-2 py-0.5 rounded font-medium border border-blue-200 flex items-center gap-1">
                     <Sparkles size={11} />
                     <span>{c.agentName}</span>
                   </span>

@@ -72,7 +72,7 @@ export const AnnouncementsHistoryList: React.FC<AnnouncementsHistoryListProps> =
           <History size={16} className="text-gray-500" />
           Historial de Anuncios Emitidos en Canvas ({announcements.length})
         </h3>
-        <span className="text-[11px] text-[#6B7780]">Sincronizado con Canvas LMS</span>
+        <span className="text-xs text-[#6B7780]">Sincronizado con Canvas LMS</span>
       </div>
 
       {announcements.length === 0 ? (
@@ -90,7 +90,7 @@ export const AnnouncementsHistoryList: React.FC<AnnouncementsHistoryListProps> =
                 </div>
 
                 <div className="flex items-center gap-2 text-xs">
-                  <span className="text-[11px] text-gray-400 font-medium">{ann.fechaPublicacion}</span>
+                  <span className="text-xs text-gray-400 font-medium">{ann.fechaPublicacion}</span>
                   <CanvasBadge variant="success">Publicado en Canvas</CanvasBadge>
                   <button
                     type="button"
@@ -103,11 +103,11 @@ export const AnnouncementsHistoryList: React.FC<AnnouncementsHistoryListProps> =
                 </div>
               </div>
 
-              <div className="text-[11px] text-gray-600 whitespace-pre-line bg-gray-50 p-2.5 rounded border border-gray-200 max-h-28 overflow-y-auto leading-relaxed">
+              <div className="text-xs text-gray-600 whitespace-pre-line bg-gray-50 p-2.5 rounded border border-gray-200 max-h-28 overflow-y-auto leading-relaxed">
                 {renderMessage(ann.mensaje)}
               </div>
 
-              <div className="text-[10px] text-gray-400 flex items-center gap-2">
+              <div className="text-xs text-gray-400 flex items-center gap-2">
                 <span>Autor: {ann.autor}</span>
                 <span>•</span>
                 <span>Canal: Notificaciones automáticas por correo & App Canvas</span>

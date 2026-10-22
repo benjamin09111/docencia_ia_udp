@@ -72,7 +72,7 @@ export const TeacherSubjectGroupCard: React.FC<TeacherSubjectGroupCardProps> = (
               <span>Multisección</span>
             </span>
           )}
-          <span className="text-[11px] text-[#6B7780]">
+          <span className="text-xs text-[#6B7780]">
             Acciones rápidas para {group.sectionsCount === 1 ? "esta sección" : `las ${group.sectionsCount} secciones`}:
           </span>
         </div>
@@ -81,28 +81,28 @@ export const TeacherSubjectGroupCard: React.FC<TeacherSubjectGroupCardProps> = (
           <button
             type="button"
             onClick={handleCopyAttendance}
-            className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#2D3B45] hover:text-[#B71C1C] bg-white hover:bg-gray-100 border border-gray-300 px-2 py-1 rounded transition-colors cursor-pointer"
+            className="inline-flex items-center gap-1 text-xs font-semibold text-[#2D3B45] hover:text-[#B71C1C] bg-white hover:bg-gray-100 border border-gray-300 px-2.5 py-1 rounded transition-colors cursor-pointer"
             title="Copiar enlaces, pin y plantilla de asistencia de hoy"
           >
-            <Copy size={12} className="text-[#2E7D32]" />
+            <Copy size={13} className="text-[#2E7D32]" />
             <span>Copiar Asistencia</span>
           </button>
           <button
             type="button"
             onClick={handlePublishAttendanceAnnouncement}
-            className="inline-flex items-center gap-1 text-[11px] font-bold text-[#B71C1C] hover:text-[#8E1010] bg-red-50 hover:bg-red-100 border border-red-200 px-2 py-1 rounded transition-colors cursor-pointer"
+            className="inline-flex items-center gap-1 text-xs font-bold text-[#B71C1C] hover:text-[#8E1010] bg-red-50 hover:bg-red-100 border border-red-200 px-2.5 py-1 rounded transition-colors cursor-pointer"
             title="Publica automáticamente el anuncio de asistencia de hoy en cada sección"
           >
-            <Sparkles size={12} />
+            <Sparkles size={13} />
             <span>Anunciar Asistencia (1 clic)</span>
           </button>
           <button
             type="button"
             onClick={() => setIsLinkModalOpen(true)}
-            className="inline-flex items-center gap-1 text-[11px] font-bold text-[#008EE2] hover:text-[#0077BE] bg-blue-50 hover:bg-blue-100 border border-blue-200 px-2 py-1 rounded transition-colors cursor-pointer"
+            className="inline-flex items-center gap-1 text-xs font-bold text-[#008EE2] hover:text-[#0077BE] bg-blue-50 hover:bg-blue-100 border border-blue-200 px-2.5 py-1 rounded transition-colors cursor-pointer"
             title="Abre modal para pegar y publicar el link de la clase de hoy"
           >
-            <Video size={12} />
+            <Video size={13} />
             <span>Mandar Link Clase</span>
           </button>
         </div>
@@ -118,10 +118,10 @@ export const TeacherSubjectGroupCard: React.FC<TeacherSubjectGroupCardProps> = (
           isPublished={true}
           title={
             <span className="flex items-center gap-2 flex-wrap">
-              <span className="font-bold text-[#2D3B45]">{sec.sectionName}</span>
-              <span className="text-xs font-semibold px-1.5 py-0.5 rounded bg-gray-100 text-[#55636E] border border-gray-200">{sec.code}</span>
-              <span className="text-[11px] font-normal text-[#6B7780] flex items-center gap-1"><Users size={12} /><span>{sec.students_count || 0} alumnos</span></span>
-              <span className="text-[10px] bg-blue-50 text-[#008EE2] px-2 py-0.5 rounded font-medium border border-blue-200 flex items-center gap-1"><Sparkles size={11} /><span>{sec.agentName}</span></span>
+              <span className="font-bold text-sm text-[#2D3B45]">{sec.sectionName}</span>
+              <span className="text-xs font-semibold px-2 py-0.5 rounded bg-gray-100 text-[#55636E] border border-gray-200">{sec.code}</span>
+              <span className="text-xs font-normal text-[#6B7780] flex items-center gap-1"><Users size={13} /><span>{sec.students_count || 0} alumnos</span></span>
+              <span className="text-xs bg-blue-50 text-[#008EE2] px-2 py-0.5 rounded font-medium border border-blue-200 flex items-center gap-1"><Sparkles size={11} /><span>{sec.agentName}</span></span>
             </span>
           }
           subtitle={

@@ -29,9 +29,9 @@ export const DashboardTopAndRiskLists: React.FC<DashboardTopAndRiskListsProps> =
           <button
             type="button"
             onClick={() => onNavigateTab("excel")}
-            className="text-[11px] text-[#008EE2] hover:underline flex items-center gap-1 font-semibold cursor-pointer"
+            className="text-xs text-[#008EE2] hover:underline flex items-center gap-1 font-semibold cursor-pointer"
           >
-            Ver nómina <ArrowRight size={11} />
+            Ver nómina <ArrowRight size={12} />
           </button>
         </div>
 
@@ -42,11 +42,11 @@ export const DashboardTopAndRiskLists: React.FC<DashboardTopAndRiskListsProps> =
                 <p className="font-semibold text-[#2D3B45] truncate">
                   {st.nombres} {st.apellidos}
                 </p>
-                <span className="text-[11px] text-[#6B7780] font-mono">{st.rut}</span>
+                <span className="text-xs text-[#6B7780] font-mono">{st.rut}</span>
               </div>
               <div className="text-right shrink-0">
                 <span className="font-bold text-[#2E7D32] text-sm">{st.nota_final.toFixed(1)}</span>
-                <span className="text-[10px] text-[#6B7780] block">{st.asistencia_pct || 90}% Asist.</span>
+                <span className="text-xs text-[#6B7780] block">{st.asistencia_pct || 90}% Asist.</span>
               </div>
             </div>
           ))}
@@ -63,9 +63,9 @@ export const DashboardTopAndRiskLists: React.FC<DashboardTopAndRiskListsProps> =
           <button
             type="button"
             onClick={() => onNavigateTab("asistencia")}
-            className="text-[11px] text-[#B71C1C] hover:underline flex items-center gap-1 font-semibold cursor-pointer"
+            className="text-xs text-[#B71C1C] hover:underline flex items-center gap-1 font-semibold cursor-pointer"
           >
-            Revisar asistencia <ArrowRight size={11} />
+            Revisar asistencia <ArrowRight size={12} />
           </button>
         </div>
 
@@ -80,12 +80,12 @@ export const DashboardTopAndRiskLists: React.FC<DashboardTopAndRiskListsProps> =
                     {st.nombres} {st.apellidos}
                   </p>
                 </div>
-                <span className="text-[10px] font-semibold text-red-700 block mt-0.5">
+                <span className="text-xs font-semibold text-red-700 block mt-0.5">
                   Abandono de carrera formalizado en SIS UDP (Sin asistencia)
                 </span>
               </div>
               <div className="text-right shrink-0 ml-2">
-                <span className="text-[10px] bg-red-200 text-red-900 font-bold px-1.5 py-0.5 rounded">
+                <span className="text-xs bg-red-200 text-red-900 font-bold px-1.5 py-0.5 rounded">
                   Retirado
                 </span>
               </div>
@@ -99,13 +99,13 @@ export const DashboardTopAndRiskLists: React.FC<DashboardTopAndRiskListsProps> =
                 <p className="font-semibold text-[#2D3B45] truncate">
                   {st.nombres} {st.apellidos}
                 </p>
-                <span className="text-[11px] text-[#C8102E] font-medium">
+                <span className="text-xs text-[#C8102E] font-medium">
                   {st.nota_final < 4.0 ? "Promedio bajo (< 4.0)" : "Asistencia bajo 75%"}
                 </span>
               </div>
               <div className="text-right shrink-0">
                 <span className="font-bold text-[#C8102E] text-sm">{st.nota_final.toFixed(1)}</span>
-                <span className="text-[10px] text-[#6B7780] block">{st.asistencia_pct || 65}% Asist.</span>
+                <span className="text-xs text-[#6B7780] block">{st.asistencia_pct || 65}% Asist.</span>
               </div>
             </div>
           ))}

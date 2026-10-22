@@ -8,11 +8,14 @@ from core.models import (
     AgentChatRequest,
     AgentChatResponse,
     SubmissionEvaluationRequest,
-    SubmissionEvaluationResponse
+    SubmissionEvaluationResponse,
+    ActivityDesignRequest,
+    ActivityDesignResponse
 )
 from core.hierarchy import hierarchy_manager
 from agents.root import root_agent
 from agents.specialists.submission_evaluator import submission_evaluator_worker
+from agents.specialists.activity_designer import activity_designer_worker
 from protocols.agent_card import get_agent_card
 
 app = FastAPI(
@@ -80,6 +83,20 @@ def handle_submission_evaluation(request: SubmissionEvaluationRequest):
         return JSONResponse(
             status_code=500,
             content={"error": "Error interno al evaluar la entrega."}
+        )
+
+@app.post("/api/v1/agent/design-activity", response_model=ActivityDesignResponse)
+def handle_activity_design(request: ActivityDesignRequest):
+    """
+    Agente 1: Diseñador de Actividades y Rúbricas (OpenRouter).
+    Genera dinámicas de ayudantía, pauta de mediación y rúbrica sobre 100 puntos netos.
+    """
+    try:
+        return activity_designer_worker.design_activity(request)
+    except Exception:
+        return JSONResponse(
+            status_code=500,
+            content={"error": "Error interno al diseñar la actividad con el Agente 1."}
         )
 
 @app.post("/api/v1/agent/stream")

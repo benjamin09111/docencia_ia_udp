@@ -59,16 +59,16 @@ export const AdminQuickAccessNav: React.FC<AdminQuickAccessNavProps> = ({
             </span>
           </div>
 
-          <div className="text-sm sm:text-[15px] font-bold text-[#2D3B45] group-hover:text-[#B71C1C] transition-colors leading-snug">
+          <div className="text-sm font-bold text-[#2D3B45] group-hover:text-[#B71C1C] transition-colors leading-snug">
             FIC — Ing. Civil en Informática y Telecomunicaciones
           </div>
 
-          <div className="text-xs sm:text-[13px] text-[#6B7780] mt-1.5 flex items-center gap-1.5">
+          <div className="text-xs text-[#6B7780] mt-1.5 flex items-center gap-1.5">
             <Building2 size={13} className="shrink-0 text-gray-400" />
             <span className="truncate">FIC • Av. Ejército 441</span>
           </div>
 
-          <div className="mt-3 pt-2.5 border-t border-gray-100 flex items-center justify-between text-xs sm:text-[13px]">
+          <div className="mt-3 pt-2.5 border-t border-gray-100 flex items-center justify-between text-xs">
             <span className="text-[#6B7780] font-medium">5 cursos • 8 agentes</span>
             <span className="text-[#B71C1C] font-bold text-sm flex items-center gap-0.5 group-hover:translate-x-0.5 transition-transform">
               Ir directo <ChevronRight size={15} />
@@ -76,15 +76,6 @@ export const AdminQuickAccessNav: React.FC<AdminQuickAccessNavProps> = ({
           </div>
         </button>
       )}
-
-      {/* Nota descriptiva */}
-      <div className="p-3 rounded-[4px] bg-[#F5F6F8] border border-[#E0E3E6] text-xs sm:text-[13px] text-[#6B7780] leading-relaxed">
-        <p className="font-bold text-sm text-[#2D3B45] mb-1 flex items-center gap-1.5">
-          <CheckCircle2 size={14} className="text-emerald-600" />
-          Espacio Operativo
-        </p>
-        Acceso directo a la carrera con agentes IA, secciones y rúbricas activas.
-      </div>
     </aside>
   );
 };

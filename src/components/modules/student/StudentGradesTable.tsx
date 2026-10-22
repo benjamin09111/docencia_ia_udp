@@ -21,7 +21,7 @@ export const StudentGradesTable: React.FC<StudentGradesTableProps> = ({ student 
     <div className="bg-white border border-[#E0E3E6] rounded-[4px] p-5 shadow-canvas-card space-y-4">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-[#E0E3E6] pb-3">
         <div>
-          <span className="text-[10px] font-bold text-[#6B7780] uppercase tracking-wider block">
+          <span className="text-xs font-bold text-[#6B7780] uppercase tracking-wider block">
             Planilla Oficial de Calificaciones Canvas
           </span>
           <h3 className="text-sm font-bold text-[#2D3B45] mt-0.5">
@@ -49,7 +49,7 @@ export const StudentGradesTable: React.FC<StudentGradesTableProps> = ({ student 
           <CanvasTableRow hoverable={false}>
             <CanvasTableCell>
               <strong className="text-xs text-[#2D3B45]">Solemne Oficial 1</strong>
-              <span className="text-[11px] text-[#6B7780] block">Atributos de Calidad y Patrones</span>
+              <span className="text-xs text-[#6B7780] block">Atributos de Calidad y Patrones</span>
             </CanvasTableCell>
             <CanvasTableCell align="center">
               <span className="text-xs text-[#6B7780]">30%</span>
@@ -70,7 +70,7 @@ export const StudentGradesTable: React.FC<StudentGradesTableProps> = ({ student 
               <span className="text-xs font-bold text-[#008EE2]">{student.solemne_1_final}</span>
             </CanvasTableCell>
             <CanvasTableCell align="center">
-              <span className="text-[11px] font-bold text-[#2E7D32] bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-[3px]">
+              <span className="text-xs font-bold text-[#2E7D32] bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-[3px]">
                 Calificada
               </span>
             </CanvasTableCell>
@@ -79,7 +79,7 @@ export const StudentGradesTable: React.FC<StudentGradesTableProps> = ({ student 
           <CanvasTableRow hoverable={false}>
             <CanvasTableCell>
               <strong className="text-xs text-[#2D3B45]">Solemne Oficial 2</strong>
-              <span className="text-[11px] text-[#6B7780] block">Planificación Ágil, Riesgos PMBOK y Cloud</span>
+              <span className="text-xs text-[#6B7780] block">Planificación Ágil, Riesgos PMBOK y Cloud</span>
             </CanvasTableCell>
             <CanvasTableCell align="center">
               <span className="text-xs text-[#6B7780]">30%</span>
@@ -94,7 +94,7 @@ export const StudentGradesTable: React.FC<StudentGradesTableProps> = ({ student 
               <span className="text-xs font-bold text-[#008EE2]">{student.solemne_2}</span>
             </CanvasTableCell>
             <CanvasTableCell align="center">
-              <span className="text-[11px] font-bold text-[#2E7D32] bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-[3px]">
+              <span className="text-xs font-bold text-[#2E7D32] bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-[3px]">
                 Calificada
               </span>
             </CanvasTableCell>
@@ -103,7 +103,7 @@ export const StudentGradesTable: React.FC<StudentGradesTableProps> = ({ student 
           <CanvasTableRow hoverable={false}>
             <CanvasTableCell>
               <strong className="text-xs text-[#2D3B45]">Taller y Proyecto Final</strong>
-              <span className="text-[11px] text-[#6B7780] block">Arquitectura Ejecutable y Defensa</span>
+              <span className="text-xs text-[#6B7780] block">Arquitectura Ejecutable y Defensa</span>
             </CanvasTableCell>
             <CanvasTableCell align="center">
               <span className="text-xs text-[#6B7780]">40%</span>
@@ -118,7 +118,7 @@ export const StudentGradesTable: React.FC<StudentGradesTableProps> = ({ student 
               <span className="text-xs font-bold text-[#008EE2]">{student.taller_proyecto}</span>
             </CanvasTableCell>
             <CanvasTableCell align="center">
-              <span className="text-[11px] font-bold text-[#2E7D32] bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-[3px]">
+              <span className="text-xs font-bold text-[#2E7D32] bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-[3px]">
                 Calificada
               </span>
             </CanvasTableCell>

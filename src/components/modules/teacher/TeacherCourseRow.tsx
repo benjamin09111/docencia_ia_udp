@@ -96,16 +96,16 @@ export const TeacherCourseRow: React.FC<TeacherCourseRowProps> = ({
       <CanvasTableCell>
         <div>
           <div className="flex items-center gap-1.5">
-            <span className="font-bold text-[#2D3B45] text-xs group-hover:text-[#008EE2] transition-colors">
+            <span className="font-semibold text-sm text-[#2D3B45] group-hover:text-[#008EE2] transition-colors">
               {course.name}
             </span>
             {isMockCourse && (
-              <span className="text-[10px] bg-amber-100 text-amber-800 font-bold px-1.5 py-0.2 rounded border border-amber-200">
+              <span className="text-xs bg-amber-100 text-amber-800 font-bold px-1.5 py-0.5 rounded border border-amber-200">
                 Mock 1er Año
               </span>
             )}
           </div>
-          <span className="block text-[11px] text-[#6B7780]">
+          <span className="block text-xs text-[#6B7780] mt-0.5">
             Canvas ID: {course.id} • {sec.nombre} (Prof. {sec.profesor})
           </span>
         </div>
@@ -118,13 +118,13 @@ export const TeacherCourseRow: React.FC<TeacherCourseRowProps> = ({
       </CanvasTableCell>
 
       <CanvasTableCell>
-        <div className="space-y-0.5 text-[11px] leading-tight min-w-[170px]">
+        <div className="space-y-0.5 text-xs leading-tight min-w-[170px]">
           <div className="flex items-center gap-1.5 text-purple-950 font-medium">
             <span className="w-1.5 h-1.5 rounded-full bg-purple-600 shrink-0" />
             <span><strong>Ayudantía:</strong> {sched.ayudantia}</span>
           </div>
-          <div className="text-[10px] text-[#6B7780] pl-3 font-mono flex items-center gap-1">
-            <Building2 size={11} className="text-[#C8102E]" />
+          <div className="text-xs text-[#6B7780] pl-3 font-mono flex items-center gap-1 mt-0.5">
+            <Building2 size={12} className="text-[#C8102E]" />
             <span>{sched.ayudantiaSala || "SALA X"}</span>
           </div>
         </div>
