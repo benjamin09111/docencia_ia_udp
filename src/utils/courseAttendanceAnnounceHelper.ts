@@ -34,7 +34,7 @@ export function formatSectionAttendanceInfo(
   const checkinUrl = getPublicCheckinUrl(code);
   const visualUrl = getPublicVisualUrl(code);
   const details = sec.sectionDetails;
-  const visualPin = details ? getSectionVisualPin(details) : (details?.pinActivo || "4821");
+  const visualPin = details ? getSectionVisualPin(details) : "4821";
   const pinAsistencia = dailyPin || "Disponible en clase";
 
   return `${subjectName} - ${secName}
