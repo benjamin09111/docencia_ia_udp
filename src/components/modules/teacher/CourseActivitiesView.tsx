@@ -3,16 +3,12 @@
 import React, { useState, useMemo } from "react";
 import { CourseDeliverable, StudentSubmission } from "@/types";
 import { CanvasToolbar } from "@/components/canvas/CanvasToolbar";
-import { CanvasItemGroup, CanvasItemRow } from "@/components/canvas/CanvasItemGroup";
+import { CanvasItemGroup } from "@/components/canvas/CanvasItemGroup";
 import { CreateActivityWorkspace } from "./CreateActivityWorkspace";
-import { ActivityEditModal } from "./activities/ActivityEditModal";
-import { ActivityDeleteConfirmModal } from "./activities/ActivityDeleteConfirmModal";
-import { CatalogoActividadesModal } from "./activities/CatalogoActividadesModal";
-import { ActivitySubmissionsModal } from "./activities/ActivitySubmissionsModal";
-import { ActivityPautaModal } from "./activities/ActivityPautaModal";
-import { FileText, Award, Edit3, EyeOff, Globe, Trash2, CheckCircle2 } from "lucide-react";
-import { CreateWithAgentModal } from "./activities/CreateWithAgentModal";
+import { CheckCircle2 } from "lucide-react";
 import { ActivityAgentDraft } from "@/types/activityAgent";
+import { CourseActivitiesModals } from "./activities/CourseActivitiesModals";
+import { ActivityItemRow } from "./activities/ActivityItemRow";
 
 interface CourseActivitiesViewProps {
   courseId: number;
@@ -88,19 +84,23 @@ export const CourseActivitiesView: React.FC<CourseActivitiesViewProps> = ({
     setTimeout(() => setToastMessage(null), 3000);
   };
 
+  const handleDeleteActivity = () => {
+    if (!deletingActivity) return;
+    const title = deletingActivity.titulo;
+    setActivitiesList((prev) => prev.filter((a) => a.id !== deletingActivity.id));
+    setDeletingActivity(null);
+    setToastMessage(`Actividad "${title}" eliminada.`);
+    setTimeout(() => setToastMessage(null), 3000);
+  };
+
   const handleResolveAppeal = (subId: string, action: "aceptar" | "ratificar") => {
     onResolveAppeal?.(subId, action);
-    setAppealMessage(
-      action === "aceptar"
-        ? "Apelación aceptada (+0.1 décimas registradas)."
-        : "Calificación ratificada según rúbrica."
-    );
+    setAppealMessage(action === "aceptar" ? "Apelación aceptada (+0.1 décimas)." : "Calificación ratificada.");
     setTimeout(() => setAppealMessage(null), 3500);
   };
 
   return (
     <div className="space-y-4">
-      {/* Canvas Content Toolbar */}
       <CanvasToolbar
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
@@ -124,15 +124,10 @@ export const CourseActivitiesView: React.FC<CourseActivitiesViewProps> = ({
         </div>
       )}
 
-      {/* Canvas Item Group (Módulos de Canvas) */}
       <CanvasItemGroup
         title="ACTIVIDADES FORMATIVAS & TALLERES"
         weightBadge="Bolsa de Décimas"
-        countBadge={
-          <span className="text-xs bg-gray-200 text-[#2D3B45] font-semibold px-2 py-0.5 rounded-full">
-            {filteredActivities.length}
-          </span>
-        }
+        countBadge={<span className="text-xs bg-gray-200 text-[#2D3B45] font-semibold px-2 py-0.5 rounded-full">{filteredActivities.length}</span>}
         onAddClick={() => setIsCreatingWorkspace(true)}
       >
         {filteredActivities.length === 0 ? (
@@ -140,134 +135,51 @@ export const CourseActivitiesView: React.FC<CourseActivitiesViewProps> = ({
             No hay actividades formativas que coincidan con la búsqueda.
           </div>
         ) : (
-          filteredActivities.map((act) => {
-            const subs = entregasAlumnos.filter((s) => s.deliverable_id === act.id);
-            const appeals = subs.filter((s) => s.apelacion?.estado === "pendiente").length;
-
-            return (
-              <CanvasItemRow
-                key={act.id}
-                id={act.id}
-                indicatorColor={act.estado === "publicada" ? "green" : "gray"}
-                icon={<FileText size={17} />}
-                title={act.titulo}
-                subtitle={
-                  <span>
-                    Fecha límite: <strong>{act.fecha_limite}</strong> • {act.target_evaluacion || "Solemne 1"} •{" "}
-                    {act.rubrica.length} criterios •{" "}
-                    <strong className="text-[#2E7D32]">{act.ponderacion_o_decimas}</strong>
-                  </span>
-                }
-                isPublished={act.estado === "publicada"}
-                rightBadge={
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-[#2D3B45] font-semibold px-2 py-0.5 bg-[#F5F6F8] rounded-[3px] border border-[#C7CDD1]">
-                      {subs.length} {subs.length === 1 ? "entrega" : "entregas"}
-                    </span>
-                    {appeals > 0 && (
-                      <span className="text-xs text-amber-900 font-bold px-2 py-0.5 bg-amber-50 rounded-[3px] border border-amber-300">
-                        ⚠️ {appeals} apelación
-                      </span>
-                    )}
-                  </div>
-                }
-                actionItems={[
-                  {
-                    label: "Ver entregas y SpeedGrader",
-                    icon: <FileText size={14} className="text-[#008EE2]" />,
-                    onClick: () => setViewingSubmissionsItem(act),
-                  },
-                  {
-                    label: "Ver pauta oficial y rúbrica",
-                    icon: <Award size={14} className="text-[#B71C1C]" />,
-                    onClick: () => setViewingPautaActivity(act),
-                  },
-                  {
-                    label: "Editar actividad",
-                    icon: <Edit3 size={14} className="text-[#2D3B45]" />,
-                    onClick: () => setEditingActivity(act),
-                  },
-                  {
-                    label: act.estado === "publicada" ? "Despublicar" : "Publicar",
-                    icon: act.estado === "publicada" ? <EyeOff size={14} /> : <Globe size={14} />,
-                    onClick: () => handleTogglePublish(act),
-                  },
-                  {
-                    label: "Eliminar",
-                    icon: <Trash2 size={14} className="text-red-600" />,
-                    variant: "danger",
-                    onClick: () => setDeletingActivity(act),
-                  },
-                ]}
-              />
-            );
-          })
+          filteredActivities.map((act) => (
+            <ActivityItemRow
+              key={act.id}
+              act={act}
+              entregasAlumnos={entregasAlumnos}
+              onViewSubmissions={setViewingSubmissionsItem}
+              onViewPauta={setViewingPautaActivity}
+              onEdit={setEditingActivity}
+              onTogglePublish={handleTogglePublish}
+              onDelete={setDeletingActivity}
+            />
+          ))
         )}
       </CanvasItemGroup>
 
-      {/* Modales Canónicos */}
-      {editingActivity && (
-        <ActivityEditModal
-          activity={editingActivity}
-          isOpen={true}
-          onClose={() => setEditingActivity(null)}
-          onSave={(updated) => {
-            setActivitiesList((prev) => prev.map((a) => (a.id === updated.id ? updated : a)));
-            setToastMessage(`Cambios guardados en "${updated.titulo}".`);
-            setTimeout(() => setToastMessage(null), 3000);
-          }}
-        />
-      )}
-
-      {deletingActivity && (
-        <ActivityDeleteConfirmModal
-          activity={deletingActivity}
-          isOpen={true}
-          onClose={() => setDeletingActivity(null)}
-          onConfirm={() => {
-            const title = deletingActivity.titulo;
-            setActivitiesList((prev) => prev.filter((a) => a.id !== deletingActivity.id));
-            setDeletingActivity(null);
-            setToastMessage(`Actividad "${title}" eliminada.`);
-            setTimeout(() => setToastMessage(null), 3000);
-          }}
-        />
-      )}
-
-      {viewingSubmissionsItem && (
-        <ActivitySubmissionsModal
-          activity={viewingSubmissionsItem}
-          submissions={entregasAlumnos.filter((s) => s.deliverable_id === viewingSubmissionsItem.id)}
-          isOpen={true}
-          onClose={() => setViewingSubmissionsItem(null)}
-          onResolveAppeal={handleResolveAppeal}
-          appealMessage={appealMessage}
-        />
-      )}
-
-      {viewingPautaActivity && (
-        <ActivityPautaModal
-          activity={viewingPautaActivity}
-          isOpen={true}
-          onClose={() => setViewingPautaActivity(null)}
-        />
-      )}
-
-      <CatalogoActividadesModal
-        isOpen={isCatalogModalOpen}
-        onClose={() => setIsCatalogModalOpen(false)}
-        onSelectForCreation={(id) => {
+      <CourseActivitiesModals
+        courseCode={courseCode}
+        courseName={courseName}
+        editingActivity={editingActivity}
+        setEditingActivity={setEditingActivity}
+        onSaveEdited={(updated) => {
+          setActivitiesList((prev) => prev.map((a) => (a.id === updated.id ? updated : a)));
+          setToastMessage(`Cambios guardados en "${updated.titulo}".`);
+          setTimeout(() => setToastMessage(null), 3000);
+        }}
+        deletingActivity={deletingActivity}
+        setDeletingActivity={setDeletingActivity}
+        onConfirmDelete={handleDeleteActivity}
+        viewingSubmissionsItem={viewingSubmissionsItem}
+        setViewingSubmissionsItem={setViewingSubmissionsItem}
+        submissions={viewingSubmissionsItem ? entregasAlumnos.filter((s) => s.deliverable_id === viewingSubmissionsItem.id) : []}
+        onResolveAppeal={handleResolveAppeal}
+        appealMessage={appealMessage}
+        viewingPautaActivity={viewingPautaActivity}
+        setViewingPautaActivity={setViewingPautaActivity}
+        isCatalogModalOpen={isCatalogModalOpen}
+        setIsCatalogModalOpen={setIsCatalogModalOpen}
+        onSelectCatalogActivity={(id) => {
           setSelectedCatalogActivityId(id);
           setAgentDraft(undefined);
           setIsCreatingWorkspace(true);
         }}
-      />
-      <CreateWithAgentModal
-        isOpen={isAgentModalOpen}
-        courseCode={courseCode}
-        courseName={courseName}
-        onClose={() => setIsAgentModalOpen(false)}
-        onCreate={(draft) => {
+        isAgentModalOpen={isAgentModalOpen}
+        setIsAgentModalOpen={setIsAgentModalOpen}
+        onCreateWithAgent={(draft) => {
           setAgentDraft(draft);
           setSelectedCatalogActivityId(undefined);
           setIsCreatingWorkspace(true);

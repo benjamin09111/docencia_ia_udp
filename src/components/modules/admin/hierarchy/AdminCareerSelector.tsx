@@ -20,18 +20,18 @@ export const AdminCareerSelector: React.FC<AdminCareerSelectorProps> = ({
   return (
     <div className="space-y-6 max-w-5xl mx-auto animate-fadeIn pb-12">
       {/* Encabezado y Breadcrumb */}
-      <div className="border-b border-[#E0E3E6] pb-5">
-        <div className="flex items-center justify-between gap-3 mb-2.5">
+      <div className="border-b border-[#E0E3E6] pb-4">
+        <div className="flex items-center justify-between gap-3 mb-2">
           <button
             type="button"
             onClick={onBack}
-            className="inline-flex items-center gap-1.5 text-sm font-bold text-[#B71C1C] hover:underline cursor-pointer"
+            className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#B71C1C] hover:underline cursor-pointer"
           >
             <ArrowLeft size={16} /> Volver a Facultades
           </button>
         </div>
 
-        <div className="flex items-center gap-2 text-sm sm:text-[15px] font-semibold text-[#6B7780] mb-1.5">
+        <div className="flex items-center gap-2 text-sm font-semibold text-[#6B7780] mb-1">
           <span className="text-[#B71C1C] hover:underline cursor-pointer">UDP IA</span>
           <span>&gt;</span>
           <span className="text-[#B71C1C] hover:underline cursor-pointer" onClick={onBack}>
@@ -41,13 +41,10 @@ export const AdminCareerSelector: React.FC<AdminCareerSelectorProps> = ({
           <span className="text-[#2D3B45] font-bold">Carreras</span>
         </div>
 
-        <h1 className="text-2xl sm:text-3xl font-bold text-[#2D3B45] flex items-center gap-3">
-          <GraduationCap size={28} className="text-[#B71C1C]" />
-          Selecciona una Carrera
+        <h1 className="text-xl sm:text-2xl font-bold text-[#2D3B45] flex items-center gap-2.5">
+          <GraduationCap size={24} className="text-[#B71C1C]" />
+          Carreras — {faculty.nombre}
         </h1>
-        <p className="text-sm sm:text-[15px] text-[#6B7780] mt-1.5 leading-relaxed">
-          Paso 2 de 3: {faculty.nombre}. Selecciona la carrera para inspeccionar sus asignaturas, secciones y agentes desplegados.
-        </p>
       </div>
 
       {/* Grid de Carreras */}
@@ -64,7 +61,7 @@ export const AdminCareerSelector: React.FC<AdminCareerSelectorProps> = ({
                   : "border-gray-200 opacity-60 cursor-not-allowed bg-gray-50/70"
               }`}
             >
-              <div className="space-y-3.5">
+              <div className="space-y-3">
                 <div className="flex items-start justify-between gap-2">
                   <div
                     className={`px-2.5 py-1 rounded-[3px] font-mono font-bold text-xs shrink-0 ${
@@ -89,26 +86,26 @@ export const AdminCareerSelector: React.FC<AdminCareerSelectorProps> = ({
 
                 <div>
                   <h3
-                    className={`text-base sm:text-[17px] font-bold leading-snug ${
+                    className={`text-base font-bold leading-snug ${
                       isActive ? "text-[#2D3B45] group-hover:text-[#B71C1C] transition-colors" : "text-gray-500"
                     }`}
                   >
                     {car.nombre}
                   </h3>
-                  <div className="text-xs sm:text-[13px] text-[#6B7780] mt-1.5 font-medium">
+                  <div className="text-xs text-[#6B7780] mt-1.5 font-medium">
                     {car.grado} • {car.semestres} semestres
                   </div>
                 </div>
 
-                <div className="text-xs sm:text-[13px] text-[#6B7780]">
+                <div className="text-xs text-[#6B7780]">
                   <span className="font-semibold text-gray-700">Unidad:</span> {car.director}
                 </div>
               </div>
 
-              <div className="pt-4 mt-4 border-t border-gray-100 flex items-center justify-between text-xs sm:text-[13px]">
+              <div className="pt-4 mt-4 border-t border-gray-100 flex items-center justify-between text-xs">
                 {isActive ? (
                   <>
-                    <div className="flex items-center gap-2.5 text-xs sm:text-[13px] text-[#6B7780]">
+                    <div className="flex items-center gap-2.5 text-xs text-[#6B7780]">
                       <span className="flex items-center gap-1 font-semibold text-[#2D3B45]">
                         <BookOpen size={13} className="text-[#008EE2]" />
                         {car.cursosActivos} cursos
@@ -119,7 +116,7 @@ export const AdminCareerSelector: React.FC<AdminCareerSelectorProps> = ({
                         {car.agentesActivos} agentes
                       </span>
                     </div>
-                    <span className="text-[#B71C1C] font-bold text-sm sm:text-[15px] flex items-center gap-0.5 group-hover:translate-x-0.5 transition-transform">
+                    <span className="text-[#B71C1C] font-bold text-sm flex items-center gap-0.5 group-hover:translate-x-0.5 transition-transform">
                       Ver Espacio <ChevronRight size={16} />
                     </span>
                   </>

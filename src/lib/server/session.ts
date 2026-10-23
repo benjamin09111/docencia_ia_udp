@@ -12,6 +12,10 @@ export type SessionRole = "docente" | "admin";
 
 export interface SessionClaims {
   role: SessionRole;
+  userId?: string;
+  email?: string;
+  name?: string;
+  isOwner?: boolean;
   jti: string;
   iat: number; // epoch segundos
   exp: number;
@@ -54,10 +58,26 @@ async function hmacKey(usage: "sign" | "verify"): Promise<CryptoKey> {
 
 const nowS = () => Math.floor(Date.now() / 1000);
 
+export type UserSessionPayload = {
+  userId: string;
+  email: string;
+  name: string;
+  role: SessionRole;
+  isOwner: boolean;
+};
+
 /** Crea un token NUEVO (identificador nuevo). Usar en el login. */
-export async function createSessionToken(role: SessionRole, now = nowS()): Promise<string> {
+export async function createSessionToken(
+  userOrRole: SessionRole | UserSessionPayload,
+  now = nowS()
+): Promise<string> {
+  const isObj = typeof userOrRole === "object";
   const claims: SessionClaims = {
-    role,
+    role: isObj ? userOrRole.role : userOrRole,
+    userId: isObj ? userOrRole.userId : undefined,
+    email: isObj ? userOrRole.email : undefined,
+    name: isObj ? userOrRole.name : undefined,
+    isOwner: isObj ? userOrRole.isOwner : undefined,
     jti: crypto.randomUUID(),
     iat: now,
     exp: now + SESSION_ABSOLUTE_TTL_S,

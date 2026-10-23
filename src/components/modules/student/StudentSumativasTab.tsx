@@ -65,7 +65,7 @@ export const StudentSumativasTab: React.FC<StudentSumativasTabProps> = ({
                     title={item.titulo}
                     subtitle={`Plazo: ${item.fecha_limite} • Ponderación: ${item.ponderacion_o_decimas}`}
                     rightBadge={
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-[3px] ${
+                      <span className={`text-xs font-bold px-2 py-0.5 rounded-[3px] ${
                         sub ? "bg-emerald-50 text-[#2E7D32] border border-emerald-200" : "bg-amber-50 text-amber-800 border border-amber-200"
                       }`}>
                         {sub ? "Entregada" : "Pendiente"}
@@ -85,7 +85,7 @@ export const StudentSumativasTab: React.FC<StudentSumativasTabProps> = ({
             <div className="bg-white border border-[#E0E3E6] rounded-[4px] p-5 shadow-canvas-card space-y-4">
               <div className="border-b border-[#E0E3E6] pb-3 flex justify-between items-start gap-3">
                 <div>
-                  <span className="text-[10px] font-bold text-[#B71C1C] bg-red-50 border border-red-200 px-2 py-0.5 rounded uppercase">
+                  <span className="text-xs font-bold text-[#B71C1C] bg-red-50 border border-red-200 px-2 py-0.5 rounded uppercase">
                     Evaluación Sumativa
                   </span>
                   <h3 className="text-base font-bold text-[#2D3B45] mt-1">{selectedItem.titulo}</h3>
@@ -127,7 +127,7 @@ export const StudentSumativasTab: React.FC<StudentSumativasTabProps> = ({
                           </td>
                           <td className="p-2.5 align-top space-y-1">
                             {criterio.indicadores.map((ind, i) => (
-                              <div key={i} className="text-[11px] text-[#6B7780]">
+                              <div key={i} className="text-xs text-[#6B7780]">
                                 <span className="font-semibold text-[#2D3B45]">{ind.nivel}:</span> {ind.detalle}
                               </div>
                             ))}

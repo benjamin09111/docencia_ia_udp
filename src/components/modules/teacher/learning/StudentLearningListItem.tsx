@@ -68,14 +68,14 @@ export const StudentLearningListItem: React.FC<StudentLearningListItemProps> = (
             </span>
           </div>
 
-          <div className="flex items-center gap-2 text-[11px] text-[#6B7780] mt-0.5">
+          <div className="flex items-center gap-2 text-xs text-[#6B7780] mt-0.5">
             <span className="font-mono">Nota: {profile.promedioActual.toFixed(1)}</span>
             <span>•</span>
             <span>Asist: {profile.asistenciaPct}%</span>
           </div>
 
           <div className="flex items-center gap-1.5 mt-1">
-            <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold border ${conf.badgeClass}`}>
+            <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-semibold border ${conf.badgeClass}`}>
               {conf.icon}
               {conf.label}
             </span>
@@ -85,7 +85,7 @@ export const StudentLearningListItem: React.FC<StudentLearningListItemProps> = (
 
       <div className="flex items-center gap-2 shrink-0">
         <div className="w-12 hidden sm:flex flex-col items-end gap-1">
-          <span className="text-[10px] font-mono font-bold text-[#6B7780]">
+          <span className="text-xs font-mono font-bold text-[#6B7780]">
             {profile.progresoGeneral}%
           </span>
           <div className="w-full bg-gray-200 h-1.5 rounded-full overflow-hidden">

@@ -157,7 +157,7 @@ export const CourseGroupsWorkspace: React.FC<CourseGroupsWorkspaceProps> = ({
           </div>
           <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto">
             {unassignedStudents.map((st) => (
-              <span key={st.canvas_id} className="px-2 py-0.5 bg-white border border-amber-300 text-amber-950 rounded text-[11px] font-medium">
+              <span key={st.canvas_id} className="px-2 py-0.5 bg-white border border-amber-300 text-amber-950 rounded text-xs font-medium">
                 {st.apellidos}, {st.nombres}
               </span>
             ))}

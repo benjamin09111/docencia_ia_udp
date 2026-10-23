@@ -48,7 +48,7 @@ export const CourseGroupCard: React.FC<CourseGroupCardProps> = ({
           </div>
           <div>
             <h4 className="text-xs font-bold text-[#2D3B45]">{group.name}</h4>
-            <span className="text-[10px] text-[#6B7780] font-medium block">
+            <span className="text-xs text-[#6B7780] font-medium block">
               {group.categoryName || "General"} • {group.members.length} integrantes
             </span>
           </div>
@@ -65,7 +65,7 @@ export const CourseGroupCard: React.FC<CourseGroupCardProps> = ({
 
       <div className="space-y-1.5">
         {group.members.length === 0 ? (
-          <div className="p-3 bg-gray-50 border border-dashed border-gray-200 rounded-[4px] text-center text-[11px] text-gray-400">
+          <div className="p-3 bg-gray-50 border border-dashed border-gray-200 rounded-[4px] text-center text-xs text-gray-400">
             Sin integrantes asignados
           </div>
         ) : (
@@ -76,7 +76,7 @@ export const CourseGroupCard: React.FC<CourseGroupCardProps> = ({
                 className="flex items-center justify-between px-2 py-1 bg-gray-50 border border-gray-200 rounded-[3px] text-xs hover:bg-white transition-colors"
               >
                 <div className="flex items-center gap-1.5 truncate">
-                  <span className="w-5 h-5 rounded-full bg-[#2D3B45] text-white flex items-center justify-center text-[9px] font-bold shrink-0">
+                  <span className="w-5 h-5 rounded-full bg-[#2D3B45] text-white flex items-center justify-center text-xs font-bold shrink-0">
                     {m.nombres.charAt(0)}
                   </span>
                   <span className="font-semibold text-[#2D3B45] truncate">
@@ -102,7 +102,7 @@ export const CourseGroupCard: React.FC<CourseGroupCardProps> = ({
           <select
             value={selectedCanvasId}
             onChange={(e) => setSelectedCanvasId(e.target.value ? Number(e.target.value) : "")}
-            className="flex-1 p-1 text-[11px] bg-gray-50 border border-gray-300 rounded-[3px] text-[#2D3B45]"
+            className="flex-1 p-1 text-xs bg-gray-50 border border-gray-300 rounded-[3px] text-[#2D3B45]"
           >
             <option value="">-- Seleccionar alumno --</option>
             {availableStudents.map((st) => (
@@ -114,7 +114,7 @@ export const CourseGroupCard: React.FC<CourseGroupCardProps> = ({
           <button
             type="button"
             onClick={handleAdd}
-            className="px-2 py-1 bg-[#008EE2] text-white text-[11px] font-bold rounded-[3px] cursor-pointer"
+            className="px-2 py-1 bg-[#008EE2] text-white text-xs font-bold rounded-[3px] cursor-pointer"
           >
             Añadir
           </button>
@@ -130,7 +130,7 @@ export const CourseGroupCard: React.FC<CourseGroupCardProps> = ({
         <button
           type="button"
           onClick={() => setIsAdding(true)}
-          className="w-full py-1 text-[11px] font-semibold text-[#008EE2] hover:bg-blue-50/70 border border-dashed border-blue-200 rounded-[3px] flex items-center justify-center gap-1 cursor-pointer transition-colors"
+          className="w-full py-1 text-xs font-semibold text-[#008EE2] hover:bg-blue-50/70 border border-dashed border-blue-200 rounded-[3px] flex items-center justify-center gap-1 cursor-pointer transition-colors"
         >
           <UserPlus size={12} />
           <span>Asignar Integrante</span>

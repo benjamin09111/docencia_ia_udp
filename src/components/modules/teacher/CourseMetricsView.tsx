@@ -8,41 +8,12 @@ import {
   CanvasTableRow,
   CanvasTableCell,
 } from "@/components/canvas/CanvasTable";
-import {
-  BarChart3,
-  Users,
-  AlertTriangle,
-  Bot,
-  TrendingUp,
-  Brain,
-  Lightbulb,
-  CheckCircle2,
-  Sparkles,
-} from "lucide-react";
-
+import { Brain, Lightbulb, CheckCircle2, Sparkles } from "lucide-react";
 import { CanvasButton } from "@/components/canvas/CanvasButton";
 import { CanvasCourse } from "@/types";
 import { CourseFinalReportModal } from "./CourseFinalReportModal";
-
-interface StudentMetric {
-  nombre: string;
-  asistenciaPct: number;
-  consultasAgente: number;
-  actividadesEntregadas: number;
-  decimasGanadas: number;
-  notaProyectada: number;
-  estadoRiesgo: "Bajo" | "Medio" | "Crítico";
-}
-
-const mockStudentMetrics: StudentMetric[] = [
-  { nombre: "Benjamín", asistenciaPct: 0, consultasAgente: 14, actividadesEntregadas: 2, decimasGanadas: 0.3, notaProyectada: 6.2, estadoRiesgo: "Bajo" },
-  { nombre: "Víctor", asistenciaPct: 0, consultasAgente: 9, actividadesEntregadas: 2, decimasGanadas: 0.3, notaProyectada: 5.9, estadoRiesgo: "Bajo" },
-  { nombre: "Laura", asistenciaPct: 0, consultasAgente: 16, actividadesEntregadas: 2, decimasGanadas: 0.3, notaProyectada: 6.5, estadoRiesgo: "Bajo" },
-  { nombre: "Francisco", asistenciaPct: 0, consultasAgente: 7, actividadesEntregadas: 1, decimasGanadas: 0.3, notaProyectada: 5.3, estadoRiesgo: "Bajo" },
-  { nombre: "Camila", asistenciaPct: 0, consultasAgente: 2, actividadesEntregadas: 0, decimasGanadas: 0.0, notaProyectada: 4.1, estadoRiesgo: "Crítico" },
-  { nombre: "Martín", asistenciaPct: 0, consultasAgente: 5, actividadesEntregadas: 1, decimasGanadas: 0.2, notaProyectada: 4.6, estadoRiesgo: "Medio" },
-  { nombre: "Sebastián", asistenciaPct: 0, consultasAgente: 8, actividadesEntregadas: 2, decimasGanadas: 0.3, notaProyectada: 5.5, estadoRiesgo: "Bajo" },
-];
+import { MOCK_STUDENT_METRICS } from "@/constants/mockStudentMetrics";
+import { MetricsKpiCardsSection } from "./metrics/MetricsKpiCardsSection";
 
 interface CourseMetricsViewProps {
   course?: CanvasCourse;
@@ -58,20 +29,22 @@ export const CourseMetricsView: React.FC<CourseMetricsViewProps> = ({ course }) 
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-gray-200 pb-2">
         <div className="flex gap-2">
           <button
+            type="button"
             onClick={() => setMetricTab("generales")}
-            className={`px-3 py-1.5 rounded-[4px] text-xs font-semibold transition-all ${
+            className={`px-3 py-1.5 rounded-[4px] text-xs font-semibold transition-all cursor-pointer ${
               metricTab === "generales"
-                ? "bg-[#2D3B45] text-white shadow-sm"
+                ? "bg-[#2D3B45] text-white shadow-2xs"
                 : "bg-white text-[#2D3B45] border border-gray-200 hover:bg-gray-50"
             }`}
           >
             Métricas Generales del Curso
           </button>
           <button
+            type="button"
             onClick={() => setMetricTab("alumnos")}
-            className={`px-3 py-1.5 rounded-[4px] text-xs font-semibold transition-all ${
+            className={`px-3 py-1.5 rounded-[4px] text-xs font-semibold transition-all cursor-pointer ${
               metricTab === "alumnos"
-                ? "bg-[#2D3B45] text-white shadow-sm"
+                ? "bg-[#2D3B45] text-white shadow-2xs"
                 : "bg-white text-[#2D3B45] border border-gray-200 hover:bg-gray-50"
             }`}
           >
@@ -94,44 +67,7 @@ export const CourseMetricsView: React.FC<CourseMetricsViewProps> = ({ course }) 
       {/* SUBTAB 1: Métricas Generales */}
       {metricTab === "generales" && (
         <div className="space-y-5">
-          {/* Tarjetas KPI Superiores */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="bg-white border border-[#E0E3E6] rounded-[4px] p-4 shadow-canvas-card">
-              <span className="text-[11px] text-[#6B7780] font-bold uppercase block">Asistencia Promedio</span>
-              <div className="flex items-baseline justify-between mt-1">
-                <span className="text-2xl font-extrabold text-[#2D3B45]">85.4%</span>
-                <span className="text-xs text-emerald-700 font-semibold">+4.2% vs 2025</span>
-              </div>
-              <span className="text-[11px] text-gray-500 mt-1 block">Meta institucional UDP: &gt; 75%</span>
-            </div>
-
-            <div className="bg-white border border-[#E0E3E6] rounded-[4px] p-4 shadow-canvas-card">
-              <span className="text-[11px] text-[#6B7780] font-bold uppercase block">Alumnos en Riesgo RI (&lt; 75%)</span>
-              <div className="flex items-baseline justify-between mt-1">
-                <span className="text-2xl font-extrabold text-[#C8102E]">1 Alumno</span>
-                <CanvasBadge variant="danger">Alerta Temprana</CanvasBadge>
-              </div>
-              <span className="text-[11px] text-gray-500 mt-1 block">Camila (68% de asistencia)</span>
-            </div>
-
-            <div className="bg-white border border-[#E0E3E6] rounded-[4px] p-4 shadow-canvas-card">
-              <span className="text-[11px] text-[#6B7780] font-bold uppercase block">Interacción con Agente IA</span>
-              <div className="flex items-baseline justify-between mt-1">
-                <span className="text-2xl font-extrabold text-[#008EE2]">61 Dudas</span>
-                <span className="text-xs text-blue-700 font-semibold">86% Alumnos</span>
-              </div>
-              <span className="text-[11px] text-gray-500 mt-1 block">Promedio: 8.7 consultas/alumno</span>
-            </div>
-
-            <div className="bg-white border border-[#E0E3E6] rounded-[4px] p-4 shadow-canvas-card">
-              <span className="text-[11px] text-[#6B7780] font-bold uppercase block">Nota Promedio Proyectada</span>
-              <div className="flex items-baseline justify-between mt-1">
-                <span className="text-2xl font-extrabold text-emerald-700">5.5</span>
-                <span className="text-xs text-gray-500">Escala 1.0 a 7.0</span>
-              </div>
-              <span className="text-[11px] text-gray-500 mt-1 block">Con +0.3 décimas aplicadas</span>
-            </div>
-          </div>
+          <MetricsKpiCardsSection />
 
           {/* Conclusiones Docentes de IA */}
           <div className="bg-white border border-[#E0E3E6] rounded-[4px] p-5 shadow-canvas-card space-y-3">
@@ -144,7 +80,7 @@ export const CourseMetricsView: React.FC<CourseMetricsViewProps> = ({ course }) 
               <div className="p-3 bg-[#F0F8FF] border border-[#B3E5FC] rounded-[4px] text-xs text-[#0277BD] flex items-start gap-2">
                 <Lightbulb size={16} className="shrink-0 mt-0.5 text-[#008EE2]" />
                 <div>
-                  <strong>Alerta de Aprendizaje:</strong> El 42% de las preguntas de los estudiantes al agente tutor se concentraron en <em>"Estimación de esfuerzo con Story Points y Matriz de Riesgos"</em>. Se recomienda dedicar 15 minutos en la próxima cátedra para reforzar este concepto antes del Avance 1.
+                  <strong>Alerta de Aprendizaje:</strong> El 42% de las preguntas de los estudiantes al agente tutor se concentraron en <em>&ldquo;Estimación de esfuerzo con Story Points y Matriz de Riesgos&rdquo;</em>. Se recomienda dedicar 15 minutos en la próxima cátedra para reforzar este concepto antes del Avance 1.
                 </div>
               </div>
 
@@ -181,7 +117,7 @@ export const CourseMetricsView: React.FC<CourseMetricsViewProps> = ({ course }) 
               </tr>
             </CanvasTableHeader>
             <tbody>
-              {mockStudentMetrics.map((s, idx) => (
+              {MOCK_STUDENT_METRICS.map((s, idx) => (
                 <CanvasTableRow key={idx} hoverable={false}>
                   <CanvasTableCell>
                     <span className="font-bold text-[#2D3B45] text-xs">{s.nombre}</span>

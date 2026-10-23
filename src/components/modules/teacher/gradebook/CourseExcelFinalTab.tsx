@@ -3,23 +3,12 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { CanvasCourse, StudentExcelRow } from "@/types";
 import { CourseSection } from "@/types/attendance";
-import { CanvasButton } from "@/components/canvas/CanvasButton";
 import { TeacherGradebookTableView } from "./TeacherGradebookTableView";
 import { SendSchoolGradesModal } from "./SendSchoolGradesModal";
 import { ShareGradesPublicModal } from "./ShareGradesPublicModal";
 import { exportAnonymousGradesToExcel } from "@/services/excelExportService";
-import {
-  FileSpreadsheet,
-  Send,
-  Edit3,
-  Check,
-  Download,
-  Share2,
-  Search,
-  X,
-  ShieldCheck,
-  CheckCircle2,
-} from "lucide-react";
+import { CourseExcelToolbar } from "./CourseExcelToolbar";
+import { FileSpreadsheet, Search, X, ShieldCheck, CheckCircle2 } from "lucide-react";
 
 interface CourseExcelFinalTabProps {
   course: CanvasCourse;
@@ -94,68 +83,15 @@ export const CourseExcelFinalTab: React.FC<CourseExcelFinalTabProps> = ({
           </p>
         </div>
 
-        <div className="flex items-center gap-2 flex-wrap">
-          <CanvasButton
-            variant="primary-udp"
-            size="sm"
-            onClick={() => setShowSendSchoolModal(true)}
-            icon={<Send size={14} />}
-            title="Enviar la planilla oficial consolidada a la Dirección de Escuela"
-          >
-            Enviar Excel a la Escuela
-          </CanvasButton>
-
-          {!isEditingExcel ? (
-            <CanvasButton
-              variant="outline"
-              size="sm"
-              onClick={() => setIsEditingExcel(true)}
-              icon={<Edit3 size={14} />}
-              title="Habilitar edición de calificaciones oficiales"
-            >
-              Modo Edición
-            </CanvasButton>
-          ) : (
-            <>
-              <CanvasButton
-                variant="primary-canvas"
-                size="sm"
-                onClick={handleSaveExcelEdits}
-                icon={<Check size={14} />}
-                title="Guardar cambios en la planilla oficial"
-              >
-                Guardar
-              </CanvasButton>
-              <CanvasButton
-                variant="outline"
-                size="sm"
-                onClick={() => setIsEditingExcel(false)}
-              >
-                Cancelar
-              </CanvasButton>
-            </>
-          )}
-
-          <CanvasButton
-            variant="outline"
-            size="sm"
-            onClick={handleDownloadExcel}
-            icon={<Download size={14} />}
-            title="Descargar la nómina oficial en formato .xlsx con fórmulas"
-          >
-            Descargar Excel UDP
-          </CanvasButton>
-
-          <CanvasButton
-            variant="outline"
-            size="sm"
-            onClick={() => setShowShareModal(true)}
-            icon={<Share2 size={14} />}
-            title="Generar enlace público anónimo para compartir con los estudiantes"
-          >
-            Compartir con Estudiantes
-          </CanvasButton>
-        </div>
+        <CourseExcelToolbar
+          isEditingExcel={isEditingExcel}
+          onSendToSchool={() => setShowSendSchoolModal(true)}
+          onToggleEdit={() => setIsEditingExcel(true)}
+          onSaveEdits={handleSaveExcelEdits}
+          onCancelEdit={() => setIsEditingExcel(false)}
+          onDownloadExcel={handleDownloadExcel}
+          onShareModal={() => setShowShareModal(true)}
+        />
       </div>
 
       {saveSuccessToast && (
@@ -197,14 +133,14 @@ export const CourseExcelFinalTab: React.FC<CourseExcelFinalTabProps> = ({
             <button
               type="button"
               onClick={() => setExcelRutFilter("")}
-              className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 cursor-pointer"
             >
               <X size={13} />
             </button>
           )}
         </div>
 
-        <div className="text-[11px] text-[#6B7780] flex items-center gap-1.5">
+        <div className="text-xs text-[#6B7780] flex items-center gap-1.5">
           <ShieldCheck size={14} className="text-emerald-600" />
           <span>
             Mostrando {filteredExcelStudents.length} de {estudiantesExcel.length} estudiantes • {isEditingExcel ? "Modo Edición Activo" : "Solo Lectura Oficial"}

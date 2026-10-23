@@ -76,7 +76,7 @@ export const StudentLearnTab: React.FC = () => {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b pb-4">
         <div>
           <div className="flex items-center gap-2">
-            <span className="px-2 py-0.5 rounded bg-blue-100 text-blue-800 text-[11px] font-bold uppercase">
+            <span className="px-2 py-0.5 rounded bg-blue-100 text-blue-800 text-xs font-bold uppercase">
               Tutor Oficial de la Asignatura
             </span>
             <span className="text-xs text-[#6B7780]">Reemplazo Oficial de ChatGPT para Pruebas</span>
@@ -122,7 +122,7 @@ export const StudentLearnTab: React.FC = () => {
                 </div>
 
                 {m.source && (
-                  <span className="text-[10px] text-gray-500 font-mono flex items-center gap-1 pl-1">
+                  <span className="text-xs text-gray-500 font-mono flex items-center gap-1 pl-1">
                     <Bookmark size={11} className="text-[#008EE2]" /> Fuente: {m.source}
                   </span>
                 )}
@@ -140,10 +140,10 @@ export const StudentLearnTab: React.FC = () => {
 
         {/* Chips de Preguntas Frecuentes para Preparar Pruebas */}
         <div className="p-3 bg-white border-t border-gray-200 space-y-1.5">
-          <span className="text-[10px] font-bold text-[#6B7780] uppercase tracking-wider block">
+          <span className="text-xs font-bold text-[#6B7780] uppercase tracking-wider block">
             💡 Temas Clave de Estudio para la Solemne:
           </span>
-          <div className="flex flex-wrap gap-1.5 text-[11px]">
+          <div className="flex flex-wrap gap-1.5 text-xs">
             <button
               onClick={() => handleQuickChip("Explícame los 12 principios de la Guía PMBOK 7 y cuáles son los más evaluados.")}
               className="bg-gray-100 hover:bg-blue-50 hover:border-blue-300 border border-gray-200 px-2.5 py-1 rounded text-[#2D3B45] transition-colors"

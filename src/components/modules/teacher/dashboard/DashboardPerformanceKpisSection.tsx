@@ -126,7 +126,7 @@ export const DashboardPerformanceKpisSection: React.FC<DashboardPerformanceKpisS
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
         {/* 1. Promedio */}
         <div className="bg-white border border-[#E0E3E6] rounded-[4px] p-4 shadow-canvas-card flex flex-col justify-between">
-          <span className="text-[11px] font-bold text-[#6B7780] uppercase tracking-wide flex items-center gap-1.5">
+          <span className="text-xs font-semibold text-[#6B7780] uppercase tracking-wide flex items-center gap-1.5">
             <TrendingUp size={14} className="text-[#008EE2]" /> Promedio General
           </span>
           <div className="mt-2 flex items-baseline gap-2">
@@ -137,7 +137,7 @@ export const DashboardPerformanceKpisSection: React.FC<DashboardPerformanceKpisS
 
         {/* 2. Tasa Aprobación */}
         <div className="bg-white border border-[#E0E3E6] rounded-[4px] p-4 shadow-canvas-card flex flex-col justify-between">
-          <span className="text-[11px] font-bold text-[#6B7780] uppercase tracking-wide flex items-center gap-1.5">
+          <span className="text-xs font-semibold text-[#6B7780] uppercase tracking-wide flex items-center gap-1.5">
             <CheckCircle2 size={14} className="text-[#2E7D32]" /> Tasa Aprobación
           </span>
           <div className="mt-2 flex items-baseline gap-2">
@@ -148,7 +148,7 @@ export const DashboardPerformanceKpisSection: React.FC<DashboardPerformanceKpisS
 
         {/* 3. Asistencia */}
         <div className="bg-white border border-[#E0E3E6] rounded-[4px] p-4 shadow-canvas-card flex flex-col justify-between">
-          <span className="text-[11px] font-bold text-[#6B7780] uppercase tracking-wide flex items-center gap-1.5">
+          <span className="text-xs font-semibold text-[#6B7780] uppercase tracking-wide flex items-center gap-1.5">
             <CalendarCheck size={14} className="text-[#B71C1C]" /> Asistencia Media
           </span>
           <div className="mt-2 flex items-baseline gap-2">
@@ -159,7 +159,7 @@ export const DashboardPerformanceKpisSection: React.FC<DashboardPerformanceKpisS
 
         {/* 4. Tareas */}
         <div className="bg-white border border-[#E0E3E6] rounded-[4px] p-4 shadow-canvas-card flex flex-col justify-between">
-          <span className="text-[11px] font-bold text-[#6B7780] uppercase tracking-wide flex items-center gap-1.5">
+          <span className="text-xs font-semibold text-[#6B7780] uppercase tracking-wide flex items-center gap-1.5">
             <Award size={14} className="text-amber-600" /> Tareas Activas
           </span>
           <div className="mt-2 flex items-baseline gap-2">
@@ -170,14 +170,14 @@ export const DashboardPerformanceKpisSection: React.FC<DashboardPerformanceKpisS
 
         {/* 5. Estudiantes que han abandonado la carrera */}
         <div className="bg-white border border-[#E0E3E6] rounded-[4px] p-4 shadow-canvas-card flex flex-col justify-between">
-          <span className="text-[11px] font-bold text-[#6B7780] uppercase tracking-wide flex items-center gap-1.5">
+          <span className="text-xs font-semibold text-[#6B7780] uppercase tracking-wide flex items-center gap-1.5">
             <UserX size={14} className="text-[#C8102E]" /> Abandono Carrera
           </span>
           <div className="mt-2 flex items-baseline gap-2">
             <span className="text-2xl font-bold text-[#C8102E]">{dropoutCount}</span>
             <span className="text-xs text-[#C8102E] font-semibold">({dropoutRate}%)</span>
           </div>
-          <span className="text-[10px] text-[#6B7780] mt-1 block">deserción registrada</span>
+          <span className="text-xs text-[#6B7780] mt-1 block">deserción registrada</span>
         </div>
       </div>
 

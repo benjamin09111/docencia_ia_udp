@@ -90,7 +90,7 @@ export const StudentLearnChatTab: React.FC<StudentLearnChatTabProps> = ({
                   {m.text}
                 </div>
                 {m.source && (
-                  <span className="text-[10px] text-[#6B7780] font-mono flex items-center gap-1 pl-1">
+                  <span className="text-xs text-[#6B7780] font-mono flex items-center gap-1 pl-1">
                     <Bookmark size={11} className="text-[#008EE2]" /> {m.source}
                   </span>
                 )}
@@ -106,10 +106,10 @@ export const StudentLearnChatTab: React.FC<StudentLearnChatTabProps> = ({
         </div>
 
         <div className="p-2.5 bg-white border-t border-[#E0E3E6] space-y-1">
-          <span className="text-[10px] font-bold text-[#6B7780] uppercase tracking-wider block">
+          <span className="text-xs font-bold text-[#6B7780] uppercase tracking-wider block">
             Consultas sugeridas para la Solemne:
           </span>
-          <div className="flex flex-wrap gap-1.5 text-[11px]">
+          <div className="flex flex-wrap gap-1.5 text-xs">
             {[
               "¿Qué diferencia hay entre RTO y RPO en un escenario de disponibilidad?",
               "Explícame los 12 principios de la Guía PMBOK 7ma Edición.",

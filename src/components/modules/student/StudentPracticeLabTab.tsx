@@ -105,17 +105,17 @@ export const StudentPracticeLabTab: React.FC<StudentPracticeLabTabProps> = ({
 
         <div className="p-3.5 bg-[#F9FAFB] border border-[#E0E3E6] rounded-[3px] flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
           <div>
-            <span className="text-[10px] font-bold text-[#008EE2] uppercase tracking-wider block">
+            <span className="text-xs font-bold text-[#008EE2] uppercase tracking-wider block">
               {selectedActivity.unidad}
             </span>
             <h4 className="text-sm font-bold text-[#2D3B45] mt-0.5">{selectedActivity.titulo}</h4>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-[11px] text-[#6B7780] flex items-center gap-1">
+            <span className="text-xs text-[#6B7780] flex items-center gap-1">
               <Clock size={12} /> {selectedActivity.fechaCreacion}
             </span>
             <span
-              className={`text-[11px] font-bold px-2 py-0.5 rounded-[3px] ${
+              className={`text-xs font-bold px-2 py-0.5 rounded-[3px] ${
                 selectedActivity.completada
                   ? "text-[#2E7D32] bg-emerald-50 border border-emerald-200"
                   : "text-[#008EE2] bg-blue-50 border border-blue-200"

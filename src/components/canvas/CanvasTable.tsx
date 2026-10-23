@@ -9,7 +9,7 @@ interface CanvasTableProps {
 export const CanvasTable: React.FC<CanvasTableProps> = ({ children, className = "", tableClassName = "" }) => {
   return (
     <div className={`overflow-x-auto border border-[#E0E3E6] rounded-[4px] bg-white shadow-canvas-card ${className}`}>
-      <table className={`w-full text-left border-collapse text-xs ${tableClassName}`}>
+      <table className={`w-full text-left border-collapse text-sm text-[#2D3B45] ${tableClassName}`}>
         {children}
       </table>
     </div>
@@ -21,7 +21,7 @@ export const CanvasTableHeader: React.FC<{ children: React.ReactNode; className?
   className = "",
 }) => {
   return (
-    <thead className={`bg-[#F5F6F8] border-b border-[#E0E3E6] text-[11px] font-bold uppercase tracking-wider text-[#6B7780] ${className}`}>
+    <thead className={`bg-[#F5F6F8] border-b border-[#E0E3E6] text-xs font-semibold uppercase tracking-wider text-[#6B7780] ${className}`}>
       {children}
     </thead>
   );

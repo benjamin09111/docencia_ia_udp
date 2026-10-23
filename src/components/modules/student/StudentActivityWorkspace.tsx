@@ -34,7 +34,7 @@ export const StudentActivityWorkspace: React.FC<StudentActivityWorkspaceProps> =
     <div className="bg-white border border-[#E0E3E6] rounded-[4px] p-5 shadow-canvas-card space-y-4">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-[#E0E3E6] pb-3">
         <div>
-          <span className="text-[10px] font-bold text-[#B71C1C] bg-red-50 border border-red-200 px-2 py-0.5 rounded uppercase">
+          <span className="text-xs font-bold text-[#B71C1C] bg-red-50 border border-red-200 px-2 py-0.5 rounded uppercase">
             Taller Formativo Activo
           </span>
           <h3 className="text-base font-bold text-[#2D3B45] mt-1">{activity.titulo}</h3>
@@ -71,7 +71,7 @@ export const StudentActivityWorkspace: React.FC<StudentActivityWorkspaceProps> =
                 <tr key={r.id} className="hover:bg-gray-50/50">
                   <td className="p-2.5">
                     <strong className="text-[#2D3B45]">{r.descripcion}</strong>
-                    <p className="text-[11px] text-[#6B7780] mt-0.5">{r.indicadores[0]?.detalle}</p>
+                    <p className="text-xs text-[#6B7780] mt-0.5">{r.indicadores[0]?.detalle}</p>
                   </td>
                   <td className="p-2.5 text-right font-bold text-[#008EE2]">{r.puntaje_max} pts</td>
                 </tr>
@@ -87,13 +87,13 @@ export const StudentActivityWorkspace: React.FC<StudentActivityWorkspaceProps> =
           <div className="p-4 bg-emerald-50/60 border border-emerald-300 rounded-[3px] space-y-3">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
               <div>
-                <span className="text-[10px] font-bold text-[#2E7D32] bg-emerald-100 px-2 py-0.5 rounded uppercase">
+                <span className="text-xs font-bold text-[#2E7D32] bg-emerald-100 px-2 py-0.5 rounded uppercase">
                   Entrega Calificada
                 </span>
                 <h4 className="text-xs font-bold text-[#2D3B45] mt-1">
                   Archivo: {submission.archivo_nombre}
                 </h4>
-                <span className="text-[11px] text-[#6B7780]">
+                <span className="text-xs text-[#6B7780]">
                   Fecha de envío: {submission.fecha_entrega}
                 </span>
               </div>
@@ -110,10 +110,10 @@ export const StudentActivityWorkspace: React.FC<StudentActivityWorkspaceProps> =
                 <strong className="flex items-center gap-1">
                   <AlertCircle size={13} /> Apelación Enviada al Docente:
                 </strong>
-                <p className="text-[11px] text-amber-800 italic">
+                <p className="text-xs text-amber-800 italic">
                   &quot;{submission.apelacion.motivo}&quot;
                 </p>
-                <span className="text-[10px] text-amber-700 block font-bold">
+                <span className="text-xs text-amber-700 block font-bold">
                   Estado: {submission.apelacion.estado === "pendiente" ? "Pendiente de revisión" : submission.apelacion.estado}
                 </span>
               </div>
@@ -145,7 +145,7 @@ export const StudentActivityWorkspace: React.FC<StudentActivityWorkspaceProps> =
             <Upload size={22} className="mx-auto text-[#6B7780]" />
             <div>
               <h4 className="text-xs font-bold text-[#2D3B45]">Entregar Solución del Taller</h4>
-              <p className="text-[11px] text-[#6B7780] mt-0.5">
+              <p className="text-xs text-[#6B7780] mt-0.5">
                 Simula el envío para obtener retroalimentación instantánea según la rúbrica oficial.
               </p>
             </div>

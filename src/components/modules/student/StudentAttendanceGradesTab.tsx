@@ -60,7 +60,7 @@ export const StudentAttendanceGradesTab: React.FC<StudentAttendanceGradesTabProp
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-gray-100 text-[#2D3B45] border border-[#C7CDD1] uppercase">
+              <span className="text-xs font-bold px-2 py-0.5 rounded bg-[#F5F6F8] text-[#2D3B45] border border-[#C7CDD1] uppercase">
                 Estudiante Canvas
               </span>
               <span className="text-xs text-[#6B7780] font-mono">
@@ -88,7 +88,7 @@ export const StudentAttendanceGradesTab: React.FC<StudentAttendanceGradesTabProp
       <div className="bg-white border border-[#E0E3E6] rounded-[4px] p-5 shadow-canvas-card space-y-4">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-[#E0E3E6] pb-3">
           <div>
-            <span className="text-[10px] font-bold text-[#6B7780] uppercase tracking-wider block">
+            <span className="text-xs font-bold text-[#6B7780] uppercase tracking-wider block">
               Registro Oficial de Asistencia UDP
             </span>
             <h3 className="text-sm font-bold text-[#2D3B45] flex items-center gap-2 mt-0.5">
@@ -122,7 +122,7 @@ export const StudentAttendanceGradesTab: React.FC<StudentAttendanceGradesTabProp
             >
               {selectedStudent.asistencia_pct}%
             </span>
-            <span className="text-[11px] text-[#6B7780] mt-0.5 block">
+            <span className="text-xs text-[#6B7780] mt-0.5 block">
               Mínimo exigido UDP: <strong>75%</strong>
             </span>
           </div>
@@ -144,7 +144,7 @@ export const StudentAttendanceGradesTab: React.FC<StudentAttendanceGradesTabProp
               />
             </div>
 
-            <p className="text-[11px] text-[#6B7780] leading-snug">
+            <p className="text-xs text-[#6B7780] leading-snug">
               {isAsistenciaOk
                 ? "Cumples con el porcentaje reglamentario de asistencia de la Escuela de Informática y Telecomunicaciones."
                 : "Atención: Te encuentras bajo el 75% mínimo. Es indispensable asistir a las próximas sesiones para evitar causal RI."}

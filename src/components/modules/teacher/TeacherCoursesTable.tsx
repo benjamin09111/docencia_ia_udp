@@ -75,12 +75,12 @@ export const TeacherCoursesTable: React.FC<TeacherCoursesTableProps> = ({
 
   return (
     <div className="bg-white border border-[#E0E3E6] rounded-[4px] shadow-canvas-card overflow-hidden">
-      <div className="bg-[#FAFBFD] px-3.5 py-2 border-b border-[#E0E3E6] flex items-center justify-between text-[11px] text-[#6B7780]">
+      <div className="bg-[#FAFBFD] px-3.5 py-2 border-b border-[#E0E3E6] flex items-center justify-between text-xs text-[#6B7780]">
         <span className="flex items-center gap-1.5 font-medium">
-          <GripVertical size={13} className="text-[#008EE2]" />
+          <GripVertical size={14} className="text-[#008EE2]" />
           Arrastra las filas desde el icono lateral para personalizar tu orden de asignaturas
         </span>
-        <span className="font-mono font-bold text-[10px] bg-blue-50 text-[#008EE2] px-2 py-0.5 rounded border border-blue-200">
+        <span className="font-mono font-bold text-xs bg-blue-50 text-[#008EE2] px-2 py-0.5 rounded border border-blue-200">
           {courses.length} Cursos
         </span>
       </div>

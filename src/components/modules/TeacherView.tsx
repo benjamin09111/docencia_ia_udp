@@ -35,13 +35,6 @@ interface TeacherViewProps {
   } | null) => void;
 }
 
-const DEFAULT_TEACHER_COURSES: CanvasCourse[] = [
-  { id: 44999, name: "202602 - PROYECTO EN TICS II", code: "CIT3203_CA01", term: "2026-02 Semestre Primavera", students_count: 28, is_automated: true },
-  { id: 45002, name: "PROYECTO EN TICS II", code: "CIT3203_CA02", term: "2026-02 Semestre Primavera", students_count: 30, is_automated: true },
-  { id: 47552, name: "PROYECTO EN TICS II", code: "CIT3203_CA03", term: "2026-02 Semestre Primavera", students_count: 28, is_automated: true },
-  { id: 47047, name: "GESTIÓN ORGANIZACIONAL", code: "CIT2206_CA01", term: "2026-02 Semestre Primavera", students_count: 44, is_automated: true },
-  { id: 44988, name: "ARQUITECTURAS EMERGENTES", code: "CIT3100_CA02", term: "2026-02 Semestre Primavera", students_count: 23, is_automated: true },
-];
 
 export const TeacherView: React.FC<TeacherViewProps> = ({
   canvasCourses,
@@ -87,12 +80,7 @@ export const TeacherView: React.FC<TeacherViewProps> = ({
   }, []);
 
   const mergedCourses = useMemo(() => {
-    const list = [...canvasCourses];
-    const existingIds = new Set(list.map((c) => c.id));
-    DEFAULT_TEACHER_COURSES.forEach((fb) => {
-      if (!existingIds.has(fb.id)) list.push(fb);
-    });
-    return list;
+    return canvasCourses;
   }, [canvasCourses]);
 
   const navItems: CourseNavItem[] = [
