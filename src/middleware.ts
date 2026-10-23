@@ -8,6 +8,8 @@ import { SESSION_COOKIE, SessionConfigError, refreshIdle, sessionCookieOptions, 
 const PUBLIC_API = [
   "/api/auth/login",
   "/api/auth/logout",
+  "/api/auth/me",
+  "/api/auth/demo-accounts",
   "/api/attendance/checkin",
   "/api/attendance/ticket",
   "/api/data", // cada operación declara su acceso (público / tablero / docente) y la ruta lo verifica

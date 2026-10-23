@@ -12,11 +12,14 @@ export default function DocentePage() {
   const [entregasAlumnos, setEntregasAlumnos] = useState<StudentSubmission[]>(initialCourseData.entregas_alumnos);
 
   useEffect(() => {
-    setEstudiantesExcel(getStoredCourseGrades("CIT3203_CA01"));
     fetch("/api/canvas/courses")
       .then((r) => r.json())
       .then((data) => {
-        if (Array.isArray(data) && data.length > 0) setCanvasCourses(data);
+        if (Array.isArray(data) && data.length > 0) {
+          setCanvasCourses(data);
+          const activeCode = data[0]?.code || "CIT3000_CA02";
+          setEstudiantesExcel(getStoredCourseGrades(activeCode));
+        }
       })
       .catch(() => {});
   }, []);
