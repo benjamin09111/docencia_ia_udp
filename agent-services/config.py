@@ -35,8 +35,10 @@ class AgentSettings(_BaseClass):
     """
     app_name: str = Field(default_factory=lambda: os.getenv("APP_NAME", "Docencia IA UDP - Agent Services"))
     environment: str = Field(default_factory=lambda: os.getenv("ENVIRONMENT", "development"))
-    host: str = Field(default_factory=lambda: os.getenv("HOST", "0.0.0.0"))
+    host: str = Field(default_factory=lambda: os.getenv("HOST", "127.0.0.1"))
     port: int = Field(default_factory=lambda: int(os.getenv("PORT", "8080")))
+    allowed_origins: str = Field(default_factory=lambda: os.getenv("ALLOWED_ORIGINS", "http://localhost:3000"))
+    agent_service_api_key: str = Field(default_factory=lambda: os.getenv("AGENT_SERVICE_API_KEY", ""))
     
     # Proveedores de LLM: OpenRouter (Puerta unificada 100% Gratuita con openrouter/free)
     openrouter_api_key: str = Field(default_factory=lambda: os.getenv("OPENROUTER_API_KEY", ""))

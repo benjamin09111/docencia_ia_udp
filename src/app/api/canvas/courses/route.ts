@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/server/auth";
 import { fetchCanvasCourses } from "@/services/canvas";
 import { getSupabaseAdmin } from "@/lib/server/supabaseAdmin";
+import { findUserById } from "@/lib/server/userStore";
 import { CanvasCourse } from "@/types";
 
 function mapCodeToAgentId(code: string): string | undefined {
@@ -15,12 +16,15 @@ function mapCodeToAgentId(code: string): string | undefined {
 export async function GET(req: NextRequest) {
   try {
     const session = await getSession(req);
-    if (!session || !session.email) {
+    if (!session || !session.userId) {
       return NextResponse.json({ error: "Sesión requerida." }, { status: 401 });
     }
 
-    const userEmail = session.email.trim().toLowerCase();
-    const isOwner = Boolean(session.isOwner || userEmail === "benjamin.morales3@mail.udp.cl");
+    const user = await findUserById(session.userId);
+    if (!user) return NextResponse.json({ error: "Sesión requerida." }, { status: 401 });
+
+    const userEmail = user.email.trim().toLowerCase();
+    const isOwner = Boolean(session.isOwner);
     const hasCanvasToken = Boolean(process.env.CANVAS_API_TOKEN && process.env.CANVAS_API_TOKEN.trim().length > 10);
 
     // 1. Si es el titular y tiene token activo de Canvas, sincroniza cursos favoritos oficiales de Canvas
@@ -38,19 +42,13 @@ export async function GET(req: NextRequest) {
     // 2. Modelo Relacional Canvas: Consultar enrollments y secciones asociadas en Supabase
     try {
       const admin = getSupabaseAdmin();
-      const { data: userRecord } = await admin
-        .from("users")
-        .select("id")
-        .ilike("email", userEmail)
-        .maybeSingle();
-
       let sections: Array<{ id: string; code: string; name: string; course: unknown }> = [];
 
-      if (userRecord?.id) {
+      if (user.id) {
         const { data: enrolledRows } = await admin
           .from("enrollments")
           .select("section:sections(id, code, name, course:courses(id, code, name, canvas_course_id, term))")
-          .eq("user_id", userRecord.id);
+          .eq("user_id", user.id);
 
         if (Array.isArray(enrolledRows) && enrolledRows.length > 0) {
           sections = enrolledRows

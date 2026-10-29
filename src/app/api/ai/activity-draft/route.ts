@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireRole } from "@/lib/server/auth";
 import { ActivityAgentRequest, ActivityAgentDraft } from "@/types/activityAgent";
+import { checkAiPrivacy, externalAiProcessingEnabled } from "@/lib/server/aiPrivacy";
 
 const validFormats = ["individual", "grupal"];
 const validAssessments = ["decimas", "nota"];
@@ -18,13 +19,24 @@ export async function POST(req: NextRequest) {
     const content = body.content || "contenidos definidos por el docente";
     const modality = body.format === "grupal" ? "en equipos" : "de manera individual";
     const durationMin = parseInt(body.duration || "45", 10) || 45;
+    const privacy = checkAiPrivacy(`${body.objective}\n${content}\n${body.courseName || ""}`);
+    if (!privacy.allowed) {
+      return NextResponse.json(
+        { error: "Elimina datos personales o sensibles antes de solicitar asistencia de IA.", code: "personal_data_blocked" },
+        { status: 422, headers: { "Cache-Control": "no-store" } }
+      );
+    }
 
     // 1. Invocar Agente 1 (Diseñador de Actividades) en microservicio desacoplado Python
     const agentServiceUrl = process.env.AGENT_SERVICES_URL || "http://127.0.0.1:8080";
-    try {
+    if (externalAiProcessingEnabled()) {
+      try {
       const pyRes = await fetch(`${agentServiceUrl}/api/v1/agent/design-activity`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(process.env.AGENT_SERVICE_API_KEY ? { "X-Agent-Service-Key": process.env.AGENT_SERVICE_API_KEY } : {}),
+        },
         body: JSON.stringify({
           objective: body.objective.trim(),
           course_name: body.courseName || "Arquitectura de Software",
@@ -58,8 +70,9 @@ export async function POST(req: NextRequest) {
         };
         return NextResponse.json(draft);
       }
-    } catch {
-      // Si el microservicio está offline o en timeout, continúa a la contingencia determinista
+      } catch {
+        // Si el microservicio está offline o en timeout, continúa a la contingencia determinista
+      }
     }
 
     // 2. Fallback determinista local institucional

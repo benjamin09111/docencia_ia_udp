@@ -25,10 +25,10 @@ export async function isRevoked(jti: string, now = Date.now()): Promise<boolean>
     checkedOk.set(jti, now);
     return false;
   } catch (e) {
-    // La revocación es una barrera adicional: si la consulta falla (p. ej. migración pendiente) no se deja a
-    // los docentes sin acceso. La firma y los vencimientos de la sesión siguen validándose siempre.
+    // Sin poder consultar revocaciones no es posible garantizar que una sesión cerrada
+    // siga invalidada. Las rutas privadas fallan cerradas hasta recuperar el servicio.
     console.error("[revocation] no se pudo consultar revoked_sessions:", e instanceof Error ? e.message : e);
-    return false;
+    return true;
   }
 }
 

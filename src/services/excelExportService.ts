@@ -1,4 +1,4 @@
-import * as XLSX from "xlsx";
+import { XLSX } from "@/utils/exceljsAdapter";
 import { ClassSession, StudentAttendanceSummary, StudentWorkRecord } from "@/types/attendance";
 import { StudentExcelRow } from "@/types";
 import { getTodayDateStr } from "@/services/attendanceStore";

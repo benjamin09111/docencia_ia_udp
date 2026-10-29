@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { User, LogOut, Shield, CheckCircle, AlertTriangle, X } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { ChangePasswordForm } from "./ChangePasswordForm";
 
 interface CanvasAccountModalProps {
   isOpen: boolean;
@@ -103,6 +104,8 @@ export const CanvasAccountModal: React.FC<CanvasAccountModalProps> = ({ isOpen, 
             </div>
           )}
         </div>
+
+        <ChangePasswordForm />
 
         <div className="flex items-center justify-between pt-2 border-t border-gray-100">
           <button
