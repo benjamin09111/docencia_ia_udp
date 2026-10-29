@@ -1,13 +1,31 @@
 import { NextRequest, NextResponse } from "next/server";
 import { AiChatRequest, AiChatResponse } from "@/types/ai";
+import { requireRole } from "@/lib/server/auth";
+import { checkAiPrivacy, externalAiProcessingEnabled } from "@/lib/server/aiPrivacy";
+
+const MAX_MESSAGE_CHARS = 8_000;
 
 export async function POST(req: NextRequest) {
+  const auth = await requireRole(req);
+  if ("response" in auth) return auth.response;
+
   try {
     const body = (await req.json()) as AiChatRequest;
     const { agentRole, message, courseCode, courseName } = body;
 
-    if (!message || typeof message !== "string") {
+    if (!message || typeof message !== "string" || message.length > MAX_MESSAGE_CHARS) {
       return NextResponse.json({ error: "El mensaje es requerido." }, { status: 400 });
+    }
+
+    const privacy = checkAiPrivacy(message);
+    if (!privacy.allowed) {
+      return NextResponse.json(
+        {
+          error: "La consulta contiene datos personales o sensibles. Elimínalos o reemplázalos por alias antes de usar IA.",
+          code: "personal_data_blocked",
+        },
+        { status: 422, headers: { "Cache-Control": "no-store" } }
+      );
     }
 
     const lower = message.toLowerCase();
@@ -15,31 +33,36 @@ export async function POST(req: NextRequest) {
     let sources: string[] = [];
 
     // 1. Intentar consultar al microservicio agéntico desacoplado Python (agent-services)
-    const agentServiceUrl = process.env.AGENT_SERVICES_URL || "http://127.0.0.1:8080";
-    try {
-      const pyRes = await fetch(`${agentServiceUrl}/api/v1/agent/chat`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          message,
-          node_id: courseCode ? `course:${courseCode.toLowerCase()}` : "course:cit3203",
-          worker_role: agentRole,
-        }),
-        signal: AbortSignal.timeout(2500),
-      });
+    if (externalAiProcessingEnabled()) {
+      const agentServiceUrl = process.env.AGENT_SERVICES_URL || "http://127.0.0.1:8080";
+      try {
+        const pyRes = await fetch(`${agentServiceUrl}/api/v1/agent/chat`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...(process.env.AGENT_SERVICE_API_KEY ? { "X-Agent-Service-Key": process.env.AGENT_SERVICE_API_KEY } : {}),
+          },
+          body: JSON.stringify({
+            message,
+            node_id: courseCode ? `course:${courseCode.toLowerCase()}` : "course:cit3203",
+            worker_role: agentRole,
+          }),
+          signal: AbortSignal.timeout(2500),
+        });
 
-      if (pyRes.ok) {
-        const pyData = await pyRes.json();
-        const response: AiChatResponse = {
-          reply: pyData.reply,
-          agentRole,
-          tokensUsed: pyData.tokens_estimated || Math.round(pyData.reply.length / 4),
-          sources: pyData.sources || ["Agente Jerárquico UDP"],
-        };
-        return NextResponse.json(response);
+        if (pyRes.ok) {
+          const pyData = await pyRes.json();
+          const response: AiChatResponse = {
+            reply: pyData.reply,
+            agentRole,
+            tokensUsed: pyData.tokens_estimated || Math.round(pyData.reply.length / 4),
+            sources: pyData.sources || ["Agente Jerárquico UDP"],
+          };
+          return NextResponse.json(response);
+        }
+      } catch {
+        // Si el microservicio no está activo o supera el timeout, continúa al motor local institucional
       }
-    } catch {
-      // Si el microservicio no está activo o supera el timeout, continúa al motor local institucional
     }
 
     // 2. Lógica local de contingencia institucional (Fallback seguro sin fuga de errores)

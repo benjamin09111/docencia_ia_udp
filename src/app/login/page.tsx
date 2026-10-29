@@ -1,11 +1,10 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { safeNextPath } from "@/utils/safeRedirect";
 import { useRouter } from "next/navigation";
 import { GraduationCap, ShieldCheck, Lock, ArrowRight, AlertCircle, Loader2, User } from "lucide-react";
 import Link from "next/link";
-import { DevDemoAccountsDrawer, DemoAccount } from "@/components/modules/login/DevDemoAccountsDrawer";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -13,17 +12,6 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [demoAccounts, setDemoAccounts] = useState<DemoAccount[]>([]);
-
-  useEffect(() => {
-    fetch("/api/auth/demo-accounts")
-      .then((res) => res.json())
-      .then((data) => {
-        if (Array.isArray(data.accounts)) setDemoAccounts(data.accounts);
-      })
-      .catch(() => {});
-  }, []);
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!identifier.trim() || !password.trim()) {
@@ -58,12 +46,6 @@ export default function LoginPage() {
     }
   };
 
-  const handleSelectAccount = (email: string, pass: string) => {
-    setIdentifier(email);
-    setPassword(pass);
-    setError(null);
-  };
-
   return (
     <div className="min-h-screen bg-[#F5F6F8] flex flex-col justify-between p-4 sm:p-6 font-sans">
       <header className="max-w-md w-full mx-auto flex items-center justify-between border-b border-gray-200 pb-3 mb-6">
@@ -96,8 +78,6 @@ export default function LoginPage() {
               Inicia sesión con tus credenciales de Escuela para acceder al panel docente.
             </p>
           </div>
-
-          <DevDemoAccountsDrawer accounts={demoAccounts} onSelectAccount={handleSelectAccount} />
 
           {error && (
             <div className="p-3 bg-rose-50 border border-rose-200 text-[#B71C1C] rounded-[4px] text-xs flex items-center gap-2 animate-fadeIn">

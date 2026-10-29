@@ -13,9 +13,8 @@ export type SessionRole = "docente" | "admin";
 export interface SessionClaims {
   role: SessionRole;
   userId?: string;
-  email?: string;
-  name?: string;
   isOwner?: boolean;
+  authVersion?: number;
   jti: string;
   iat: number; // epoch segundos
   exp: number;
@@ -60,10 +59,9 @@ const nowS = () => Math.floor(Date.now() / 1000);
 
 export type UserSessionPayload = {
   userId: string;
-  email: string;
-  name: string;
   role: SessionRole;
   isOwner: boolean;
+  authVersion: number;
 };
 
 /** Crea un token NUEVO (identificador nuevo). Usar en el login. */
@@ -75,9 +73,8 @@ export async function createSessionToken(
   const claims: SessionClaims = {
     role: isObj ? userOrRole.role : userOrRole,
     userId: isObj ? userOrRole.userId : undefined,
-    email: isObj ? userOrRole.email : undefined,
-    name: isObj ? userOrRole.name : undefined,
     isOwner: isObj ? userOrRole.isOwner : undefined,
+    authVersion: isObj ? userOrRole.authVersion : undefined,
     jti: crypto.randomUUID(),
     iat: now,
     exp: now + SESSION_ABSOLUTE_TTL_S,
@@ -116,7 +113,21 @@ export async function verifySessionToken(token: string | undefined, now = nowS()
   const claims = (await verifyPayload(token)) as SessionClaims | null;
   if (!claims) return null;
   if (claims.role !== "docente" && claims.role !== "admin") return null;
-  if (!claims.jti || typeof claims.exp !== "number" || typeof claims.idleExp !== "number") return null;
+  // Las versiones antiguas incluían PII en una cookie firmada pero no cifrada.
+  // Se invalidan para forzar una sesión nueva con claims mínimos.
+  if ("email" in claims || "name" in claims) return null;
+  if (
+    !claims.jti ||
+    !claims.userId ||
+    typeof claims.authVersion !== "number" ||
+    !Number.isSafeInteger(claims.authVersion) ||
+    claims.authVersion < 1 ||
+    typeof claims.exp !== "number" ||
+    typeof claims.idleExp !== "number" ||
+    typeof claims.iat !== "number" ||
+    claims.exp - claims.iat > SESSION_ABSOLUTE_TTL_S ||
+    claims.idleExp - claims.iat > SESSION_IDLE_TTL_S
+  ) return null;
   if (now >= claims.exp || now >= claims.idleExp) return null;
   return claims;
 }
@@ -139,6 +150,7 @@ export function sessionCookieOptions(maxAgeS = SESSION_ABSOLUTE_TTL_S) {
     sameSite: "lax" as const,
     path: "/",
     maxAge: maxAgeS,
+    priority: "high" as const,
   };
 }
 
