@@ -23,7 +23,7 @@ export const StudentCourseHeader: React.FC<StudentCourseHeaderProps> = ({
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <div>
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-[11px] font-bold px-2 py-0.5 rounded bg-gray-100 text-[#2D3B45] border border-[#C7CDD1] uppercase tracking-wide">
+            <span className="text-xs font-bold px-2 py-0.5 rounded bg-[#F5F6F8] text-[#2D3B45] border border-[#C7CDD1] uppercase tracking-wide">
               {courseCode}
             </span>
             <span className="text-xs text-[#6B7780]">

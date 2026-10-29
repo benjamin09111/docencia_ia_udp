@@ -1,9 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
+import { requireRole } from "@/lib/server/auth";
+import { canMutateCanvas, canvasMutationDenied, isSafeCanvasHtml } from "@/lib/server/canvasMutationSecurity";
+import { invalidRequestOriginResponse, isTrustedMutation } from "@/lib/server/requestSecurity";
 
 const CANVAS_BASE_URL = process.env.CANVAS_BASE_URL || "https://udp.instructure.com";
 const CANVAS_TOKEN = process.env.CANVAS_API_TOKEN || "";
 
 export async function GET(req: NextRequest) {
+  const auth = await requireRole(req, ["admin"]);
+  if ("response" in auth) return auth.response;
+
   try {
     const { searchParams } = new URL(req.url);
     const courseId = searchParams.get("courseId");
@@ -11,6 +17,7 @@ export async function GET(req: NextRequest) {
     if (!courseId) {
       return NextResponse.json({ error: "courseId es requerido" }, { status: 400 });
     }
+    if (!canMutateCanvas(auth.session, courseId)) return canvasMutationDenied();
 
     if (!CANVAS_TOKEN) {
       return NextResponse.json({
@@ -59,16 +66,21 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  const auth = await requireRole(req, ["admin"]);
+  if ("response" in auth) return auth.response;
+  if (!isTrustedMutation(req)) return invalidRequestOriginResponse();
+
   try {
     const body = await req.json();
     const { courseId, title, htmlBody, setAsDefaultView = true } = body;
 
-    if (!courseId || !htmlBody) {
+    if (!courseId || !isSafeCanvasHtml(htmlBody)) {
       return NextResponse.json(
         { error: "courseId y htmlBody son requeridos" },
         { status: 400 }
       );
     }
+    if (!canMutateCanvas(auth.session, courseId)) return canvasMutationDenied();
 
     if (!CANVAS_TOKEN) {
       // Modo local simulado (sin token oficial configurado)

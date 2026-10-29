@@ -1,9 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
+import { requireRole } from "@/lib/server/auth";
+import { canMutateCanvas, canvasMutationDenied } from "@/lib/server/canvasMutationSecurity";
+import { invalidRequestOriginResponse, isTrustedMutation } from "@/lib/server/requestSecurity";
 
 const CANVAS_BASE_URL = process.env.CANVAS_BASE_URL || "https://udp.instructure.com";
 const CANVAS_TOKEN = process.env.CANVAS_API_TOKEN || "";
 
 export async function POST(req: NextRequest) {
+  const auth = await requireRole(req, ["admin"]);
+  if ("response" in auth) return auth.response;
+  if (!isTrustedMutation(req)) return invalidRequestOriginResponse();
+
   try {
     const body = await req.json();
     const {
@@ -20,6 +27,11 @@ export async function POST(req: NextRequest) {
       allowedAttempts = -1,
       omitFromFinalGrade = false,
     } = body;
+
+    if (!canMutateCanvas(auth.session, courseId)) return canvasMutationDenied();
+    if (typeof name !== "string" || name.trim().length === 0 || name.length > 255) {
+      return NextResponse.json({ error: "La tarea requiere un nombre válido." }, { status: 400 });
+    }
 
     if (!CANVAS_TOKEN) {
       return NextResponse.json(

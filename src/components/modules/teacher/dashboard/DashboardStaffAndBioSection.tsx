@@ -104,7 +104,7 @@ export const DashboardStaffAndBioSection: React.FC<DashboardStaffAndBioSectionPr
             <User size={20} />
           </div>
           <div className="min-w-0">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-[#B71C1C] block">
+            <span className="text-xs font-bold uppercase tracking-wider text-[#B71C1C] block">
               Profesor Titular / Docente
             </span>
             <p className="text-sm font-bold text-[#2D3B45] truncate">
@@ -122,7 +122,7 @@ export const DashboardStaffAndBioSection: React.FC<DashboardStaffAndBioSectionPr
             <User size={20} />
           </div>
           <div className="min-w-0">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-[#008EE2] block">
+            <span className="text-xs font-bold uppercase tracking-wider text-[#008EE2] block">
               Ayudante de Cátedra & Taller
             </span>
             <p className="text-sm font-bold text-[#2D3B45] truncate">

@@ -54,12 +54,12 @@ export const AdminTechnicalAgentsTab: React.FC<AdminTechnicalAgentsTabProps> = (
             indicatorColor="blue"
             isPublished={true}
             title={
-              <span className="flex items-center gap-2">
-                <span>{agent.nombre}</span>
-                <span className="font-mono text-[10px] text-gray-500 font-normal">
+              <span className="flex items-center gap-2 flex-wrap">
+                <span className="font-bold text-sm text-[#2D3B45]">{agent.nombre}</span>
+                <span className="font-mono text-xs text-gray-500 font-normal">
                   ({agent.codigo})
                 </span>
-                <span className="text-[10px] bg-gray-100 text-[#2D3B45] px-1.5 py-0.2 rounded font-normal border border-gray-200">
+                <span className="text-xs bg-gray-100 text-[#2D3B45] px-2 py-0.5 rounded font-normal border border-gray-200">
                   {agent.ambito}
                 </span>
               </span>

@@ -79,9 +79,9 @@ export const TeacherPendingSummary: React.FC<TeacherPendingSummaryProps> = ({
   return (
     <div className="text-xs select-none space-y-2">
       {/* Encabezado del Resumen Recopilador */}
-      <div className="text-[11px] font-bold text-[#6B7780] uppercase tracking-wider px-2 pb-1 flex items-center justify-between">
+      <div className="text-xs font-semibold text-[#6B7780] uppercase tracking-wider px-2 pb-1 flex items-center justify-between">
         <span>Resumen Pendiente</span>
-        <span className="text-[10px] font-mono bg-gray-200 text-gray-700 px-1.5 py-0.2 rounded font-bold">
+        <span className="text-xs font-mono bg-gray-200 text-gray-700 px-2 py-0.5 rounded font-bold">
           {appeals.length + reviews.length}
         </span>
       </div>
@@ -91,14 +91,14 @@ export const TeacherPendingSummary: React.FC<TeacherPendingSummaryProps> = ({
         <button
           type="button"
           onClick={() => setAppealsOpen(!appealsOpen)}
-          className="w-full text-left p-2 bg-gray-50/80 hover:bg-gray-100/80 transition-colors flex items-center justify-between font-semibold text-[#2D3B45]"
+          className="w-full text-left p-2.5 bg-gray-50/80 hover:bg-gray-100/80 transition-colors flex items-center justify-between font-semibold text-[#2D3B45]"
         >
           <div className="flex items-center gap-1.5 min-w-0">
-            {appealsOpen ? <ChevronDown size={13} className="text-[#6B7780]" /> : <ChevronRight size={13} className="text-[#6B7780]" />}
+            {appealsOpen ? <ChevronDown size={14} className="text-[#6B7780]" /> : <ChevronRight size={14} className="text-[#6B7780]" />}
             <span className="truncate">Apelaciones</span>
           </div>
           <span
-            className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
+            className={`text-xs font-bold px-2 py-0.5 rounded ${
               appeals.length > 0 ? "bg-red-100 text-[#B71C1C]" : "bg-gray-100 text-gray-500"
             }`}
           >
@@ -109,23 +109,23 @@ export const TeacherPendingSummary: React.FC<TeacherPendingSummaryProps> = ({
         {appealsOpen && (
           <div className="divide-y divide-gray-100 bg-white">
             {appeals.length === 0 ? (
-              <p className="p-2 text-[11px] text-[#6B7780] italic">Sin apelaciones pendientes.</p>
+              <p className="p-2.5 text-xs text-[#6B7780] italic">Sin apelaciones pendientes.</p>
             ) : (
               appeals.map((app) => (
                 <div
                   key={app.id}
                   onClick={() => onSelectCourse?.(app.courseCode)}
-                  className="p-2 hover:bg-red-50/40 transition-colors cursor-pointer group"
+                  className="p-2.5 hover:bg-red-50/40 transition-colors cursor-pointer group"
                 >
-                  <div className="flex items-center justify-between">
-                    <span className="font-semibold text-[#2D3B45] group-hover:text-[#B71C1C] truncate block">
+                  <div className="flex items-center justify-between gap-1">
+                    <span className="font-semibold text-xs text-[#2D3B45] group-hover:text-[#B71C1C] truncate block">
                       {app.studentName}
                     </span>
-                    <span className="text-[9px] font-mono text-[#008EE2] bg-blue-50 px-1 rounded">
+                    <span className="text-xs font-mono text-[#008EE2] bg-blue-50 px-1.5 py-0.5 rounded border border-blue-200">
                       {app.courseCode.split("_")[0]}
                     </span>
                   </div>
-                  <p className="text-[10px] text-[#6B7780] truncate mt-0.5">{app.motivo}</p>
+                  <p className="text-xs text-[#6B7780] truncate mt-1">{app.motivo}</p>
                 </div>
               ))
             )}
@@ -138,14 +138,14 @@ export const TeacherPendingSummary: React.FC<TeacherPendingSummaryProps> = ({
         <button
           type="button"
           onClick={() => setReviewsOpen(!reviewsOpen)}
-          className="w-full text-left p-2 bg-gray-50/80 hover:bg-gray-100/80 transition-colors flex items-center justify-between font-semibold text-[#2D3B45]"
+          className="w-full text-left p-2.5 bg-gray-50/80 hover:bg-gray-100/80 transition-colors flex items-center justify-between font-semibold text-[#2D3B45]"
         >
           <div className="flex items-center gap-1.5 min-w-0">
-            {reviewsOpen ? <ChevronDown size={13} className="text-[#6B7780]" /> : <ChevronRight size={13} className="text-[#6B7780]" />}
+            {reviewsOpen ? <ChevronDown size={14} className="text-[#6B7780]" /> : <ChevronRight size={14} className="text-[#6B7780]" />}
             <span className="truncate">Por revisar</span>
           </div>
           <span
-            className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
+            className={`text-xs font-bold px-2 py-0.5 rounded ${
               reviews.length > 0 ? "bg-amber-100 text-amber-800" : "bg-gray-100 text-gray-500"
             }`}
           >
@@ -156,23 +156,23 @@ export const TeacherPendingSummary: React.FC<TeacherPendingSummaryProps> = ({
         {reviewsOpen && (
           <div className="divide-y divide-gray-100 bg-white">
             {reviews.length === 0 ? (
-              <p className="p-2 text-[11px] text-[#6B7780] italic">Todo al día.</p>
+              <p className="p-2.5 text-xs text-[#6B7780] italic">Todo al día.</p>
             ) : (
               reviews.map((rev) => (
                 <div
                   key={rev.id}
                   onClick={() => onSelectCourse?.(rev.courseCode)}
-                  className="p-2 hover:bg-amber-50/40 transition-colors cursor-pointer group"
+                  className="p-2.5 hover:bg-amber-50/40 transition-colors cursor-pointer group"
                 >
-                  <div className="flex items-center justify-between">
-                    <span className="font-semibold text-[#2D3B45] group-hover:text-[#008EE2] truncate block">
+                  <div className="flex items-center justify-between gap-1">
+                    <span className="font-semibold text-xs text-[#2D3B45] group-hover:text-[#008EE2] truncate block">
                       {rev.title}
                     </span>
-                    <span className="text-[9px] text-[#6B7780] shrink-0 ml-1">{rev.fecha}</span>
+                    <span className="text-xs text-[#6B7780] shrink-0 ml-1">{rev.fecha}</span>
                   </div>
-                  <div className="flex items-center justify-between text-[10px] text-[#6B7780] mt-0.5">
+                  <div className="flex items-center justify-between text-xs text-[#6B7780] mt-1">
                     <span className="truncate">{rev.studentOrGroup}</span>
-                    <span className="text-[9px] font-mono text-[#55636E]">{rev.courseCode.split("_")[0]}</span>
+                    <span className="text-xs font-mono text-[#55636E]">{rev.courseCode.split("_")[0]}</span>
                   </div>
                 </div>
               ))

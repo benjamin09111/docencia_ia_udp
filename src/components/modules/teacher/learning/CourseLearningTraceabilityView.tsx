@@ -99,7 +99,7 @@ export const CourseLearningTraceabilityView: React.FC<CourseLearningTraceability
               key={item.id}
               type="button"
               onClick={() => setFilterLevel(item.id)}
-              className={`px-2.5 py-1 rounded text-[11px] font-semibold border transition-all cursor-pointer whitespace-nowrap ${
+              className={`px-2.5 py-1 rounded text-xs font-semibold border transition-all cursor-pointer whitespace-nowrap ${
                 filterLevel === item.id
                   ? "bg-[#2D3B45] text-white border-[#2D3B45]"
                   : "bg-white text-[#6B7780] border-[#E0E3E6] hover:bg-gray-50 hover:text-[#2D3B45]"
@@ -117,7 +117,7 @@ export const CourseLearningTraceabilityView: React.FC<CourseLearningTraceability
         <div className="lg:col-span-5 space-y-2 max-h-[700px] overflow-y-auto pr-1">
           <div className="text-xs font-bold text-[#6B7780] uppercase tracking-wider mb-2 flex items-center justify-between px-1">
             <span>Estudiantes ({filteredProfiles.length})</span>
-            <span className="text-[10px] lowercase font-normal">selecciona para ver ficha</span>
+            <span className="text-xs lowercase font-normal">selecciona para ver ficha</span>
           </div>
 
           {filteredProfiles.length === 0 ? (

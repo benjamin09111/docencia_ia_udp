@@ -50,7 +50,7 @@ export const StudentHomeTab: React.FC<StudentHomeTabProps> = ({
                 <FileText size={14} className="text-[#B71C1C]" />
                 Evaluaciones Sumativas
               </span>
-              <span className="text-[11px] text-[#6B7780] block mt-0.5">
+              <span className="text-xs text-[#6B7780] block mt-0.5">
                 {sumativas.length} evaluaciones oficiales
               </span>
             </div>
@@ -67,7 +67,7 @@ export const StudentHomeTab: React.FC<StudentHomeTabProps> = ({
                 <Sparkles size={14} className="text-[#008EE2]" />
                 Evaluaciones Formativas
               </span>
-              <span className="text-[11px] text-[#6B7780] block mt-0.5">
+              <span className="text-xs text-[#6B7780] block mt-0.5">
                 {formativas.length} talleres con décimas
               </span>
             </div>
@@ -84,7 +84,7 @@ export const StudentHomeTab: React.FC<StudentHomeTabProps> = ({
                 <Brain size={14} className="text-[#2E7D32]" />
                 Tutor IA del Curso
               </span>
-              <span className="text-[11px] text-[#6B7780] block mt-0.5">
+              <span className="text-xs text-[#6B7780] block mt-0.5">
                 Consultas pedagógicas 24/7
               </span>
             </div>
@@ -138,7 +138,7 @@ export const StudentHomeTab: React.FC<StudentHomeTabProps> = ({
               title={item.titulo}
               subtitle={`${item.descripcion} • Plazo: ${item.fecha_limite}`}
               rightBadge={
-                <span className="text-[11px] font-semibold text-[#6B7780] bg-[#F5F6F8] border border-[#C7CDD1] px-2 py-0.5 rounded-[3px]">
+                <span className="text-xs font-semibold text-[#6B7780] bg-[#F5F6F8] border border-[#C7CDD1] px-2 py-0.5 rounded-[3px]">
                   {isSumativa ? "Pond: " : "Incentivo: "}{item.ponderacion_o_decimas}
                 </span>
               }

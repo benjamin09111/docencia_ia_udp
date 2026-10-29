@@ -74,7 +74,7 @@ export const DashboardScheduleProgressSection: React.FC<DashboardScheduleProgres
         {/* Avance de Clases Realizadas */}
         <div className="bg-[#F5F6F8] border border-[#E0E3E6] rounded-[4px] p-4 flex flex-col justify-between">
           <div>
-            <span className="text-[11px] font-bold text-[#6B7780] uppercase tracking-wide block">
+            <span className="text-xs font-bold text-[#6B7780] uppercase tracking-wide block">
               Sesiones de Cátedra y Taller
             </span>
             <div className="flex items-baseline gap-2 mt-1">
@@ -84,7 +84,7 @@ export const DashboardScheduleProgressSection: React.FC<DashboardScheduleProgres
           </div>
 
           <div className="mt-3">
-            <div className="flex justify-between text-[11px] text-[#55636E] mb-1 font-medium">
+            <div className="flex justify-between text-xs text-[#6B7780] mb-1 font-medium">
               <span>Progreso semestral</span>
               <span>{progressPercent}%</span>
             </div>
@@ -100,22 +100,22 @@ export const DashboardScheduleProgressSection: React.FC<DashboardScheduleProgres
         {/* Semana Actual según Cronograma */}
         <div className="md:col-span-2 bg-[#F5F6F8] border border-[#E0E3E6] rounded-[4px] p-4 space-y-2">
           <div className="flex justify-between items-center">
-            <span className="text-[11px] font-bold text-[#008EE2] uppercase tracking-wide flex items-center gap-1.5">
+            <span className="text-xs font-bold text-[#008EE2] uppercase tracking-wide flex items-center gap-1.5">
               <BookOpen size={14} />
               Contenido de la Semana Actual (Semana {currentWeekInfo.semana})
             </span>
-            <span className="text-[10px] bg-white border border-gray-200 px-2 py-0.5 rounded text-[#55636E] font-medium">
+            <span className="text-xs bg-white border border-gray-200 px-2 py-0.5 rounded text-[#55636E] font-medium">
               {currentWeekInfo.fechas}
             </span>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
             <div className="bg-white border border-gray-200 rounded p-2.5">
-              <span className="text-[10px] font-bold text-[#6B7780] block uppercase">Cátedras:</span>
+              <span className="text-xs font-bold text-[#6B7780] block uppercase">Cátedras:</span>
               <p className="text-[#2D3B45] font-medium mt-0.5">{currentWeekInfo.catedraMartes}</p>
             </div>
             <div className="bg-white border border-gray-200 rounded p-2.5">
-              <span className="text-[10px] font-bold text-[#6B7780] block uppercase">Ayudantía / Taller:</span>
+              <span className="text-xs font-bold text-[#6B7780] block uppercase">Ayudantía / Taller:</span>
               <p className="text-[#2D3B45] font-medium mt-0.5">{currentWeekInfo.ayudantia}</p>
             </div>
           </div>

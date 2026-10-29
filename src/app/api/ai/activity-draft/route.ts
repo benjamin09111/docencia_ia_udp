@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireRole } from "@/lib/server/auth";
 import { ActivityAgentRequest, ActivityAgentDraft } from "@/types/activityAgent";
+import { checkAiPrivacy, externalAiProcessingEnabled } from "@/lib/server/aiPrivacy";
 
 const validFormats = ["individual", "grupal"];
 const validAssessments = ["decimas", "nota"];
@@ -17,6 +18,64 @@ export async function POST(req: NextRequest) {
 
     const content = body.content || "contenidos definidos por el docente";
     const modality = body.format === "grupal" ? "en equipos" : "de manera individual";
+    const durationMin = parseInt(body.duration || "45", 10) || 45;
+    const privacy = checkAiPrivacy(`${body.objective}\n${content}\n${body.courseName || ""}`);
+    if (!privacy.allowed) {
+      return NextResponse.json(
+        { error: "Elimina datos personales o sensibles antes de solicitar asistencia de IA.", code: "personal_data_blocked" },
+        { status: 422, headers: { "Cache-Control": "no-store" } }
+      );
+    }
+
+    // 1. Invocar Agente 1 (Diseñador de Actividades) en microservicio desacoplado Python
+    const agentServiceUrl = process.env.AGENT_SERVICES_URL || "http://127.0.0.1:8080";
+    if (externalAiProcessingEnabled()) {
+      try {
+      const pyRes = await fetch(`${agentServiceUrl}/api/v1/agent/design-activity`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(process.env.AGENT_SERVICE_API_KEY ? { "X-Agent-Service-Key": process.env.AGENT_SERVICE_API_KEY } : {}),
+        },
+        body: JSON.stringify({
+          objective: body.objective.trim(),
+          course_name: body.courseName || "Arquitectura de Software",
+          course_code: "CIT3000", // Sandbox seguro
+          topic_content: content,
+          duration_minutes: durationMin,
+          format: body.format,
+          assessment_type: body.assessment,
+          max_decimas: 0.3,
+        }),
+        signal: AbortSignal.timeout(3500),
+      });
+
+      if (pyRes.ok) {
+        const pyData = await pyRes.json();
+        const draft: ActivityAgentDraft = {
+          title: pyData.title,
+          description: pyData.description,
+          content: body.content,
+          instructions: pyData.instructions.map((step: any, idx: number) => ({
+            id: `agent_${idx + 1}`,
+            numero: step.paso,
+            titulo: step.titulo,
+            descripcion: step.descripcion,
+            puntaje: step.puntaje,
+          })),
+          pointsPossible: 100,
+          assessment: body.assessment,
+          decimas: String(pyData.decimas_sugeridas ?? "0.3"),
+          isGroupAssignment: body.format === "grupal",
+        };
+        return NextResponse.json(draft);
+      }
+      } catch {
+        // Si el microservicio está offline o en timeout, continúa a la contingencia determinista
+      }
+    }
+
+    // 2. Fallback determinista local institucional
     const draft: ActivityAgentDraft = {
       title: `Taller: ${body.objective.trim()}`,
       description: `Actividad ${modality} de ${body.duration || "45 minutos"}, orientada a ${body.objective.trim()}. Se alinea con ${content} del programa oficial de ${body.courseName}.`,

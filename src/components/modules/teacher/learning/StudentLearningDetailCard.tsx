@@ -72,7 +72,7 @@ export const StudentLearningDetailCard: React.FC<StudentLearningDetailCardProps>
             <MessageSquare size={14} className="text-[#008EE2]" />
             Reflexión del Estudiante (Módulo Estudiante)
           </span>
-          <span className="text-[11px] text-[#6B7780] flex items-center gap-1 font-mono">
+          <span className="text-xs text-[#6B7780] flex items-center gap-1 font-mono">
             <Calendar size={12} /> {profile.reflexionEstudiante.fecha}
           </span>
         </div>
@@ -83,10 +83,10 @@ export const StudentLearningDetailCard: React.FC<StudentLearningDetailCardProps>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1 text-xs">
           <div className="bg-white p-2.5 rounded border border-gray-200 space-y-1">
-            <span className="text-[11px] font-bold text-gray-700 flex items-center gap-1">
+            <span className="text-xs font-bold text-gray-700 flex items-center gap-1">
               <AlertTriangle size={12} className="text-amber-500" /> Dificultades reportadas:
             </span>
-            <ul className="text-[11px] text-gray-600 list-disc list-inside space-y-0.5">
+            <ul className="text-xs text-gray-600 list-disc list-inside space-y-0.5">
               {profile.reflexionEstudiante.dificultadesPercibidas.map((dif, idx) => (
                 <li key={idx}>{dif}</li>
               ))}
@@ -94,10 +94,10 @@ export const StudentLearningDetailCard: React.FC<StudentLearningDetailCardProps>
           </div>
 
           <div className="bg-white p-2.5 rounded border border-gray-200 space-y-1">
-            <span className="text-[11px] font-bold text-gray-700 flex items-center gap-1">
+            <span className="text-xs font-bold text-gray-700 flex items-center gap-1">
               <Target size={12} className="text-[#008EE2]" /> Meta declarada para próximo hito:
             </span>
-            <p className="text-[11px] text-gray-600">{profile.reflexionEstudiante.metasProximoHito}</p>
+            <p className="text-xs text-gray-600">{profile.reflexionEstudiante.metasProximoHito}</p>
           </div>
         </div>
       </div>
@@ -112,7 +112,7 @@ export const StudentLearningDetailCard: React.FC<StudentLearningDetailCardProps>
           </div>
           <div className="flex flex-wrap gap-1.5">
             {profile.fortalezas.map((f, i) => (
-              <span key={i} className="inline-flex items-center gap-1 px-2 py-1 bg-white border border-emerald-300 rounded text-[11px] text-emerald-900 font-medium shadow-xs">
+              <span key={i} className="inline-flex items-center gap-1 px-2 py-1 bg-white border border-emerald-300 rounded text-xs text-emerald-900 font-medium shadow-xs">
                 <CheckCircle2 size={11} className="text-emerald-600 shrink-0" />
                 {f}
               </span>
@@ -128,7 +128,7 @@ export const StudentLearningDetailCard: React.FC<StudentLearningDetailCardProps>
           </div>
           <div className="flex flex-wrap gap-1.5">
             {profile.debilidades.map((d, i) => (
-              <span key={i} className="inline-flex items-center gap-1 px-2 py-1 bg-white border border-amber-300 rounded text-[11px] text-amber-900 font-medium shadow-xs">
+              <span key={i} className="inline-flex items-center gap-1 px-2 py-1 bg-white border border-amber-300 rounded text-xs text-amber-900 font-medium shadow-xs">
                 <Clock size={11} className="text-amber-600 shrink-0" />
                 {d}
               </span>
@@ -148,7 +148,7 @@ export const StudentLearningDetailCard: React.FC<StudentLearningDetailCardProps>
             type="button"
             onClick={handleSimulateAiDiagnosis}
             disabled={isRegenerating}
-            className="inline-flex items-center gap-1 px-2 py-0.5 bg-white border border-indigo-300 hover:bg-indigo-50 text-indigo-700 rounded text-[11px] font-semibold transition-colors cursor-pointer disabled:opacity-60"
+            className="inline-flex items-center gap-1 px-2 py-0.5 bg-white border border-indigo-300 hover:bg-indigo-50 text-indigo-700 rounded text-xs font-semibold transition-colors cursor-pointer disabled:opacity-60"
           >
             <RefreshCw size={11} className={isRegenerating ? "animate-spin" : ""} />
             {isRegenerating ? "Analizando..." : "Reanalizar con IA"}
@@ -156,7 +156,7 @@ export const StudentLearningDetailCard: React.FC<StudentLearningDetailCardProps>
         </div>
 
         {showAiSuccess && (
-          <div className="p-2 bg-emerald-100 text-emerald-800 border border-emerald-300 rounded text-[11px] font-medium flex items-center gap-1.5 animate-fadeIn">
+          <div className="p-2 bg-emerald-100 text-emerald-800 border border-emerald-300 rounded text-xs font-medium flex items-center gap-1.5 animate-fadeIn">
             <CheckCircle2 size={13} className="text-emerald-700" />
             Diagnóstico pedagógico actualizado exitosamente con la última evidencia de entregas.
           </div>
@@ -166,17 +166,17 @@ export const StudentLearningDetailCard: React.FC<StudentLearningDetailCardProps>
           <p className="text-[#2D3B45] font-medium leading-relaxed">{profile.diagnosticoIA.resumen}</p>
 
           <div className="p-2.5 bg-white border border-indigo-100 rounded text-indigo-950 space-y-1">
-            <span className="font-bold flex items-center gap-1 text-[11px] text-indigo-900">
+            <span className="font-bold flex items-center gap-1 text-xs text-indigo-900">
               <Lightbulb size={12} className="text-indigo-600" /> Cómo apoyar al estudiante (Orientación Docente):
             </span>
-            <p className="text-[11px] text-gray-700 leading-normal">{profile.diagnosticoIA.recomendacionDocente}</p>
+            <p className="text-xs text-gray-700 leading-normal">{profile.diagnosticoIA.recomendacionDocente}</p>
           </div>
 
           <div className="p-2.5 bg-white border border-indigo-100 rounded text-indigo-950 space-y-1">
-            <span className="font-bold flex items-center gap-1 text-[11px] text-indigo-900">
+            <span className="font-bold flex items-center gap-1 text-xs text-indigo-900">
               <HelpCircle size={12} className="text-indigo-600" /> Pregunta gatilladora sugerida para próxima sesión:
             </span>
-            <ul className="text-[11px] text-gray-700 list-disc list-inside space-y-0.5">
+            <ul className="text-xs text-gray-700 list-disc list-inside space-y-0.5">
               {profile.diagnosticoIA.preguntasGatilladoras.map((preg, idx) => (
                 <li key={idx} className="italic">&ldquo;{preg}&rdquo;</li>
               ))}

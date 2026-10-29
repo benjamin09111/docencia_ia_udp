@@ -1,13 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { SESSION_COOKIE, SessionClaims, SessionConfigError, verifySessionToken } from "./session";
 import { isRevoked } from "./sessionRevocation";
+import { isSessionVersionCurrent } from "./userStore";
 
 /** Sesión válida de la petición, o null (sin cookie, inválida, vencida o servidor mal configurado). */
 export async function getSession(req: NextRequest): Promise<SessionClaims | null> {
   try {
     const claims = await verifySessionToken(req.cookies.get(SESSION_COOKIE)?.value);
     // Una sesión cerrada (logout) queda revocada aunque alguien conserve la cookie
-    if (claims && (await isRevoked(claims.jti))) return null;
+    if (!claims) return null;
+    if (await isRevoked(claims.jti)) return null;
+    if (!(await isSessionVersionCurrent(claims.userId!, claims.authVersion!))) return null;
     return claims;
   } catch (e) {
     if (e instanceof SessionConfigError) console.error("[auth]", e.message);

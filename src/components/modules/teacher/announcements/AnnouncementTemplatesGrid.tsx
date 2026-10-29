@@ -59,7 +59,7 @@ export const AnnouncementTemplatesGrid: React.FC<AnnouncementTemplatesGridProps>
                 <div className="w-8 h-8 rounded bg-gray-50 flex items-center justify-center border border-gray-200 group-hover:bg-blue-50 group-hover:border-blue-200 transition-colors">
                   {renderIcon(tpl.categoria)}
                 </div>
-                <span className="text-[10px] uppercase font-bold text-gray-400 group-hover:text-[#008EE2]">
+                <span className="text-xs uppercase font-bold text-gray-400 group-hover:text-[#008EE2]">
                   1 Clic
                 </span>
               </div>
@@ -67,12 +67,12 @@ export const AnnouncementTemplatesGrid: React.FC<AnnouncementTemplatesGridProps>
               <h4 className="text-xs font-bold text-[#2D3B45] group-hover:text-[#008EE2] transition-colors">
                 {tpl.tituloSugerido}
               </h4>
-              <p className="text-[11px] text-[#6B7780] mt-1 line-clamp-2">
+              <p className="text-xs text-[#6B7780] mt-1 line-clamp-2">
                 {tpl.descripcionCorta}
               </p>
             </div>
 
-            <div className="mt-3 pt-2 border-t border-gray-100 flex items-center justify-between text-[11px] text-[#008EE2] font-semibold">
+            <div className="mt-3 pt-2 border-t border-gray-100 flex items-center justify-between text-xs text-[#008EE2] font-semibold">
               <span>Preparar anuncio</span>
               <span>→</span>
             </div>

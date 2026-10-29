@@ -1,0 +1,27 @@
+name: Security checks
+
+on:
+  pull_request:
+  push:
+    branches: [staging, main]
+
+jobs:
+  prevent-sensitive-data:
+    name: Prevent new PII and secrets
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Scan added lines only
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            base="origin/${{ github.base_ref }}"
+          else
+            base="${{ github.event.before }}"
+          fi
+          node scripts/security/check-no-pii.mjs --base "$base"

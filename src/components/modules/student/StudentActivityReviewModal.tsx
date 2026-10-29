@@ -19,7 +19,7 @@ export const StudentActivityReviewModal: React.FC<StudentActivityReviewModalProp
       <div className="bg-white rounded-[4px] max-w-2xl w-full p-4 sm:p-6 shadow-xl border border-[#E0E3E6] space-y-4 animate-scaleUp max-h-[90vh] overflow-y-auto">
         <div className="flex justify-between items-start border-b border-[#E0E3E6] pb-3">
           <div>
-            <span className="text-[10px] font-bold text-[#2E7D32] bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded uppercase">
+            <span className="text-xs font-bold text-[#2E7D32] bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded uppercase">
               Revisado según rúbrica Canvas
             </span>
             <h3 className="text-base font-bold text-[#2D3B45] mt-1">
@@ -29,7 +29,7 @@ export const StudentActivityReviewModal: React.FC<StudentActivityReviewModalProp
           <button
             type="button"
             onClick={onClose}
-            className="text-[#6B7780] hover:text-[#2D3B45] font-bold text-lg"
+            className="text-[#6B7780] hover:text-[#2D3B45] font-bold text-lg cursor-pointer"
           >
             ✕
           </button>
@@ -52,13 +52,13 @@ export const StudentActivityReviewModal: React.FC<StudentActivityReviewModalProp
                   {c.puntaje_obtenido} / {c.puntaje_max} pts
                 </span>
               </div>
-              <div className="bg-blue-50/50 p-2.5 rounded border border-blue-200 text-[11.5px] text-[#0277BD] space-y-1">
+              <div className="bg-blue-50/50 p-2.5 rounded border border-blue-200 text-xs text-[#0277BD] space-y-1">
                 <span className="font-bold flex items-center gap-1">
                   <Quote size={12} /> Cita Textual de la Solución:
                 </span>
                 <p className="italic font-serif text-[#01579B]">&quot;{c.cita_textual}&quot;</p>
               </div>
-              <p className="text-[11px] text-[#6B7780]">
+              <p className="text-xs text-[#6B7780]">
                 <strong className="text-[#2D3B45]">Comentario Técnico:</strong> {c.comentario}
               </p>
             </div>

@@ -17,19 +17,16 @@ export const AdminFacultySelector: React.FC<AdminFacultySelectorProps> = ({
   return (
     <div className="space-y-6 max-w-6xl mx-auto animate-fadeIn pb-12">
       {/* Encabezado y Breadcrumb Oficial Canvas LMS */}
-      <div className="border-b border-[#E0E3E6] pb-5">
-        <div className="flex items-center gap-2 text-sm sm:text-[15px] font-semibold text-[#6B7780] mb-1.5">
+      <div className="border-b border-[#E0E3E6] pb-4">
+        <div className="flex items-center gap-2 text-sm font-semibold text-[#6B7780] mb-1">
           <span className="text-[#B71C1C] hover:underline cursor-pointer">UDP IA</span>
           <span>&gt;</span>
-          <span className="text-[#2D3B45] font-bold">Facultades UDP</span>
+          <span className="text-[#2D3B45] font-bold">Facultades</span>
         </div>
-        <h1 className="text-2xl sm:text-3xl font-bold text-[#2D3B45] flex items-center gap-3">
-          <Building2 size={28} className="text-[#B71C1C]" />
-          Selecciona una Facultad
+        <h1 className="text-xl sm:text-2xl font-bold text-[#2D3B45] flex items-center gap-2.5">
+          <Building2 size={24} className="text-[#B71C1C]" />
+          Facultades UDP
         </h1>
-        <p className="text-sm sm:text-[15px] text-[#6B7780] mt-1.5 leading-relaxed">
-          Paso 1 de 3: Elige la facultad para auditar y orquestar los agentes de IA, cursos y asignaturas departamentales.
-        </p>
       </div>
 
       {/* Contenedor con Menú Lateral Izquierdo de Accesos Rápidos y Grid Principal */}
@@ -59,7 +56,7 @@ export const AdminFacultySelector: React.FC<AdminFacultySelectorProps> = ({
                   : "border-gray-200 opacity-60 cursor-not-allowed bg-gray-50/70"
               }`}
             >
-              <div className="space-y-3.5">
+              <div className="space-y-3">
                 <div className="flex items-start justify-between gap-2">
                   <div
                     className={`w-11 h-11 rounded-[4px] flex items-center justify-center font-bold text-base shrink-0 ${
@@ -84,27 +81,23 @@ export const AdminFacultySelector: React.FC<AdminFacultySelectorProps> = ({
 
                 <div>
                   <h3
-                    className={`text-base sm:text-[17px] font-bold leading-snug ${
+                    className={`text-base font-bold leading-snug ${
                       isActive ? "text-[#2D3B45] group-hover:text-[#B71C1C] transition-colors" : "text-gray-500"
                     }`}
                   >
                     {fac.nombre}
                   </h3>
-                  <div className="flex items-center gap-1.5 text-xs sm:text-[13px] text-[#6B7780] mt-1.5">
+                  <div className="flex items-center gap-1.5 text-xs text-[#6B7780] mt-1.5">
                     <MapPin size={13} className="shrink-0 text-gray-400" />
                     <span className="truncate">{fac.campus}</span>
                   </div>
                 </div>
-
-                <p className="text-xs sm:text-[13px] text-[#6B7780] leading-relaxed line-clamp-3">
-                  {fac.descripcion}
-                </p>
               </div>
 
-              <div className="pt-4 mt-4 border-t border-gray-100 flex items-center justify-between text-xs sm:text-[13px]">
+              <div className="pt-4 mt-4 border-t border-gray-100 flex items-center justify-between text-xs">
                 {isActive ? (
                   <>
-                    <div className="flex items-center gap-3 text-xs sm:text-[13px] text-[#6B7780]">
+                    <div className="flex items-center gap-3 text-xs text-[#6B7780]">
                       <span className="flex items-center gap-1 font-semibold text-[#2D3B45]">
                         <BookOpen size={13} className="text-[#008EE2]" />
                         {fac.cursosActivos} cursos
@@ -115,7 +108,7 @@ export const AdminFacultySelector: React.FC<AdminFacultySelectorProps> = ({
                         {fac.agentesActivos} agentes
                       </span>
                     </div>
-                    <span className="text-[#B71C1C] font-bold text-sm sm:text-[15px] flex items-center gap-0.5 group-hover:translate-x-0.5 transition-transform">
+                    <span className="text-[#B71C1C] font-bold text-sm flex items-center gap-0.5 group-hover:translate-x-0.5 transition-transform">
                       Ingresar <ChevronRight size={16} />
                     </span>
                   </>

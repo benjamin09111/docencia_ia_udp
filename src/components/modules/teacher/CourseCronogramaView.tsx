@@ -8,18 +8,9 @@ import {
   saveStoredCronograma,
 } from "@/services/cronogramaService";
 import { CanvasButton } from "@/components/canvas/CanvasButton";
-import {
-  Calendar,
-  Printer,
-  Edit3,
-  Check,
-  RotateCcw,
-  Sparkles,
-  Download,
-  AlertCircle,
-  FileText,
-  Clock,
-} from "lucide-react";
+import { Calendar, Printer, Edit3, Check, RotateCcw } from "lucide-react";
+import { CronogramaTableRow } from "./cronograma/CronogramaTableRow";
+import { CronogramaFooterSummary } from "./cronograma/CronogramaFooterSummary";
 
 interface CourseCronogramaViewProps {
   courseCode: string;
@@ -40,9 +31,7 @@ export const CourseCronogramaView: React.FC<CourseCronogramaViewProps> = ({
   }, [courseCode]);
 
   const handleCellChange = (semana: number, field: keyof CronogramaRow, value: string) => {
-    setRows((prev) =>
-      prev.map((r) => (r.semana === semana ? { ...r, [field]: value } : r))
-    );
+    setRows((prev) => prev.map((r) => (r.semana === semana ? { ...r, [field]: value } : r)));
   };
 
   const handleSave = () => {
@@ -59,18 +48,8 @@ export const CourseCronogramaView: React.FC<CourseCronogramaViewProps> = ({
     }
   };
 
-  const handlePrint = () => {
-    window.print();
-  };
-
   const filteredRows = filtroTipo === "evaluaciones"
-    ? rows.filter(
-        (r) =>
-          r.isSpecialRow ||
-          (r.evaluacionesIndividuales && r.evaluacionesIndividuales !== "-") ||
-          (r.evaluacionesGrupales && r.evaluacionesGrupales !== "-") ||
-          (r.laboratorios && r.laboratorios !== "-")
-      )
+    ? rows.filter((r) => r.isSpecialRow || (r.evaluacionesIndividuales && r.evaluacionesIndividuales !== "-") || (r.evaluacionesGrupales && r.evaluacionesGrupales !== "-") || (r.laboratorios && r.laboratorios !== "-"))
     : rows;
 
   return (
@@ -99,8 +78,8 @@ export const CourseCronogramaView: React.FC<CourseCronogramaViewProps> = ({
               <button
                 type="button"
                 onClick={() => setFiltroTipo("todas")}
-                className={`px-2.5 py-1 ${
-                  filtroTipo === "todas" ? "bg-gray-100 font-bold text-gray-900" : "bg-white text-gray-600"
+                className={`px-2.5 py-1 cursor-pointer transition-colors ${
+                  filtroTipo === "todas" ? "bg-gray-100 font-bold text-gray-900" : "bg-white text-gray-600 hover:bg-gray-50"
                 }`}
               >
                 Todas las semanas
@@ -108,8 +87,8 @@ export const CourseCronogramaView: React.FC<CourseCronogramaViewProps> = ({
               <button
                 type="button"
                 onClick={() => setFiltroTipo("evaluaciones")}
-                className={`px-2.5 py-1 ${
-                  filtroTipo === "evaluaciones" ? "bg-gray-100 font-bold text-gray-900" : "bg-white text-gray-600"
+                className={`px-2.5 py-1 cursor-pointer transition-colors ${
+                  filtroTipo === "evaluaciones" ? "bg-gray-100 font-bold text-gray-900" : "bg-white text-gray-600 hover:bg-gray-50"
                 }`}
               >
                 Solo Evaluaciones
@@ -140,7 +119,7 @@ export const CourseCronogramaView: React.FC<CourseCronogramaViewProps> = ({
               variant="outline"
               size="sm"
               icon={<Printer size={14} />}
-              onClick={handlePrint}
+              onClick={() => window.print()}
               title="Descargar versión para impresión o PDF"
             >
               Descargar PDF
@@ -151,7 +130,7 @@ export const CourseCronogramaView: React.FC<CourseCronogramaViewProps> = ({
                 type="button"
                 onClick={handleReset}
                 title="Restablecer plantilla inicial"
-                className="p-1.5 text-gray-400 hover:text-rose-600 transition-colors"
+                className="p-1.5 text-gray-400 hover:text-rose-600 transition-colors cursor-pointer"
               >
                 <RotateCcw size={14} />
               </button>
@@ -167,9 +146,8 @@ export const CourseCronogramaView: React.FC<CourseCronogramaViewProps> = ({
         </div>
       )}
 
-      {/* Tabla Oficial de Cronograma (Clon exacto de cronograma.pdf) */}
+      {/* Tabla Oficial de Cronograma */}
       <div className="bg-white border border-[#E0E3E6] rounded-[4px] p-4 shadow-canvas-card print:border-none print:shadow-none print:p-0">
-        {/* Cabecera institucional idéntica a cronograma.pdf */}
         <div className="border border-gray-400 rounded-t-[2px] bg-amber-100/40 p-2.5 mb-0 text-xs">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
             <div>
@@ -184,7 +162,7 @@ export const CourseCronogramaView: React.FC<CourseCronogramaViewProps> = ({
         </div>
 
         <div className="overflow-x-auto border-x border-b border-gray-400">
-          <table className="w-full text-left text-[11px] border-collapse min-w-[980px]">
+          <table className="w-full text-left text-xs border-collapse min-w-[980px]">
             <thead>
               <tr className="bg-amber-100/60 text-gray-800 font-bold border-b border-gray-400 text-center uppercase tracking-tight">
                 <th className="p-2 border-r border-gray-400 w-12">Semana</th>
@@ -199,208 +177,19 @@ export const CourseCronogramaView: React.FC<CourseCronogramaViewProps> = ({
               </tr>
             </thead>
             <tbody>
-              {filteredRows.map((r) => {
-                // Filas especiales destacadas con banner horizontal (Receso, Solemne 1, Solemne 2, Exámenes)
-                if (r.isSpecialRow) {
-                  const bgClass =
-                    r.specialType === "receso"
-                      ? "bg-amber-200/50 text-amber-950 font-bold"
-                      : r.specialType === "examenes"
-                      ? "bg-emerald-100/60 text-emerald-950 font-bold"
-                      : "bg-blue-100/60 text-blue-950 font-bold";
-
-                  return (
-                    <React.Fragment key={`special_${r.semana}`}>
-                      <tr className={`border-b border-gray-400 ${bgClass}`}>
-                        <td className="p-1.5 text-center font-bold border-r border-gray-400 bg-white">
-                          {r.semana}
-                        </td>
-                        <td className="p-1.5 text-center font-medium border-r border-gray-400 bg-white">
-                          {r.fechas}
-                        </td>
-                        <td colSpan={6} className="p-2 text-center uppercase tracking-wide">
-                          {r.specialText}
-                        </td>
-                        <td className="p-1.5 text-[10px] text-gray-700 bg-white">
-                          {r.observaciones}
-                        </td>
-                      </tr>
-                      {/* Si la semana además tiene detalle de clases (ej. semana 7 solemne) */}
-                      {r.catedraMartes !== "-" && (
-                        <tr className="border-b border-gray-300 hover:bg-gray-50/80">
-                          <td className="p-1.5 text-center text-gray-400 border-r border-gray-300">↳</td>
-                          <td className="p-1.5 text-center text-gray-500 border-r border-gray-300">
-                            Detalle
-                          </td>
-                          <td className="p-1.5 border-r border-gray-300">
-                            {isEditing ? (
-                              <input
-                                type="text"
-                                value={r.catedraMartes}
-                                onChange={(e) => handleCellChange(r.semana, "catedraMartes", e.target.value)}
-                                className="w-full p-1 border border-blue-300 rounded text-[11px]"
-                              />
-                            ) : (
-                              r.catedraMartes
-                            )}
-                          </td>
-                          <td className="p-1.5 border-r border-gray-300 font-semibold text-[#008EE2]">
-                            {isEditing ? (
-                              <input
-                                type="text"
-                                value={r.catedraViernes}
-                                onChange={(e) => handleCellChange(r.semana, "catedraViernes", e.target.value)}
-                                className="w-full p-1 border border-blue-300 rounded text-[11px]"
-                              />
-                            ) : (
-                              r.catedraViernes
-                            )}
-                          </td>
-                          <td className="p-1.5 border-r border-gray-300">{r.ayudantia}</td>
-                          <td className="p-1.5 text-center font-bold text-rose-700 border-r border-gray-300">
-                            {r.evaluacionesIndividuales}
-                          </td>
-                          <td className="p-1.5 text-center border-r border-gray-300">{r.evaluacionesGrupales}</td>
-                          <td className="p-1.5 text-center border-r border-gray-300">{r.laboratorios}</td>
-                          <td className="p-1.5 text-[10px] text-gray-600">-</td>
-                        </tr>
-                      )}
-                    </React.Fragment>
-                  );
-                }
-
-                // Fila normal
-                return (
-                  <tr key={r.semana} className="border-b border-gray-300 hover:bg-gray-50/70">
-                    <td className="p-2 text-center font-bold border-r border-gray-300 text-gray-700">
-                      {r.semana}
-                    </td>
-                    <td className="p-2 text-center font-medium border-r border-gray-300 text-gray-800 whitespace-nowrap">
-                      {r.fechas}
-                    </td>
-                    <td className="p-2 border-r border-gray-300 text-gray-800">
-                      {isEditing ? (
-                        <input
-                          type="text"
-                          value={r.catedraMartes}
-                          onChange={(e) => handleCellChange(r.semana, "catedraMartes", e.target.value)}
-                          className="w-full p-1 border border-blue-300 rounded text-[11px]"
-                        />
-                      ) : (
-                        r.catedraMartes
-                      )}
-                    </td>
-                    <td className="p-2 border-r border-gray-300 text-gray-800">
-                      {isEditing ? (
-                        <input
-                          type="text"
-                          value={r.catedraViernes}
-                          onChange={(e) => handleCellChange(r.semana, "catedraViernes", e.target.value)}
-                          className="w-full p-1 border border-blue-300 rounded text-[11px]"
-                        />
-                      ) : (
-                        r.catedraViernes
-                      )}
-                    </td>
-                    <td className="p-2 border-r border-gray-300 text-gray-700">
-                      {isEditing ? (
-                        <input
-                          type="text"
-                          value={r.ayudantia}
-                          onChange={(e) => handleCellChange(r.semana, "ayudantia", e.target.value)}
-                          className="w-full p-1 border border-blue-300 rounded text-[11px]"
-                        />
-                      ) : (
-                        r.ayudantia
-                      )}
-                    </td>
-                    <td className="p-2 text-center border-r border-gray-300 font-semibold text-rose-700">
-                      {isEditing ? (
-                        <input
-                          type="text"
-                          value={r.evaluacionesIndividuales}
-                          onChange={(e) =>
-                            handleCellChange(r.semana, "evaluacionesIndividuales", e.target.value)
-                          }
-                          className="w-full p-1 border border-blue-300 rounded text-[11px] text-center"
-                        />
-                      ) : (
-                        r.evaluacionesIndividuales
-                      )}
-                    </td>
-                    <td className="p-2 text-center border-r border-gray-300 font-semibold text-purple-800">
-                      {isEditing ? (
-                        <input
-                          type="text"
-                          value={r.evaluacionesGrupales}
-                          onChange={(e) => handleCellChange(r.semana, "evaluacionesGrupales", e.target.value)}
-                          className="w-full p-1 border border-blue-300 rounded text-[11px] text-center"
-                        />
-                      ) : (
-                        r.evaluacionesGrupales
-                      )}
-                    </td>
-                    <td className="p-2 text-center border-r border-gray-300 text-emerald-800 font-medium">
-                      {isEditing ? (
-                        <input
-                          type="text"
-                          value={r.laboratorios}
-                          onChange={(e) => handleCellChange(r.semana, "laboratorios", e.target.value)}
-                          className="w-full p-1 border border-blue-300 rounded text-[11px] text-center"
-                        />
-                      ) : (
-                        r.laboratorios
-                      )}
-                    </td>
-                    <td className="p-2 text-[10px] text-gray-600 leading-tight">
-                      {isEditing ? (
-                        <input
-                          type="text"
-                          value={r.observaciones}
-                          onChange={(e) => handleCellChange(r.semana, "observaciones", e.target.value)}
-                          className="w-full p-1 border border-blue-300 rounded text-[10px]"
-                        />
-                      ) : (
-                        r.observaciones
-                      )}
-                    </td>
-                  </tr>
-                );
-              })}
+              {filteredRows.map((r) => (
+                <CronogramaTableRow
+                  key={r.semana}
+                  row={r}
+                  isEditing={isEditing}
+                  onCellChange={handleCellChange}
+                />
+              ))}
             </tbody>
           </table>
         </div>
 
-        {/* Resumen inferior idéntico a cronograma.pdf */}
-        <div className="mt-3 p-3 bg-amber-50/70 border border-gray-400 rounded text-xs text-gray-800">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-amber-200 pb-2 mb-2">
-            <span className="font-mono font-bold text-[11px] text-amber-900">
-              Versión 1.2 (Planificación oficial aprobada por Dirección de Escuela)
-            </span>
-            <span className="text-[11px] text-gray-600 italic">
-              La siguiente planificación de solemnes es referencial y podría sufrir modificaciones por contingencia institucional.
-            </span>
-          </div>
-
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px]">
-            <div>
-              <span className="font-bold text-gray-700">Solemne 1: </span>
-              <span className="font-mono font-semibold">Jueves 24 – Miércoles 30 septiembre</span>
-            </div>
-            <div>
-              <span className="font-bold text-gray-700">Solemne 2: </span>
-              <span className="font-mono font-semibold">Lunes 23 – Viernes 27 noviembre</span>
-            </div>
-            <div>
-              <span className="font-bold text-gray-700">Fin de clases: </span>
-              <span className="font-mono font-semibold">Viernes 4 de diciembre</span>
-            </div>
-            <div>
-              <span className="font-bold text-gray-700">Exámenes: </span>
-              <span className="font-mono font-semibold">9, 11, 14, 16 y 18 de diciembre</span>
-            </div>
-          </div>
-        </div>
+        <CronogramaFooterSummary />
       </div>
     </div>
   );

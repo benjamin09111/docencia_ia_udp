@@ -51,10 +51,10 @@ export const StudentActivityChat: React.FC = () => {
           </div>
           <div>
             <h3 className="text-xs font-bold text-[#2D3B45]">Tutor de la Actividad</h3>
-            <span className="text-[10px] text-[#2E7D32] font-medium">● Orientación sobre criterios de rúbrica</span>
+            <span className="text-xs text-[#2E7D32] font-medium">● Orientación sobre criterios de rúbrica</span>
           </div>
         </div>
-        <span className="text-[10px] bg-[#F5F6F8] border border-[#C7CDD1] text-[#2D3B45] px-1.5 py-0.5 rounded font-semibold">
+        <span className="text-xs bg-[#F5F6F8] border border-[#C7CDD1] text-[#2D3B45] px-1.5 py-0.5 rounded font-semibold">
           Canvas IA
         </span>
       </div>
@@ -63,7 +63,7 @@ export const StudentActivityChat: React.FC = () => {
         {messages.map((m, idx) => (
           <div key={idx} className={`flex gap-2 ${m.sender === "user" ? "justify-end" : "justify-start"}`}>
             {m.sender === "agent" && (
-              <div className="w-5 h-5 rounded-full bg-blue-50 text-[#008EE2] border border-blue-200 flex items-center justify-center shrink-0 mt-0.5 text-[9px] font-bold">
+              <div className="w-5 h-5 rounded-full bg-blue-50 text-[#008EE2] border border-blue-200 flex items-center justify-center shrink-0 mt-0.5 text-xs font-bold">
                 IA
               </div>
             )}
@@ -79,7 +79,7 @@ export const StudentActivityChat: React.FC = () => {
           </div>
         ))}
         {isTyping && (
-          <div className="text-[11px] text-[#6B7780] italic flex items-center gap-1">
+          <div className="text-xs text-[#6B7780] italic flex items-center gap-1">
             <span className="animate-spin inline-block">⏳</span> Asistente analizando rúbrica...
           </div>
         )}

@@ -51,7 +51,7 @@ export const QuizViewer: React.FC<QuizViewerProps> = ({
           >
             <div className="flex items-start justify-between gap-3">
               <span className="text-xs font-bold text-[#2D3B45] flex items-center gap-2">
-                <span className="w-5 h-5 rounded-full bg-blue-100 text-[#008EE2] flex items-center justify-center text-[11px] font-bold shrink-0">
+                <span className="w-5 h-5 rounded-full bg-blue-100 text-[#008EE2] flex items-center justify-center text-xs font-bold shrink-0">
                   {qIndex + 1}
                 </span>
                 <span className="leading-tight">{q.pregunta}</span>
@@ -59,11 +59,11 @@ export const QuizViewer: React.FC<QuizViewerProps> = ({
               {submitted && (
                 <div className="shrink-0">
                   {isCorrect ? (
-                    <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded flex items-center gap-1">
+                    <span className="text-xs font-bold text-[#2E7D32] bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded flex items-center gap-1">
                       <CheckCircle2 size={12} /> Correcto
                     </span>
                   ) : (
-                    <span className="text-[10px] font-bold text-rose-800 bg-rose-100 px-2 py-0.5 rounded flex items-center gap-1">
+                    <span className="text-xs font-bold text-rose-700 bg-rose-50 border border-rose-200 px-2 py-0.5 rounded flex items-center gap-1">
                       <XCircle size={12} /> Incorrecto
                     </span>
                   )}
@@ -97,7 +97,7 @@ export const QuizViewer: React.FC<QuizViewerProps> = ({
                     onClick={() => handleSelectOption(q.id, optIndex)}
                     className={`w-full text-left p-2.5 rounded-[4px] border text-xs transition-all flex items-start gap-2.5 ${optionStyle}`}
                   >
-                    <span className="font-mono font-bold text-[11px] shrink-0 mt-0.5">
+                    <span className="font-mono font-bold text-xs shrink-0 mt-0.5">
                       {String.fromCharCode(65 + optIndex)})
                     </span>
                     <span className="leading-snug">{opt}</span>
@@ -109,10 +109,10 @@ export const QuizViewer: React.FC<QuizViewerProps> = ({
             {/* Explicación tras validar */}
             {submitted && (
               <div className="mt-2 ml-0 sm:ml-7 p-3 rounded-[4px] bg-blue-50/70 border border-blue-200 text-xs text-[#0277BD] space-y-1">
-                <span className="font-bold flex items-center gap-1 text-[11px]">
+                <span className="font-bold flex items-center gap-1 text-xs">
                   <HelpCircle size={13} /> Justificación Teórica:
                 </span>
-                <p className="text-[11px] leading-relaxed text-[#01579B]">{q.explicacion}</p>
+                <p className="text-xs leading-relaxed text-[#01579B]">{q.explicacion}</p>
               </div>
             )}
           </div>

@@ -104,7 +104,7 @@ export const CourseAnnouncementsView: React.FC<CourseAnnouncementsViewProps> = (
 
             <div className="bg-emerald-50 border border-emerald-200 rounded px-3 py-1.5 flex items-center gap-2 text-xs text-emerald-800">
               <CheckCircle2 size={16} className="text-emerald-600" />
-              <span className="font-medium text-[11px]">Conectado a Canvas API / Anuncios</span>
+              <span className="font-medium text-xs">Conectado a Canvas API / Anuncios</span>
             </div>
           </div>
         </div>

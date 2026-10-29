@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { InstitutionalFaculty, InstitutionalCareer } from "@/constants/institutionalHierarchy";
 import { CanvasCourseNav, CourseNavItem } from "@/components/canvas/CanvasCourseNav";
 import { AdminCourseAgentsTab } from "@/components/modules/admin/AdminCourseAgentsTab";
+import { AdminAgentsTableTab } from "@/components/modules/admin/AdminAgentsTableTab";
 import { AdminTechnicalAgentsTab } from "@/components/modules/admin/AdminTechnicalAgentsTab";
 import { AdminCourseScheduleManagement } from "@/components/modules/admin/AdminCourseScheduleManagement";
 import { AdminCourseDetailView } from "@/components/modules/admin/AdminCourseDetailView";
@@ -33,8 +34,8 @@ export const AdminWorkspaceView: React.FC<AdminWorkspaceViewProps> = ({
   onBackToFaculties,
 }) => {
   const [activeTab, setActiveTab] = useState<
-    "course_agents" | "technical_agents" | "official_files" | "course_schedules" | "ayudantias" | "grade_scale"
-  >("course_agents");
+    "agents_table" | "course_agents" | "technical_agents" | "official_files" | "course_schedules" | "ayudantias" | "grade_scale"
+  >("agents_table");
 
   const [selectedDetailSection, setSelectedDetailSection] = useState<CourseSection | null>(null);
   const [selectedHistoryAgent, setSelectedHistoryAgent] = useState<TechnicalAgentItem | null>(null);
@@ -62,6 +63,7 @@ export const AdminWorkspaceView: React.FC<AdminWorkspaceViewProps> = ({
   }, []);
 
   const navItems: CourseNavItem[] = [
+    { id: "agents_table", label: "Catálogo de agentes (Tabla)", icon: <Bot size={15} /> },
     { id: "course_agents", label: "Sistemas de agentes", icon: <Bot size={15} /> },
     { id: "technical_agents", label: "Agentes técnicos", icon: <Cpu size={15} /> },
     { id: "official_files", label: "Archivos e info oficial", icon: <FolderArchive size={15} /> },
@@ -136,6 +138,8 @@ export const AdminWorkspaceView: React.FC<AdminWorkspaceViewProps> = ({
 
         {/* Área de Contenido Principal (#content) */}
         <div className="flex-1 min-w-0">
+          {activeTab === "agents_table" && <AdminAgentsTableTab />}
+
           {activeTab === "course_agents" && (
             <AdminCourseAgentsTab
               sections={sections}
