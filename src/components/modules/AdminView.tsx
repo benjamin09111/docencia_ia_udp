@@ -1,100 +1,35 @@
 "use client";
 
 import React, { useState } from "react";
-import { InstitutionalFaculty, InstitutionalCareer } from "@/constants/institutionalHierarchy";
-import { AdminFacultySelector } from "@/components/modules/admin/hierarchy/AdminFacultySelector";
-import { AdminCareerSelector } from "@/components/modules/admin/hierarchy/AdminCareerSelector";
-import { AdminWorkspaceView } from "@/components/modules/admin/AdminWorkspaceView";
-import { AdminAgentsTableTab } from "@/components/modules/admin/AdminAgentsTableTab";
-import { INSTITUTIONAL_ADMIN_AGENTS } from "@/constants/systemAgentsCatalog";
-import { Building2, Bot } from "lucide-react";
+import { Bot, Building2, LockKeyhole, Users } from "lucide-react";
+import { InstitutionalFaculty } from "@/constants/institutionalHierarchy";
+import { AdminFacultySelector } from "./admin/hierarchy/AdminFacultySelector";
+import { AdminAgentsTableTab } from "./admin/AdminAgentsTableTab";
+import { AdminFacultyWorkspace } from "./admin/AdminFacultyWorkspace";
+import { AdminLockedPanel } from "./admin/AdminLockedPanel";
+import { AdminPrincipalView } from "./admin/AdminPrincipalView";
+
+type AdminTab = "principal" | "facultades" | "agentes" | "ayudantes" | "docentes" | "noticias";
+
+const tabs: Array<{ id: AdminTab; label: string; icon: React.ReactNode; locked?: boolean }> = [
+  { id: "principal", label: "PRINCIPAL", icon: <Building2 size={15} /> },
+  { id: "facultades", label: "FACULTADES", icon: <Building2 size={15} /> },
+  { id: "agentes", label: "AGENTES", icon: <Bot size={15} /> },
+  { id: "ayudantes", label: "AYUDANTES", icon: <Users size={15} />, locked: true },
+  { id: "docentes", label: "DOCENTES", icon: <LockKeyhole size={15} />, locked: true },
+  { id: "noticias", label: "NOTICIAS", icon: <LockKeyhole size={15} />, locked: true },
+];
 
 export const AdminView: React.FC = () => {
-  // Pestañas principales a nivel Admin: FACULTADES | AGENTES
-  const [adminMainTab, setAdminMainTab] = useState<"facultades" | "agentes">("facultades");
-
-  // Estado de navegación jerárquica para la pestaña FACULTADES
-  const [selectedFaculty, setSelectedFaculty] = useState<InstitutionalFaculty | null>(null);
-  const [selectedCareer, setSelectedCareer] = useState<InstitutionalCareer | null>(null);
-
-  return (
-    <div className="space-y-4 animate-fadeIn">
-      {/* Selector Superior Canónico Canvas: FACULTADES | AGENTES */}
-      <div className="flex items-center gap-6 border-b border-[#E0E3E6] pb-0">
-        <button
-          type="button"
-          onClick={() => setAdminMainTab("facultades")}
-          className={`pb-2.5 text-sm font-semibold transition-all relative cursor-pointer flex items-center gap-2 ${
-            adminMainTab === "facultades"
-              ? "text-[#2D3B45] border-b-2 border-[#B71C1C] font-bold"
-              : "text-[#6B7780] hover:text-[#2D3B45]"
-          }`}
-        >
-          <Building2 size={16} className={adminMainTab === "facultades" ? "text-[#B71C1C]" : "text-gray-400"} />
-          <span>FACULTADES</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setAdminMainTab("agentes")}
-          className={`pb-2.5 text-sm font-semibold transition-all relative cursor-pointer flex items-center gap-2 ${
-            adminMainTab === "agentes"
-              ? "text-[#2D3B45] border-b-2 border-[#B71C1C] font-bold"
-              : "text-[#6B7780] hover:text-[#2D3B45]"
-          }`}
-        >
-          <Bot size={16} className={adminMainTab === "agentes" ? "text-[#B71C1C]" : "text-gray-400"} />
-          <span>AGENTES</span>
-          <span className="text-xs bg-red-50 text-[#B71C1C] border border-red-200 px-2 py-0.5 rounded-full font-bold">
-            {INSTITUTIONAL_ADMIN_AGENTS.length}
-          </span>
-        </button>
-      </div>
-
-      {/* Pestaña 1: AGENTES INSTITUCIONALES / GENERALES */}
-      {adminMainTab === "agentes" && (
-        <div className="space-y-4 animate-fadeIn">
-          <AdminAgentsTableTab
-            agents={INSTITUTIONAL_ADMIN_AGENTS}
-            showTierFilters={false}
-            searchPlaceholder="Buscar por agente, código o modelo OpenRouter..."
-          />
-        </div>
-      )}
-
-      {/* Pestaña 2: FACULTADES, CARRERAS Y CURSOS */}
-      {adminMainTab === "facultades" && (
-        <div className="animate-fadeIn">
-          {!selectedFaculty ? (
-            <AdminFacultySelector
-              onSelectFaculty={(fac) => {
-                setSelectedFaculty(fac);
-                setSelectedCareer(null);
-              }}
-              onQuickSelect={(faculty, career) => {
-                setSelectedFaculty(faculty);
-                setSelectedCareer(career);
-              }}
-            />
-          ) : !selectedCareer ? (
-            <AdminCareerSelector
-              faculty={selectedFaculty}
-              onSelectCareer={(car) => setSelectedCareer(car)}
-              onBack={() => setSelectedFaculty(null)}
-            />
-          ) : (
-            <AdminWorkspaceView
-              faculty={selectedFaculty}
-              career={selectedCareer}
-              onBackToCareers={() => setSelectedCareer(null)}
-              onBackToFaculties={() => {
-                setSelectedCareer(null);
-                setSelectedFaculty(null);
-              }}
-            />
-          )}
-        </div>
-      )}
-    </div>
-  );
+  const [active, setActive] = useState<AdminTab>("facultades");
+  const [faculty, setFaculty] = useState<InstitutionalFaculty | null>(null);
+  const selectTab = (tab: AdminTab, locked?: boolean) => { if (!locked) { setActive(tab); setFaculty(null); } };
+  const content = () => {
+    if (active === "principal") return <AdminPrincipalView />;
+    if (active === "agentes") return <AdminAgentsTableTab searchPlaceholder="Buscar todos los agentes de la plataforma..." />;
+    if (active === "facultades") return faculty ? <AdminFacultyWorkspace faculty={faculty} onBack={() => setFaculty(null)} /> : <AdminFacultySelector onSelectFaculty={setFaculty} />;
+    const label = tabs.find((tab) => tab.id === active)?.label || "Módulo";
+    return <AdminLockedPanel title={`${label} bloqueado`} description="Este módulo está reservado para una próxima etapa de habilitación institucional." />;
+  };
+  return <div className="space-y-4 animate-fadeIn"><nav className="flex gap-5 overflow-x-auto border-b border-[#E0E3E6]" aria-label="Administración institucional">{tabs.map((tab) => <button key={tab.id} type="button" disabled={tab.locked} onClick={() => selectTab(tab.id, tab.locked)} className={`pb-2.5 text-xs font-bold flex items-center gap-1.5 whitespace-nowrap border-b-2 transition-colors ${active === tab.id ? "border-[#B71C1C] text-[#2D3B45]" : "border-transparent text-[#6B7780]"} ${tab.locked ? "opacity-50 cursor-not-allowed" : "hover:text-[#B71C1C] cursor-pointer"}`}>{tab.icon}{tab.label}{tab.locked && <LockKeyhole size={12} />}</button>)}</nav>{content()}</div>;
 };

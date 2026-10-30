@@ -22,10 +22,11 @@ const isPublicApi = (pathname: string) =>
 const isPublicPage = (pathname: string) =>
   pathname.startsWith("/asistencia") || pathname.includes("/visual");
 
-// Nunca habilitar impersonación de vistas en producción, incluso ante un error
-// de configuración que deje DEV=TRUE en el entorno desplegado.
+// En desarrollo, un administrador puede recorrer las tres experiencias para
+// construirlas y probarlas. Producción permanece cerrada sin depender de una
+// variable de entorno adicional que pueda configurarse por error.
 const developmentCrossRoleViewsEnabled = () =>
-  process.env.NODE_ENV !== "production" && process.env.DEV === "TRUE";
+  process.env.NODE_ENV === "development";
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;

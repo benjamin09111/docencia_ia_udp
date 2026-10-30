@@ -54,6 +54,7 @@ export const TeacherSubjectGroupCard: React.FC<TeacherSubjectGroupCardProps> = (
       title={`${group.subjectName} (${group.subjectCode})`}
       weightBadge={`${group.sectionsCount} ${group.sectionsCount === 1 ? "sección" : "secciones"} • ${group.totalStudents} estudiantes`}
       headerActions={headerActions}
+      defaultExpanded={false}
       className="transition-shadow hover:shadow-sm"
     >
       {toastMessage && (
@@ -108,7 +109,7 @@ export const TeacherSubjectGroupCard: React.FC<TeacherSubjectGroupCardProps> = (
         </div>
       </div>
 
-      {/* Filas de Secciones */}
+      {/* Filas de Secciones: cliqueables directo sin menú de 3 puntos */}
       {group.sections.map((sec: EnrichedCourseSection) => (
         <CanvasItemRow
           key={sec.id}
@@ -118,9 +119,10 @@ export const TeacherSubjectGroupCard: React.FC<TeacherSubjectGroupCardProps> = (
           isPublished={true}
           title={
             <span className="flex items-center gap-2 flex-wrap">
-              <span className="font-bold text-sm text-[#2D3B45]">{sec.sectionName}</span>
+              <span className="font-bold text-sm text-[#2D3B45] hover:underline">{sec.sectionName}</span>
               <span className="text-xs font-semibold px-2 py-0.5 rounded bg-gray-100 text-[#55636E] border border-gray-200">{sec.code}</span>
               <span className="text-xs font-normal text-[#6B7780] flex items-center gap-1"><Users size={13} /><span>{sec.students_count || 0} alumnos</span></span>
+              <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded border ${sec.source === "sandbox" ? "bg-amber-50 text-amber-800 border-amber-200" : "bg-emerald-50 text-emerald-800 border-emerald-200"}`}>{sec.source === "sandbox" ? "SANDBOX" : "CANVAS"}</span>
               <span className="text-xs bg-blue-50 text-[#008EE2] px-2 py-0.5 rounded font-medium border border-blue-200 flex items-center gap-1"><Sparkles size={11} /><span>{sec.agentName}</span></span>
             </span>
           }
@@ -130,10 +132,6 @@ export const TeacherSubjectGroupCard: React.FC<TeacherSubjectGroupCardProps> = (
             </span>
           }
           onClick={() => onOpenCourse(sec.id)}
-          actionItems={[
-            { label: "Abrir espacio de la sección", icon: <BookOpen size={14} className="text-[#008EE2]" />, onClick: () => onOpenCourse(sec.id) },
-            { label: "Enviar anuncio general a esta sección", icon: <Megaphone size={14} className="text-[#B71C1C]" />, onClick: () => onAnnounceCourses([sec.id]) },
-          ]}
         />
       ))}
 

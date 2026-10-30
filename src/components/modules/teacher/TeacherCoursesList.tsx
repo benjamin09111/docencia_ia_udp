@@ -135,6 +135,7 @@ export const TeacherCoursesList: React.FC<TeacherCoursesListProps> = ({
         <CanvasItemGroup
           title="Todas las Secciones Semestre Primavera (2026-2)"
           weightBadge={`${filteredEnriched.length} secciones activas`}
+          defaultExpanded={false}
         >
           {filteredEnriched.map((c: EnrichedCourseSection) => (
             <CanvasItemRow
@@ -145,10 +146,11 @@ export const TeacherCoursesList: React.FC<TeacherCoursesListProps> = ({
               isPublished={true}
               title={
                 <span className="flex items-center gap-2 flex-wrap">
-                  <span className="font-bold text-sm text-[#2D3B45]">{c.name}</span>
+                  <span className="font-bold text-sm text-[#2D3B45] hover:underline">{c.name}</span>
                   <span className="text-xs font-semibold px-2 py-0.5 rounded bg-gray-100 text-[#55636E] border border-gray-200">
                     {c.code}
                   </span>
+                  <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded border ${c.source === "sandbox" ? "bg-amber-50 text-amber-800 border-amber-200" : "bg-emerald-50 text-emerald-800 border-emerald-200"}`}>{c.source === "sandbox" ? "SANDBOX" : "CANVAS"}</span>
                   <span className="text-xs bg-blue-50 text-[#008EE2] px-2 py-0.5 rounded font-medium border border-blue-200 flex items-center gap-1">
                     <Sparkles size={11} />
                     <span>{c.agentName}</span>
@@ -161,13 +163,6 @@ export const TeacherCoursesList: React.FC<TeacherCoursesListProps> = ({
                 </span>
               }
               onClick={() => onOpenCourse(c.id)}
-              actionItems={[
-                {
-                  label: "Abrir espacio del curso",
-                  icon: <BookOpen size={14} className="text-[#008EE2]" />,
-                  onClick: () => onOpenCourse(c.id),
-                },
-              ]}
             />
           ))}
         </CanvasItemGroup>

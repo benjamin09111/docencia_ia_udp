@@ -1,23 +1,16 @@
 "use client";
 
 import React, { useState } from "react";
-import {
-  ChevronDown,
-  ChevronRight,
-  AlertCircle,
-  FileText,
-  Clock,
-  CheckCircle2,
-} from "lucide-react";
+import { ChevronDown, ChevronRight } from "lucide-react";
 
-interface PendingAppealItem {
+export interface PendingAppealItem {
   id: string;
   studentName: string;
   motivo: string;
   courseCode: string;
 }
 
-interface PendingReviewItem {
+export interface PendingReviewItem {
   id: string;
   title: string;
   studentOrGroup: string;
@@ -25,56 +18,21 @@ interface PendingReviewItem {
   fecha: string;
 }
 
-const DEFAULT_PENDING_APPEALS: PendingAppealItem[] = [
-  {
-    id: "app-1",
-    studentName: "Tomás Morales",
-    motivo: "Licencia médica justificada (Sesión 05 Oct)",
-    courseCode: "CIT3203_CA01",
-  },
-  {
-    id: "app-2",
-    studentName: "Francisca Soto",
-    motivo: "Falla de señal GPS en sala L-204",
-    courseCode: "CIT3100_CA02",
-  },
-];
-
-const DEFAULT_PENDING_REVIEWS: PendingReviewItem[] = [
-  {
-    id: "rev-1",
-    title: "Informe Hito 2: Arquitectura Base",
-    studentOrGroup: "Grupo 4 (Capstone)",
-    courseCode: "CIT3203_CA01",
-    fecha: "Ayer 23:59",
-  },
-  {
-    id: "rev-2",
-    title: "Taller Microservicios & Kubernetes",
-    studentOrGroup: "Vicente Tapia",
-    courseCode: "CIT3100_CA02",
-    fecha: "Hoy 10:15",
-  },
-  {
-    id: "rev-3",
-    title: "Caso Harvard: Netflix & Dinámica",
-    studentOrGroup: "Sofía Henríquez",
-    courseCode: "CIT2206_CA01",
-    fecha: "06 Oct",
-  },
-];
-
 interface TeacherPendingSummaryProps {
+  appeals?: PendingAppealItem[];
+  reviews?: PendingReviewItem[];
   onSelectCourse?: (courseCode: string) => void;
 }
 
 export const TeacherPendingSummary: React.FC<TeacherPendingSummaryProps> = ({
+  appeals = [],
+  reviews = [],
   onSelectCourse,
 }) => {
-  const [appealsOpen, setAppealsOpen] = useState(true);
-  const [reviewsOpen, setReviewsOpen] = useState(true);
-  const [appeals, setAppeals] = useState<PendingAppealItem[]>(DEFAULT_PENDING_APPEALS);
-  const [reviews, setReviews] = useState<PendingReviewItem[]>(DEFAULT_PENDING_REVIEWS);
+  const [appealsOpen, setAppealsOpen] = useState(false);
+  const [reviewsOpen, setReviewsOpen] = useState(false);
+
+  const totalCount = appeals.length + reviews.length;
 
   return (
     <div className="text-xs select-none space-y-2">
@@ -82,7 +40,7 @@ export const TeacherPendingSummary: React.FC<TeacherPendingSummaryProps> = ({
       <div className="text-xs font-semibold text-[#6B7780] uppercase tracking-wider px-2 pb-1 flex items-center justify-between">
         <span>Resumen Pendiente</span>
         <span className="text-xs font-mono bg-gray-200 text-gray-700 px-2 py-0.5 rounded font-bold">
-          {appeals.length + reviews.length}
+          {totalCount}
         </span>
       </div>
 
@@ -91,7 +49,7 @@ export const TeacherPendingSummary: React.FC<TeacherPendingSummaryProps> = ({
         <button
           type="button"
           onClick={() => setAppealsOpen(!appealsOpen)}
-          className="w-full text-left p-2.5 bg-gray-50/80 hover:bg-gray-100/80 transition-colors flex items-center justify-between font-semibold text-[#2D3B45]"
+          className="w-full text-left p-2.5 bg-gray-50/80 hover:bg-gray-100/80 transition-colors flex items-center justify-between font-semibold text-[#2D3B45] cursor-pointer"
         >
           <div className="flex items-center gap-1.5 min-w-0">
             {appealsOpen ? <ChevronDown size={14} className="text-[#6B7780]" /> : <ChevronRight size={14} className="text-[#6B7780]" />}
@@ -138,7 +96,7 @@ export const TeacherPendingSummary: React.FC<TeacherPendingSummaryProps> = ({
         <button
           type="button"
           onClick={() => setReviewsOpen(!reviewsOpen)}
-          className="w-full text-left p-2.5 bg-gray-50/80 hover:bg-gray-100/80 transition-colors flex items-center justify-between font-semibold text-[#2D3B45]"
+          className="w-full text-left p-2.5 bg-gray-50/80 hover:bg-gray-100/80 transition-colors flex items-center justify-between font-semibold text-[#2D3B45] cursor-pointer"
         >
           <div className="flex items-center gap-1.5 min-w-0">
             {reviewsOpen ? <ChevronDown size={14} className="text-[#6B7780]" /> : <ChevronRight size={14} className="text-[#6B7780]" />}

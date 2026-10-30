@@ -1,9 +1,10 @@
 "use client";
 
-import React from "react";
+import React, { useMemo, useState } from "react";
 import { InstitutionalFaculty, InstitutionalCareer, INSTITUTIONAL_FACULTIES } from "@/constants/institutionalHierarchy";
-import { Building2, ChevronRight, BookOpen, Bot, MapPin, CheckCircle2 } from "lucide-react";
+import { Building2, ChevronRight, BookOpen, Bot, MapPin, CheckCircle2, LayoutGrid, List, Search } from "lucide-react";
 import { AdminQuickAccessNav } from "@/components/modules/admin/hierarchy/AdminQuickAccessNav";
+import { CanvasTable, CanvasTableCell, CanvasTableHeader, CanvasTableRow } from "@/components/canvas/CanvasTable";
 
 interface AdminFacultySelectorProps {
   onSelectFaculty: (faculty: InstitutionalFaculty) => void;
@@ -14,6 +15,10 @@ export const AdminFacultySelector: React.FC<AdminFacultySelectorProps> = ({
   onSelectFaculty,
   onQuickSelect,
 }) => {
+  const [query, setQuery] = useState("");
+  const [view, setView] = useState<"table" | "cards">("table");
+  const faculties = useMemo(() => INSTITUTIONAL_FACULTIES.filter((faculty) => faculty.nombre.toLowerCase().includes(query.trim().toLowerCase()) || faculty.sigla.toLowerCase().includes(query.trim().toLowerCase())), [query]);
+
   return (
     <div className="space-y-6 max-w-6xl mx-auto animate-fadeIn pb-12">
       {/* Encabezado y Breadcrumb Oficial Canvas LMS */}
@@ -42,9 +47,13 @@ export const AdminFacultySelector: React.FC<AdminFacultySelectorProps> = ({
           }}
         />
 
-        {/* Grid de Facultades */}
-        <div className="flex-1 min-w-0 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-5">
-        {INSTITUTIONAL_FACULTIES.map((fac) => {
+        <div className="flex-1 min-w-0 space-y-3">
+          <div className="flex flex-col sm:flex-row gap-2 sm:items-center justify-between">
+            <label className="relative flex-1 max-w-md"><Search size={14} className="absolute left-2.5 top-2.5 text-[#6B7780]" /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar facultad por nombre..." className="w-full border border-[#C7CDD1] rounded-[4px] py-2 pl-8 pr-3 text-xs focus:outline-none focus:border-[#B71C1C]" /></label>
+            <div className="flex border border-[#C7CDD1] rounded-[4px] overflow-hidden self-start"><button type="button" onClick={() => setView("table")} title="Vista tabla" className={`p-2 ${view === "table" ? "bg-[#424242] text-white" : "bg-white text-[#6B7780]"}`}><List size={15} /></button><button type="button" onClick={() => setView("cards")} title="Vista tarjetas" className={`p-2 border-l border-[#C7CDD1] ${view === "cards" ? "bg-[#424242] text-white" : "bg-white text-[#6B7780]"}`}><LayoutGrid size={15} /></button></div>
+          </div>
+          {view === "table" ? <CanvasTable><CanvasTableHeader><tr><th className="p-3 text-left">Facultad</th><th className="p-3 text-left">Campus</th><th className="p-3 text-center">Cursos</th><th className="p-3 text-center">Agentes</th><th className="p-3 text-right">Estado</th></tr></CanvasTableHeader><tbody>{faculties.map((fac) => <CanvasTableRow key={fac.id} onClick={() => fac.estado === "activo" && onSelectFaculty(fac)} className={fac.estado === "activo" ? "cursor-pointer" : "opacity-60"}><CanvasTableCell><div className="flex items-center gap-2"><span className="w-8 h-8 rounded bg-red-50 text-[#B71C1C] border border-red-200 flex items-center justify-center font-bold text-xs">{fac.sigla}</span><span className="font-semibold text-[#2D3B45]">{fac.nombre}</span></div></CanvasTableCell><CanvasTableCell>{fac.campus}</CanvasTableCell><CanvasTableCell align="center">{fac.cursosActivos}</CanvasTableCell><CanvasTableCell align="center">{fac.agentesActivos}</CanvasTableCell><CanvasTableCell align="right">{fac.estado === "activo" ? <span className="text-emerald-700 font-semibold">Ingresar →</span> : <span className="text-gray-500">Próximamente</span>}</CanvasTableCell></CanvasTableRow>)}</tbody></CanvasTable> : <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-5">
+        {faculties.map((fac) => {
           const isActive = fac.estado === "activo";
           return (
             <div
@@ -119,6 +128,7 @@ export const AdminFacultySelector: React.FC<AdminFacultySelectorProps> = ({
             </div>
           );
         })}
+        </div>}
         </div>
       </div>
     </div>

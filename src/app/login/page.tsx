@@ -4,7 +4,6 @@ import React, { useState } from "react";
 import { safeNextPath } from "@/utils/safeRedirect";
 import { useRouter } from "next/navigation";
 import { GraduationCap, ShieldCheck, Lock, ArrowRight, AlertCircle, Loader2, User } from "lucide-react";
-import Link from "next/link";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -12,6 +11,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!identifier.trim() || !password.trim()) {
@@ -140,19 +140,6 @@ export default function LoginPage() {
               )}
             </button>
           </form>
-
-          <div className="pt-4 border-t border-gray-100 text-center">
-            <span className="text-[11px] text-[#6B7780] block mb-1">
-              ¿Eres estudiante y vienes a marcar tu asistencia?
-            </span>
-            <Link
-              href="/asistencia"
-              className="text-xs font-bold text-[#B71C1C] hover:underline inline-flex items-center gap-1"
-            >
-              <span>Ir a Marcaje de Asistencia (Libre y Público)</span>
-              <ArrowRight size={12} />
-            </Link>
-          </div>
         </div>
       </main>
 

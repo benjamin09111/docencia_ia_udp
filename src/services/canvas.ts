@@ -47,7 +47,7 @@ export async function fetchCanvasUser(): Promise<CanvasUser> {
 
 export async function fetchCanvasCourses(): Promise<CanvasCourse[]> {
   if (!CANVAS_TOKEN) {
-    return getFallbackCourses();
+    return [];
   }
 
   try {
@@ -90,23 +90,10 @@ export async function fetchCanvasCourses(): Promise<CanvasCourse[]> {
           students_count: Math.floor(Math.random() * 10) + 25,
           is_automated: isTeacherCourse,
           agent_id: agentId,
+          source: "canvas" as const,
         };
       });
   } catch {
-    return getFallbackCourses();
+    return [];
   }
-}
-
-function getFallbackCourses(): CanvasCourse[] {
-  return [
-    {
-      id: 41210,
-      name: "ARQUITECTURA DE SOFTWARE (SANDBOX UDP)",
-      code: "CIT3000_CA02",
-      term: "2026-02 Semestre Primavera",
-      students_count: 36,
-      is_automated: true,
-      agent_id: "agent_arq_soft",
-    },
-  ];
 }

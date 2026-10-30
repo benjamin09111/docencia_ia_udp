@@ -13,8 +13,7 @@ import { getSavedSections, getSectionByCourseCode, INITIAL_SECTIONS } from "@/se
 import { fetchSectionsFromSupabase, isSupabaseConfigured } from "@/services/attendanceDbService";
 import { ImportCourseExcelModal } from "./common/ImportCourseExcelModal";
 import { TeacherPendingSummary } from "./teacher/TeacherPendingSummary";
-import { BookOpen, Megaphone, Bot, User, FolderArchive } from "lucide-react";
-import { OfficialMaterialsView } from "./official-materials/OfficialMaterialsView";
+import { BookOpen, Megaphone, Bot, User } from "lucide-react";
 import { UserRole } from "@/types";
 
 interface TeacherViewProps {
@@ -35,13 +34,11 @@ interface TeacherViewProps {
   } | null) => void;
 }
 
-
 export const TeacherView: React.FC<TeacherViewProps> = ({
   canvasCourses,
   entregables,
   estudiantesExcel,
   entregasAlumnos = [],
-  currentRole = "teacher",
   onAddDeliverable,
   onUpdateGrade,
   onResolveAppeal,
@@ -85,7 +82,6 @@ export const TeacherView: React.FC<TeacherViewProps> = ({
 
   const navItems: CourseNavItem[] = [
     { id: "courses", label: "Mis cursos", icon: <BookOpen size={15} /> },
-    { id: "official_files", label: "Archivos e información oficial", icon: <FolderArchive size={15} /> },
     { id: "quick_announcements", label: "Anuncios rápidos", icon: <Megaphone size={15} /> },
     { id: "my_agent", label: "Mi agente", icon: <Bot size={15} /> },
     { id: "my_profile", label: "Mi perfil", icon: <User size={15} /> },
@@ -152,13 +148,10 @@ export const TeacherView: React.FC<TeacherViewProps> = ({
           />
         )}
 
-        {activeTab === "official_files" && (
-          <OfficialMaterialsView isAdmin={currentRole === "admin"} />
-        )}
-
         {activeTab === "quick_announcements" && (
           <TeacherQuickAnnouncementsView
             courses={mergedCourses}
+            sections={sections}
             initialSelectedCourseIds={preselectedAnnounceIds}
           />
         )}

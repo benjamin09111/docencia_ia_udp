@@ -17,6 +17,7 @@ export interface CanvasCourse {
   students_count?: number;
   is_automated?: boolean;
   agent_id?: string;
+  source?: "canvas" | "sandbox";
 }
 
 export interface AgentPerillas {
