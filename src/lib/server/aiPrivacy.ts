@@ -15,6 +15,9 @@ export type AiPrivacyCheck =
  * Barrera previa a cualquier proveedor externo: la IA no recibe identificadores
  * personales ni datos de localización. Los nombres y entregas identificables se
  * deben pseudonimizar en un flujo especializado antes de llegar a esta ruta.
+ *
+ * Alcance actual: RUT, email, teléfono, IP, coordenadas, IDs Canvas explícitos.
+ * Pendiente (fase privacidad): seudonimización de nombres propios en entregas.
  */
 export function checkAiPrivacy(text: string): AiPrivacyCheck {
   const categories = PERSONAL_DATA_PATTERNS.filter(({ pattern }) => pattern.test(text)).map(({ label }) => label);
@@ -24,4 +27,12 @@ export function checkAiPrivacy(text: string): AiPrivacyCheck {
 /** Las llamadas fuera de la red local requieren habilitación explícita en entorno. */
 export function externalAiProcessingEnabled(): boolean {
   return process.env.AI_EXTERNAL_PROCESSING_ENABLED === "true";
+}
+
+/** Texto seguro para logs/telemetría: nunca persistir el prompt original. */
+export function redactForAiAudit(text: string, max = 80): string {
+  const privacy = checkAiPrivacy(text);
+  if (!privacy.allowed) return `[blocked:${privacy.categories.join(",")}]`;
+  const trimmed = text.replace(/\s+/g, " ").trim();
+  return trimmed.length <= max ? trimmed : `${trimmed.slice(0, max)}…`;
 }

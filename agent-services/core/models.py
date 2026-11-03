@@ -38,7 +38,7 @@ class AgentNode(BaseModel):
 
 class AgentChatRequest(BaseModel):
     message: str
-    node_id: str = Field(default="course:cit3203", description="Identificador del nodo en el árbol")
+    node_id: str = Field(default="course:cit3000", description="Identificador del nodo sandbox en el árbol")
     worker_role: Optional[str] = Field(default=None, description="Worker especialista asignado")
     session_id: Optional[str] = Field(default=None)
     settings: Optional[PedagogicalSettings] = None
@@ -61,7 +61,7 @@ class RubricItem(BaseModel):
 class SubmissionEvaluationRequest(BaseModel):
     student_solution: str
     assignment_title: str
-    course_id: str = "course:cit3203"
+    course_id: str = "course:cit3000"
     rubric: List[RubricItem]
     max_decimas: float = 0.6
 

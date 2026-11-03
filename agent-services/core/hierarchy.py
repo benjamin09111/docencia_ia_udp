@@ -55,17 +55,37 @@ class HierarchyTreeManager:
             ]
         ))
 
-        # Nivel 4: Curso / Docente ("Mini-Yo del Profesor")
+        # Nivel 4: Curso sandbox (único destino por defecto para desarrollo de IA)
         self.register_node(AgentNode(
-            id="course:cit3203",
-            name="CIT3203 - Arquitectura de Software (Prof. Jorge Cruz / Ayudantía Benjamín)",
+            id="course:cit3000",
+            name="CIT3000 - Arquitectura de Software (Sandbox de Pruebas)",
             level=AgentLevel.COURSE,
             parent_id="career:informatica",
-            description="Asignatura de diseño y evaluación de atributos de calidad en sistemas distribuidos.",
+            description="Curso sandbox para agentes, RAG y evaluación asistida. No contiene datos de cursos reales.",
             directives=[
-                "Objetivo: Evaluar atributos de calidad (RTO, RPO, disponibilidad, escalabilidad) mediante escenarios tácticos.",
-                "Ayudantías enfocadas en talleres prácticos preparatorios para Solemnes oficiales.",
-                "Mantener trazabilidad estricta: comparar entregas progresivas con pautas anteriores y señalar feedback no abordado."
+                "Operar exclusivamente sobre materiales y entregas de prueba del sandbox CIT3000.",
+                "No solicitar ni inferir datos personales de estudiantes de cursos reales UDP.",
+                "Human-in-the-Loop: toda nota sugerida requiere validación docente antes de Canvas.",
+                "Priorizar atributos de calidad (RTO, RPO, disponibilidad, escalabilidad) y trade-offs explícitos."
+            ],
+            default_settings=PedagogicalSettings(
+                nivel_exigencia=ExigencyLevel.ESTRICTO,
+                estilo_pedagogico=PedagogicalStyle.SOCRATICO,
+                politica_decimas=0.6
+            ),
+            allowed_workers=["activity_designer", "submission_evaluator", "excel_engine"]
+        ))
+
+        # Nodo de referencia pedagógica (materiales de dominio). No es default de chat.
+        self.register_node(AgentNode(
+            id="course:cit3203",
+            name="CIT3203 - Proyecto en TICs II (nodo de referencia, no sandbox)",
+            level=AgentLevel.COURSE,
+            parent_id="career:informatica",
+            description="Nodo de referencia de dominio. La IA de producción debe preferir course:cit3000.",
+            directives=[
+                "Usar solo como referencia de dominio cuando el docente lo indique explícitamente.",
+                "No modificar ni inventar datos de estudiantes o calificaciones de secciones reales."
             ],
             default_settings=PedagogicalSettings(
                 nivel_exigencia=ExigencyLevel.ESTRICTO,
