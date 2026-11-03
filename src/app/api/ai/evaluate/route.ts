@@ -3,6 +3,7 @@ import { requireRole } from "@/lib/server/auth";
 import { checkAiPrivacy } from "@/lib/server/aiPrivacy";
 import { postAgentServices } from "@/lib/server/agentServicesClient";
 import { resolveAiCourseCode, toAgentCourseNodeId } from "@/lib/server/aiCoursePolicy";
+import { pseudonymizePersonNames } from "@/lib/server/aiPseudonymize";
 import type { AiSubmissionEvaluationRequest, AiSubmissionEvaluationResult } from "@/types/ai";
 
 const MAX_SOLUTION_CHARS = 40_000;
@@ -53,11 +54,12 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const { text: safeSolution } = pseudonymizePersonNames(body.studentSolution);
     const courseCode = resolveAiCourseCode(body.courseCode);
     const upstream = await postAgentServices<PyEvaluateResponse>(
       "/api/v1/agent/evaluate",
       {
-        student_solution: body.studentSolution,
+        student_solution: safeSolution,
         assignment_title: body.assignmentTitle || body.deliverableId || "Entrega formativa",
         course_id: toAgentCourseNodeId(courseCode),
         rubric: body.rubric.map((item) => ({

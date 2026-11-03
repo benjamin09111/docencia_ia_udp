@@ -5,6 +5,7 @@ import { checkAiPrivacy } from "@/lib/server/aiPrivacy";
 import { postAgentServices } from "@/lib/server/agentServicesClient";
 import { resolveAiCourseCode, toAgentCourseNodeId } from "@/lib/server/aiCoursePolicy";
 import { buildLocalAiChatReply } from "@/lib/server/aiChatFallback";
+import { pseudonymizePersonNames } from "@/lib/server/aiPseudonymize";
 
 const MAX_MESSAGE_CHARS = 8_000;
 const CHAT_TIMEOUT_MS = 45_000;
@@ -43,13 +44,14 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const { text: safeMessage } = pseudonymizePersonNames(message);
     const safeCourseCode = resolveAiCourseCode(courseCode);
     const safeCourseName = courseName || "Arquitectura de Software (Sandbox)";
 
     const upstream = await postAgentServices<PyChatResponse>(
       "/api/v1/agent/chat",
       {
-        message,
+        message: safeMessage,
         node_id: toAgentCourseNodeId(safeCourseCode),
         worker_role: agentRole,
         context_data: { course_code: safeCourseCode, course_name: safeCourseName },
@@ -67,7 +69,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(response);
     }
 
-    const local = buildLocalAiChatReply(agentRole, message, safeCourseName, safeCourseCode);
+    const local = buildLocalAiChatReply(agentRole, safeMessage, safeCourseName, safeCourseCode);
     const response: AiChatResponse = {
       reply: local.reply,
       agentRole,

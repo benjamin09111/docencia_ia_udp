@@ -4,6 +4,7 @@ import { ActivityAgentRequest, ActivityAgentDraft } from "@/types/activityAgent"
 import { checkAiPrivacy } from "@/lib/server/aiPrivacy";
 import { postAgentServices } from "@/lib/server/agentServicesClient";
 import { getAiSandboxCourseCode, resolveAiCourseCode } from "@/lib/server/aiCoursePolicy";
+import { pseudonymizePersonNames } from "@/lib/server/aiPseudonymize";
 
 const validFormats = ["individual", "grupal"];
 const validAssessments = ["decimas", "nota"];
@@ -39,14 +40,16 @@ export async function POST(req: NextRequest) {
 
     const sandboxCode = getAiSandboxCourseCode();
     const courseCode = resolveAiCourseCode(body.courseCode) || sandboxCode;
+    const { text: safeObjective } = pseudonymizePersonNames(body.objective.trim());
+    const { text: safeContent } = pseudonymizePersonNames(content);
 
     const upstream = await postAgentServices<PyDesignResponse>(
       "/api/v1/agent/design-activity",
       {
-        objective: body.objective.trim(),
+        objective: safeObjective,
         course_name: body.courseName || "Arquitectura de Software",
         course_code: courseCode,
-        topic_content: content,
+        topic_content: safeContent,
         duration_minutes: durationMin,
         format: body.format,
         assessment_type: body.assessment,
