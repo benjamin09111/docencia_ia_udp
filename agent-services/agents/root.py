@@ -22,11 +22,18 @@ class RootInstitutionalAgent:
             worker_role=request.worker_role
         )
         
+        course_code = "CIT3000"
+        if request.context_data and isinstance(request.context_data, dict):
+            course_code = str(request.context_data.get("course_code") or course_code)
+        elif node.id.startswith("course:"):
+            course_code = node.id.split(":", 1)[1].upper()
+
         reply, tools, sources, tokens = agent_loop_engine.run_turn(
             system_prompt=system_prompt,
             user_message=request.message,
             node_name=node.name,
-            worker_role=request.worker_role or ""
+            worker_role=request.worker_role or "",
+            course_code=course_code,
         )
         
         lineage = hierarchy_manager.get_lineage(node.id)

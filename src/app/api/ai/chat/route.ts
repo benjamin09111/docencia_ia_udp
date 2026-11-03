@@ -1,10 +1,26 @@
 import { NextRequest, NextResponse } from "next/server";
 import { AiChatRequest, AiChatResponse } from "@/types/ai";
 import { requireRole } from "@/lib/server/auth";
-import { checkAiPrivacy, externalAiProcessingEnabled } from "@/lib/server/aiPrivacy";
+import { checkAiPrivacy } from "@/lib/server/aiPrivacy";
+import { postAgentServices } from "@/lib/server/agentServicesClient";
+import { resolveAiCourseCode, toAgentCourseNodeId } from "@/lib/server/aiCoursePolicy";
+import { buildLocalAiChatReply } from "@/lib/server/aiChatFallback";
+import { pseudonymizePersonNames } from "@/lib/server/aiPseudonymize";
 
 const MAX_MESSAGE_CHARS = 8_000;
+const CHAT_TIMEOUT_MS = 45_000;
 
+type PyChatResponse = {
+  reply?: string;
+  tokens_estimated?: number;
+  sources?: string[];
+};
+
+/**
+ * Chat institucional. Hoy las sesiones firmadas solo emiten docente|admin
+ * (incl. vistas alumno en DEV). Cuando exista rol alumno, ampliar requireRole
+ * y restringir agentRole a tutores teóricos/técnicos.
+ */
 export async function POST(req: NextRequest) {
   const auth = await requireRole(req);
   if ("response" in auth) return auth.response;
@@ -13,7 +29,7 @@ export async function POST(req: NextRequest) {
     const body = (await req.json()) as AiChatRequest;
     const { agentRole, message, courseCode, courseName } = body;
 
-    if (!message || typeof message !== "string" || message.length > MAX_MESSAGE_CHARS) {
+    if (!agentRole || !message || typeof message !== "string" || message.length > MAX_MESSAGE_CHARS) {
       return NextResponse.json({ error: "El mensaje es requerido." }, { status: 400 });
     }
 
@@ -28,107 +44,41 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const lower = message.toLowerCase();
-    let reply = "";
-    let sources: string[] = [];
+    const { text: safeMessage } = pseudonymizePersonNames(message);
+    const safeCourseCode = resolveAiCourseCode(courseCode);
+    const safeCourseName = courseName || "Arquitectura de Software (Sandbox)";
 
-    // 1. Intentar consultar al microservicio agéntico desacoplado Python (agent-services)
-    if (externalAiProcessingEnabled()) {
-      const agentServiceUrl = process.env.AGENT_SERVICES_URL || "http://127.0.0.1:8080";
-      try {
-        const pyRes = await fetch(`${agentServiceUrl}/api/v1/agent/chat`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            ...(process.env.AGENT_SERVICE_API_KEY ? { "X-Agent-Service-Key": process.env.AGENT_SERVICE_API_KEY } : {}),
-          },
-          body: JSON.stringify({
-            message,
-            node_id: courseCode ? `course:${courseCode.toLowerCase()}` : "course:cit3203",
-            worker_role: agentRole,
-          }),
-          signal: AbortSignal.timeout(2500),
-        });
+    const upstream = await postAgentServices<PyChatResponse>(
+      "/api/v1/agent/chat",
+      {
+        message: safeMessage,
+        node_id: toAgentCourseNodeId(safeCourseCode),
+        worker_role: agentRole,
+        context_data: { course_code: safeCourseCode, course_name: safeCourseName },
+      },
+      CHAT_TIMEOUT_MS
+    );
 
-        if (pyRes.ok) {
-          const pyData = await pyRes.json();
-          const response: AiChatResponse = {
-            reply: pyData.reply,
-            agentRole,
-            tokensUsed: pyData.tokens_estimated || Math.round(pyData.reply.length / 4),
-            sources: pyData.sources || ["Agente Jerárquico UDP"],
-          };
-          return NextResponse.json(response);
-        }
-      } catch {
-        // Si el microservicio no está activo o supera el timeout, continúa al motor local institucional
-      }
+    if (upstream.ok && upstream.data.reply) {
+      const response: AiChatResponse = {
+        reply: upstream.data.reply,
+        agentRole,
+        tokensUsed: upstream.data.tokens_estimated || Math.round(upstream.data.reply.length / 4),
+        sources: upstream.data.sources || ["Agente Jerárquico UDP"],
+      };
+      return NextResponse.json(response);
     }
 
-    // 2. Lógica local de contingencia institucional (Fallback seguro sin fuga de errores)
-    switch (agentRole) {
-      case "activity_assistant":
-        sources = ["Catálogo Oficial de Metodologías Activas CREA UDP"];
-        if (lower.includes("instruccion") || lower.includes("paso")) {
-          reply =
-            "Le recomiendo estructurar la dinámica con tiempos acotados (ej. 15 min de análisis, 20 min de debate, 10 min de conclusiones) y solicitar un entregable formal de máximo 2 páginas para resguardar la carga cognitiva.";
-        } else if (lower.includes("decima") || lower.includes("nota") || lower.includes("evalua")) {
-          reply =
-            "Recuerde que las actividades de ayudantía bonifican décimas formativas (+0.1 a +1.0) que se agregan directamente al hito oficial que usted determine, sin descalibrar las ponderaciones del 100% del curso.";
-        } else if (lower.includes("rubrica") || lower.includes("pauta")) {
-          reply =
-            "La rúbrica institucional está dividida en Rubros, Criterios y Subcriterios con descriptores observables sobre 100 puntos netos para evitar sesgos evaluativos.";
-        } else {
-          reply =
-            "Entendido profesor. Puedo adaptar cualquier sección del taller (roles, tiempo o pauta oficial) para que se ajuste exactamente a sus objetivos de cátedra.";
-        }
-        break;
-
-      case "theoretical_tutor":
-        sources = ["Software Architecture in Practice (Bass et al.)", "Guía PMBOK 7ma Edición"];
-        if (lower.includes("rto") || lower.includes("rpo") || lower.includes("disponibilidad")) {
-          reply =
-            "📌 RTO (Recovery Time Objective) es el tiempo máximo admisible para restaurar la operatividad del sistema tras un incidente. RPO (Recovery Point Objective) es el volumen tolerable de pérdida transaccional de datos medido en tiempo. Ambos deben figurar en la medida de respuesta de su escenario.";
-        } else if (lower.includes("pmbok") || lower.includes("principio")) {
-          reply =
-            "La Guía PMBOK 7ma Edición estructura 12 principios rectores orientados a entrega continua de valor. En las evaluaciones se priorizan: Liderazgo adaptativo, Diseño de calidad intrínseca y Navegación proactiva ante riesgos e incertidumbre.";
-        } else if (lower.includes("microservicio") || lower.includes("monolito")) {
-          reply =
-            "El trade-off fundamental reside en complejidad operacional vs bajo acoplamiento. Los microservicios ofrecen escalabilidad granular pero demandan observabilidad distribuida, consistencia eventual (Sagas) y resiliencia en red (Circuit Breaker).";
-        } else {
-          reply =
-            "Según el marco conceptual oficial de la Escuela de Informática UDP, las decisiones de arquitectura deben fundamentarse en atributos de calidad cuantificables y matrices de trade-offs verificables.";
-        }
-        break;
-
-      case "technical_tutor":
-        sources = ["Descriptor Oficial CIT3203", "Reglamento Académico UDP"];
-        if (lower.includes("asistencia") || lower.includes("ri")) {
-          reply =
-            "La normativa de la Escuela exige un mínimo del 75% de asistencia a cátedras y ayudantías. Quedar bajo este umbral activa causal de Reprobación por Inasistencia (RI).";
-        } else {
-          reply = `Para la asignatura ${courseName || "oficial"} (${courseCode || "CIT3203"}), los parámetros de sala, ayudantía y condiciones de eximición están regulados por el descriptor vigente.`;
-        }
-        break;
-
-      default:
-        reply = "Consulta procesada por el motor de agentes institucional CREA UDP.";
-        sources = ["Ecosistema Docente IA UDP"];
-    }
-
+    const local = buildLocalAiChatReply(agentRole, safeMessage, safeCourseName, safeCourseCode);
     const response: AiChatResponse = {
-      reply,
+      reply: local.reply,
       agentRole,
-      tokensUsed: Math.round(reply.length / 4),
-      sources,
+      tokensUsed: Math.round(local.reply.length / 4),
+      sources: local.sources,
     };
-
     return NextResponse.json(response);
   } catch (error) {
     console.error("Error en API de Agente IA:", error);
-    return NextResponse.json(
-      { error: "Error interno al procesar la consulta con el agente." },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Error interno al procesar la consulta con el agente." }, { status: 500 });
   }
 }

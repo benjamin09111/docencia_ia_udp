@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { requireRole } from "@/lib/server/auth";
 
 const CANVAS_BASE_URL = process.env.CANVAS_BASE_URL || "https://udp.instructure.com";
 const CANVAS_TOKEN = process.env.CANVAS_API_TOKEN || "";
@@ -7,11 +8,14 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ courseId: string }> }
 ) {
+  const auth = await requireRole(request);
+  if ("response" in auth) return auth.response;
+
   try {
     const { courseId } = await params;
 
     if (!CANVAS_TOKEN) {
-      return NextResponse.json({ error: "No CANVAS_API_TOKEN configured" }, { status: 401 });
+      return NextResponse.json({ error: "Servicio Canvas no disponible en este momento." }, { status: 503 });
     }
 
     // 1. Obtener grupos del curso en Canvas (per_page=100 y sin cache estático)
@@ -55,7 +59,7 @@ export async function GET(
                   canvas_id: u.id,
                   nombres: parts.slice(0, 2).join(" ") || u.name,
                   apellidos: parts.slice(2).join(" ") || "",
-                  email: u.login_id || u.email,
+                  // Minimización: no reenviar email crudo de Canvas al cliente
                 };
               })
             : [];

@@ -98,11 +98,12 @@ def handle_submission_evaluation(request: SubmissionEvaluationRequest, http_requ
         )
 
 @app.post("/api/v1/agent/design-activity", response_model=ActivityDesignResponse)
-def handle_activity_design(request: ActivityDesignRequest):
+def handle_activity_design(request: ActivityDesignRequest, http_request: Request):
     """
     Agente 1: Diseñador de Actividades y Rúbricas (OpenRouter).
     Genera dinámicas de ayudantía, pauta de mediación y rúbrica sobre 100 puntos netos.
     """
+    require_service_key(http_request)
     try:
         return activity_designer_worker.design_activity(request)
     except Exception:

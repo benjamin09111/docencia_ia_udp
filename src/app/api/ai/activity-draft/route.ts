@@ -1,10 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireRole } from "@/lib/server/auth";
 import { ActivityAgentRequest, ActivityAgentDraft } from "@/types/activityAgent";
-import { checkAiPrivacy, externalAiProcessingEnabled } from "@/lib/server/aiPrivacy";
+import { checkAiPrivacy } from "@/lib/server/aiPrivacy";
+import { postAgentServices } from "@/lib/server/agentServicesClient";
+import { getAiSandboxCourseCode, resolveAiCourseCode } from "@/lib/server/aiCoursePolicy";
+import { pseudonymizePersonNames } from "@/lib/server/aiPseudonymize";
 
 const validFormats = ["individual", "grupal"];
 const validAssessments = ["decimas", "nota"];
+const DESIGN_TIMEOUT_MS = 60_000;
+
+type PyDesignResponse = {
+  title?: string;
+  description?: string;
+  instructions?: Array<{ paso: number; titulo: string; descripcion: string; puntaje: number }>;
+  decimas_sugeridas?: number;
+};
 
 export async function POST(req: NextRequest) {
   const auth = await requireRole(req);
@@ -27,55 +38,46 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 1. Invocar Agente 1 (Diseñador de Actividades) en microservicio desacoplado Python
-    const agentServiceUrl = process.env.AGENT_SERVICES_URL || "http://127.0.0.1:8080";
-    if (externalAiProcessingEnabled()) {
-      try {
-      const pyRes = await fetch(`${agentServiceUrl}/api/v1/agent/design-activity`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(process.env.AGENT_SERVICE_API_KEY ? { "X-Agent-Service-Key": process.env.AGENT_SERVICE_API_KEY } : {}),
-        },
-        body: JSON.stringify({
-          objective: body.objective.trim(),
-          course_name: body.courseName || "Arquitectura de Software",
-          course_code: "CIT3000", // Sandbox seguro
-          topic_content: content,
-          duration_minutes: durationMin,
-          format: body.format,
-          assessment_type: body.assessment,
-          max_decimas: 0.3,
-        }),
-        signal: AbortSignal.timeout(3500),
-      });
+    const sandboxCode = getAiSandboxCourseCode();
+    const courseCode = resolveAiCourseCode(body.courseCode) || sandboxCode;
+    const { text: safeObjective } = pseudonymizePersonNames(body.objective.trim());
+    const { text: safeContent } = pseudonymizePersonNames(content);
 
-      if (pyRes.ok) {
-        const pyData = await pyRes.json();
-        const draft: ActivityAgentDraft = {
-          title: pyData.title,
-          description: pyData.description,
-          content: body.content,
-          instructions: pyData.instructions.map((step: any, idx: number) => ({
-            id: `agent_${idx + 1}`,
-            numero: step.paso,
-            titulo: step.titulo,
-            descripcion: step.descripcion,
-            puntaje: step.puntaje,
-          })),
-          pointsPossible: 100,
-          assessment: body.assessment,
-          decimas: String(pyData.decimas_sugeridas ?? "0.3"),
-          isGroupAssignment: body.format === "grupal",
-        };
-        return NextResponse.json(draft);
-      }
-      } catch {
-        // Si el microservicio está offline o en timeout, continúa a la contingencia determinista
-      }
+    const upstream = await postAgentServices<PyDesignResponse>(
+      "/api/v1/agent/design-activity",
+      {
+        objective: safeObjective,
+        course_name: body.courseName || "Arquitectura de Software",
+        course_code: courseCode,
+        topic_content: safeContent,
+        duration_minutes: durationMin,
+        format: body.format,
+        assessment_type: body.assessment,
+        max_decimas: 0.3,
+      },
+      DESIGN_TIMEOUT_MS
+    );
+
+    if (upstream.ok && upstream.data.title && Array.isArray(upstream.data.instructions)) {
+      const draft: ActivityAgentDraft = {
+        title: upstream.data.title,
+        description: upstream.data.description || "",
+        content: body.content,
+        instructions: upstream.data.instructions.map((step, idx) => ({
+          id: `agent_${idx + 1}`,
+          numero: step.paso,
+          titulo: step.titulo,
+          descripcion: step.descripcion,
+          puntaje: step.puntaje,
+        })),
+        pointsPossible: 100,
+        assessment: body.assessment,
+        decimas: String(upstream.data.decimas_sugeridas ?? "0.3"),
+        isGroupAssignment: body.format === "grupal",
+      };
+      return NextResponse.json(draft);
     }
 
-    // 2. Fallback determinista local institucional
     const draft: ActivityAgentDraft = {
       title: `Taller: ${body.objective.trim()}`,
       description: `Actividad ${modality} de ${body.duration || "45 minutos"}, orientada a ${body.objective.trim()}. Se alinea con ${content} del programa oficial de ${body.courseName}.`,
