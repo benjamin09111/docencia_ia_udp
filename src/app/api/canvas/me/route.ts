@@ -21,6 +21,9 @@ export async function GET(req: NextRequest) {
 }
 
 export async function PUT(req: NextRequest) {
+  const auth = await requireRole(req);
+  if ("response" in auth) return auth.response;
+
   try {
     const session = await getSession(req);
     const body = await req.json();
