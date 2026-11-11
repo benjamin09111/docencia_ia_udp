@@ -25,7 +25,7 @@ export const TeacherCoursesList: React.FC<TeacherCoursesListProps> = ({
   onAnnounceCourses = () => {},
 }) => {
   const [searchQuery, setSearchQuery] = useState("");
-  const [onlyAutomated, setOnlyAutomated] = useState<boolean>(true);
+  const [onlyAutomated, setOnlyAutomated] = useState<boolean>(false);
   const [viewMode, setViewMode] = useState<"grouped" | "flat">("grouped");
 
   const enrichedCourses = useMemo(() => {

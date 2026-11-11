@@ -1,17 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getSession } from "@/lib/server/auth";
 import { fetchCanvasUser } from "@/services/canvas";
-import { requireRole } from "@/lib/server/auth";
+import { getUserCanvasToken } from "@/lib/server/userTokenStore";
 
 export async function GET(req: NextRequest) {
-  const auth = await requireRole(req);
-  if ("response" in auth) return auth.response;
-
   try {
-    const user = await fetchCanvasUser();
+    const session = await getSession(req);
+    const userToken = session?.userId
+      ? await getUserCanvasToken(session.userId, session.isOwner)
+      : null;
+
+    const user = await fetchCanvasUser(userToken || undefined);
     return NextResponse.json(user);
-  } catch (error) {
-    console.error("Error al consultar usuario de Canvas UDP:", error);
-    return NextResponse.json({ error: "Error al consultar usuario de Canvas UDP" }, { status: 500 });
+  } catch {
+    return NextResponse.json(
+      { error: "Error al consultar usuario de Canvas UDP" },
+      { status: 500 }
+    );
   }
 }
 
@@ -20,16 +25,19 @@ export async function PUT(req: NextRequest) {
   if ("response" in auth) return auth.response;
 
   try {
+    const session = await getSession(req);
     const body = await req.json();
-    const CANVAS_BASE_URL = process.env.CANVAS_BASE_URL || "https://udp.instructure.com";
-    const CANVAS_TOKEN = process.env.CANVAS_API_TOKEN || "";
+    const baseUrl = process.env.CANVAS_BASE_URL || "https://udp.instructure.com";
+    const userToken = session?.userId
+      ? await getUserCanvasToken(session.userId, session.isOwner)
+      : null;
 
-    if (CANVAS_TOKEN && body.bio) {
+    if (userToken && body.bio) {
       try {
-        await fetch(`${CANVAS_BASE_URL}/api/v1/users/self`, {
+        await fetch(`${baseUrl}/api/v1/users/self`, {
           method: "PUT",
           headers: {
-            Authorization: `Bearer ${CANVAS_TOKEN}`,
+            Authorization: `Bearer ${userToken}`,
             "Content-Type": "application/json",
           },
           body: JSON.stringify({ user: { bio: body.bio } }),
@@ -44,8 +52,10 @@ export async function PUT(req: NextRequest) {
       message: "Perfil actualizado y sincronizado en Canvas",
       data: body,
     });
-  } catch (error) {
-    console.error("Error al guardar perfil en Canvas:", error);
-    return NextResponse.json({ error: "Error al guardar perfil en Canvas" }, { status: 500 });
+  } catch {
+    return NextResponse.json(
+      { error: "Error al guardar perfil en Canvas" },
+      { status: 500 }
+    );
   }
 }

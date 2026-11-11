@@ -1,10 +1,10 @@
 import { CanvasCourse, CanvasUser } from "@/types";
 
 const CANVAS_BASE_URL = process.env.CANVAS_BASE_URL || "https://udp.instructure.com";
-const CANVAS_TOKEN = process.env.CANVAS_API_TOKEN || "";
 
-export async function fetchCanvasUser(): Promise<CanvasUser> {
-  if (!CANVAS_TOKEN) {
+export async function fetchCanvasUser(token?: string): Promise<CanvasUser> {
+  const activeToken = token || process.env.CANVAS_API_TOKEN || "";
+  if (!activeToken) {
     return {
       id: 10001,
       name: "Docente / Administrador UDP",
@@ -18,9 +18,9 @@ export async function fetchCanvasUser(): Promise<CanvasUser> {
   try {
     const res = await fetch(`${CANVAS_BASE_URL}/api/v1/users/self`, {
       headers: {
-        Authorization: `Bearer ${CANVAS_TOKEN}`,
+        Authorization: `Bearer ${activeToken}`,
       },
-      next: { revalidate: 3600 },
+      cache: "no-store",
     });
 
     if (!res.ok) throw new Error("Error fetching Canvas user");
@@ -29,8 +29,8 @@ export async function fetchCanvasUser(): Promise<CanvasUser> {
       id: data.id,
       name: data.name,
       short_name: data.short_name || data.name,
-      avatar_url: data.avatar_url,
-      email: data.primary_email || "usuario@mail.udp.cl",
+      avatar_url: data.avatar_url || "",
+      email: data.primary_email || data.login_id || "usuario@mail.udp.cl",
       role: "admin",
     };
   } catch {
@@ -45,36 +45,52 @@ export async function fetchCanvasUser(): Promise<CanvasUser> {
   }
 }
 
-export async function fetchCanvasCourses(): Promise<CanvasCourse[]> {
-  if (!CANVAS_TOKEN) {
-    return [];
-  }
+export async function fetchCanvasCourses(token?: string): Promise<CanvasCourse[]> {
+  const activeToken = token || process.env.CANVAS_API_TOKEN || "";
+  if (!activeToken) return [];
 
   try {
-    // Obtenemos los cursos favoritos que están activos en el Tablero de Canvas
-    const res = await fetch(`${CANVAS_BASE_URL}/api/v1/users/self/favorites/courses?include[]=term`, {
-      headers: {
-        Authorization: `Bearer ${CANVAS_TOKEN}`,
-      },
-      next: { revalidate: 300 },
+    // 1. Primero intentar obtener cursos favoritos del tablero
+    let res = await fetch(`${CANVAS_BASE_URL}/api/v1/users/self/favorites/courses?include[]=term`, {
+      headers: { Authorization: `Bearer ${activeToken}` },
+      cache: "no-store",
     });
 
-    if (!res.ok) throw new Error("Error fetching Canvas favorite courses");
-    const data = await res.json();
+    let data = res.ok ? await res.json() : [];
+
+    // 2. Si no tiene favoritos marcados con estrella, obtener todos los cursos activos del usuario
+    if (!Array.isArray(data) || data.length === 0) {
+      res = await fetch(`${CANVAS_BASE_URL}/api/v1/courses?enrollment_state=active&include[]=term`, {
+        headers: { Authorization: `Bearer ${activeToken}` },
+        cache: "no-store",
+      });
+      data = res.ok ? await res.json() : [];
+    }
+
+    if (!Array.isArray(data)) return [];
 
     return data
-      .filter((c: { name?: string; id?: number }) => c.name && c.id)
+      .filter((c: { name?: string; id?: number }) => c && c.name && c.id)
       .map((c: { id: number; name: string; course_code?: string; term?: { name: string } }) => {
-        const isTeacherCourse =
+        const isTeacherCourse = Boolean(
           c.id === 44999 ||
           c.id === 45002 ||
           c.id === 47552 ||
           c.id === 47047 ||
           c.id === 44988 ||
-          (c.course_code && (c.course_code.includes("CIT3203") || c.course_code.includes("CIT2206") || c.course_code.includes("CIT3100")));
+          (c.course_code &&
+            (c.course_code.includes("CIT3203") ||
+              c.course_code.includes("CIT2206") ||
+              c.course_code.includes("CIT3100")))
+        );
 
         let agentId = undefined;
-        if (c.id === 44999 || c.id === 45002 || c.id === 47552 || (c.course_code && c.course_code.includes("CIT3203"))) {
+        if (
+          c.id === 44999 ||
+          c.id === 45002 ||
+          c.id === 47552 ||
+          (c.course_code && c.course_code.includes("CIT3203"))
+        ) {
           agentId = "agent_cit3621";
         } else if (c.id === 47047 || (c.course_code && c.course_code.includes("CIT2206"))) {
           agentId = "agent_gestion_org";
@@ -87,13 +103,14 @@ export async function fetchCanvasCourses(): Promise<CanvasCourse[]> {
           name: c.name,
           code: c.course_code || `UDP_${c.id}`,
           term: c.term?.name || "2026-02 Semestre Primavera",
-          students_count: Math.floor(Math.random() * 10) + 25,
+          students_count: 30,
           is_automated: isTeacherCourse,
           agent_id: agentId,
           source: "canvas" as const,
         };
       });
-  } catch {
+  } catch (err) {
+    console.warn("[fetchCanvasCourses] Error al conectar con Canvas:", err);
     return [];
   }
 }

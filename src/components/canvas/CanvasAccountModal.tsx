@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { User, LogOut, Shield, CheckCircle, AlertTriangle, X } from "lucide-react";
+import React, { useState, useEffect, useCallback } from "react";
+import { User, LogOut, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { ChangePasswordForm } from "./ChangePasswordForm";
+import { CanvasTokenSection } from "./CanvasTokenSection";
 
 interface CanvasAccountModalProps {
   isOpen: boolean;
@@ -17,6 +18,7 @@ interface UserProfile {
   role: string;
   isOwner: boolean;
   hasCanvasToken: boolean;
+  tokenMasked?: string | null;
 }
 
 export const CanvasAccountModal: React.FC<CanvasAccountModalProps> = ({ isOpen, onClose }) => {
@@ -24,16 +26,18 @@ export const CanvasAccountModal: React.FC<CanvasAccountModalProps> = ({ isOpen, 
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loggingOut, setLoggingOut] = useState(false);
 
+  const fetchProfile = useCallback(() => {
+    fetch("/api/auth/me")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data?.authenticated && data.user) setProfile(data.user);
+      })
+      .catch(() => {});
+  }, []);
+
   useEffect(() => {
-    if (isOpen) {
-      fetch("/api/auth/me")
-        .then((res) => res.json())
-        .then((data) => {
-          if (data?.authenticated && data.user) setProfile(data.user);
-        })
-        .catch(() => {});
-    }
-  }, [isOpen]);
+    if (isOpen) fetchProfile();
+  }, [isOpen, fetchProfile]);
 
   if (!isOpen) return null;
 
@@ -46,9 +50,16 @@ export const CanvasAccountModal: React.FC<CanvasAccountModalProps> = ({ isOpen, 
     router.refresh();
   };
 
+  const roleLabels: Record<string, string> = {
+    admin: "ADMINISTRADOR",
+    docente: "DOCENTE",
+    ayudante: "AYUDANTE",
+    estudiante: "ESTUDIANTE",
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-2xs p-4 animate-fadeIn">
-      <div className="bg-white rounded-[4px] border border-[#C7CDD1] shadow-canvas-card max-w-sm w-full p-5 space-y-4">
+      <div className="bg-white rounded-[4px] border border-[#C7CDD1] shadow-canvas-card max-w-sm w-full p-5 space-y-4 max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between border-b border-gray-100 pb-2">
           <div className="flex items-center gap-2">
             <User size={18} className="text-[#B71C1C]" />
@@ -64,18 +75,18 @@ export const CanvasAccountModal: React.FC<CanvasAccountModalProps> = ({ isOpen, 
 
         <div className="flex items-center gap-3 bg-gray-50 p-3 rounded border border-gray-200">
           <div className="w-10 h-10 rounded-full bg-[#424242] text-white flex items-center justify-center font-bold text-sm shrink-0">
-            {profile?.name ? profile.name.slice(0, 2).toUpperCase() : "AD"}
+            {profile?.name ? profile.name.slice(0, 2).toUpperCase() : "UDP"}
           </div>
           <div className="min-w-0">
             <h4 className="text-xs font-bold text-[#2D3B45] truncate">
-              {profile?.name || "Administrador UDP"}
+              {profile?.name || "Usuario UDP"}
             </h4>
             <p className="text-[11px] text-[#6B7780] font-mono truncate">
-              {profile?.email || "usuario@udp.cl"}
+              {profile?.email || "usuario@mail.udp.cl"}
             </p>
-            <div className="flex items-center gap-1.5 mt-1">
+            <div className="flex items-center gap-1.5 mt-1 flex-wrap">
               <span className="bg-red-100 text-[#B71C1C] border border-red-200 text-[9px] font-bold px-1.5 py-0.2 rounded uppercase">
-                {profile?.role || "ADMIN"}
+                {roleLabels[profile?.role || ""] || profile?.role || "DOCENTE"}
               </span>
               {profile?.isOwner ? (
                 <span className="bg-emerald-100 text-emerald-800 border border-emerald-200 text-[9px] font-bold px-1.5 py-0.2 rounded">
@@ -90,20 +101,12 @@ export const CanvasAccountModal: React.FC<CanvasAccountModalProps> = ({ isOpen, 
           </div>
         </div>
 
-        <div className="p-2.5 bg-gray-50 border border-gray-200 rounded text-[11px] space-y-1">
-          <span className="text-gray-500 font-semibold block">Aislamiento de Cursos & Canvas:</span>
-          {profile?.isOwner ? (
-            <div className="flex items-center gap-1.5 text-emerald-800">
-              <CheckCircle size={13} className="text-emerald-600 shrink-0" />
-              <span>Token personal vinculado (acceso a cursos reales y asistencias).</span>
-            </div>
-          ) : (
-            <div className="flex items-center gap-1.5 text-amber-800">
-              <AlertTriangle size={13} className="text-amber-600 shrink-0" />
-              <span>Modo Sandbox activo: cursos y asistencias del titular protegidos.</span>
-            </div>
-          )}
-        </div>
+        {/* Sección de Token Personal Canvas */}
+        <CanvasTokenSection
+          hasCanvasToken={Boolean(profile?.hasCanvasToken)}
+          tokenMasked={profile?.tokenMasked}
+          onTokenUpdated={fetchProfile}
+        />
 
         <ChangePasswordForm />
 
