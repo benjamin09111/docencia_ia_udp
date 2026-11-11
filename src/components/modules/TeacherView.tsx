@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useMemo, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { CanvasCourse, CourseDeliverable, StudentExcelRow, StudentSubmission } from "@/types";
 import { CourseSection } from "@/types/attendance";
 import { AutomatedCourseWorkspace } from "./teacher/AutomatedCourseWorkspace";
@@ -44,11 +45,16 @@ export const TeacherView: React.FC<TeacherViewProps> = ({
   onResolveAppeal,
   onActiveCourseChange,
 }) => {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<string>("courses");
   const [openedCourseId, setOpenedCourseId] = useState<number | null>(null);
   const [showImportModal, setShowImportModal] = useState<boolean>(false);
   const [sections, setSections] = useState<CourseSection[]>(INITIAL_SECTIONS);
   const [preselectedAnnounceIds, setPreselectedAnnounceIds] = useState<number[] | null>(null);
+
+  const handleOpenCourse = (id: number) => {
+    router.push(`/docente/cursos/${id}`);
+  };
 
   const handleAnnounceForCourses = (courseIds: number[]) => {
     setPreselectedAnnounceIds(courseIds);
@@ -130,7 +136,7 @@ export const TeacherView: React.FC<TeacherViewProps> = ({
           <TeacherPendingSummary
             onSelectCourse={(code) => {
               const target = mergedCourses.find((c) => c.code === code || c.code.startsWith(code.split("_")[0]));
-              if (target) setOpenedCourseId(target.id);
+              if (target) handleOpenCourse(target.id);
             }}
           />
         }
@@ -142,7 +148,7 @@ export const TeacherView: React.FC<TeacherViewProps> = ({
           <TeacherCoursesList
             courses={mergedCourses}
             sections={sections}
-            onOpenCourse={(id) => setOpenedCourseId(id)}
+            onOpenCourse={handleOpenCourse}
             onOpenImportModal={() => setShowImportModal(true)}
             onAnnounceCourses={handleAnnounceForCourses}
           />

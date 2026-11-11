@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { CanvasSidebar } from "@/components/canvas/CanvasSidebar";
+import { CanvasHeader } from "@/components/canvas/CanvasHeader";
 import { useRouter } from "next/navigation";
 import { UserRole } from "@/types";
 
@@ -29,6 +30,11 @@ export default function AdminLayout({
         userName="Administrador UDP"
       />
       <div className="flex-1 flex flex-col min-w-0">
+        <CanvasHeader
+          courseCode="UDP"
+          courseName="Facultad de Ingeniería y Ciencias"
+          currentPageTitle="Administración Institucional"
+        />
         <main className="p-6 sm:p-8 lg:p-10 w-full flex-1 min-w-0 bg-white">
           {children}
         </main>

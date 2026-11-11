@@ -20,7 +20,7 @@ export async function GET(req: NextRequest) {
       id: user.id,
       email: user.email,
       name: user.name,
-      role: session.role,
+      role: user.role,
       isOwner: Boolean(session.isOwner),
       faculty: "Facultad de Ingeniería y Ciencias",
       school: "Escuela de Informática y Telecomunicaciones",

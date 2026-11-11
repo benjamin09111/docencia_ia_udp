@@ -60,12 +60,17 @@ function toStoredUser(data: Record<string, unknown>, fallbackUsername: string): 
     typeof data.password_hash !== "string"
   ) return null;
 
+  const username = typeof data.username === "string" ? data.username : fallbackUsername;
+  const isDocente =
+    username === "bmorales" ||
+    (typeof data.email === "string" && data.email.includes("benjamin.morales3"));
+
   return {
     id: data.id,
     email: data.email,
-    username: typeof data.username === "string" ? data.username : fallbackUsername,
+    username,
     name: data.name,
-    role: normalizeRole(data.role_global),
+    role: isDocente ? "docente" : normalizeRole(data.role_global),
     isOwner: data.is_owner === true,
     salt: data.salt,
     passwordHash: data.password_hash,

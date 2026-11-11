@@ -79,6 +79,7 @@ export async function proxy(request: NextRequest) {
   // En producción, admin permanece en /admin salvo si está en desarrollo
   if (
     claims.role === "admin" &&
+    !claims.isOwner &&
     (pathname === "/docente" || pathname.startsWith("/docente/") || pathname === "/estudiante" || pathname.startsWith("/estudiante/")) &&
     !isDev()
   ) {
