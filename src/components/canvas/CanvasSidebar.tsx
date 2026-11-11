@@ -79,7 +79,7 @@ export const CanvasSidebar: React.FC<CanvasSidebarProps> = ({
       >
         <div
           className="mb-2 text-center flex flex-col items-center cursor-pointer group px-2"
-          onClick={() => router.push("/docente")}
+          onClick={() => router.push("/dashboard")}
           title="Universidad Diego Portales - Canvas LMS"
         >
           <div className="flex items-center gap-0.5 text-white font-bold text-sm tracking-tight hover:opacity-90">
@@ -144,7 +144,10 @@ export const CanvasSidebar: React.FC<CanvasSidebarProps> = ({
               <button
                 key={item.id}
                 type="button"
-                onClick={() => onNavClick?.(item.id)}
+                onClick={() => {
+                  onNavClick?.(item.id);
+                  if (item.id === "dashboard") router.push("/dashboard");
+                }}
                 className={`w-full flex flex-col items-center py-2 px-1 transition-all relative group cursor-pointer ${
                   isActive ? "bg-white text-[#B71C1C] shadow-xs font-semibold" : "text-gray-200 hover:bg-[#333333] hover:text-white"
                 }`}
