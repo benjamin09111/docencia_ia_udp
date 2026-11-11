@@ -1,11 +1,18 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { getSession } from "@/lib/server/auth";
 import { fetchCanvasUser } from "@/services/canvas";
+import { getUserCanvasToken } from "@/lib/server/userTokenStore";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
-    const user = await fetchCanvasUser();
+    const session = await getSession(req);
+    const userToken = session?.userId
+      ? await getUserCanvasToken(session.userId, session.isOwner)
+      : null;
+
+    const user = await fetchCanvasUser(userToken || undefined);
     return NextResponse.json(user);
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: "Error al consultar usuario de Canvas UDP" },
       { status: 500 }
@@ -13,26 +20,24 @@ export async function GET() {
   }
 }
 
-export async function PUT(req: Request) {
+export async function PUT(req: NextRequest) {
   try {
+    const session = await getSession(req);
     const body = await req.json();
-    const CANVAS_BASE_URL = process.env.CANVAS_BASE_URL || "https://udp.instructure.com";
-    const CANVAS_TOKEN = process.env.CANVAS_API_TOKEN || "";
+    const baseUrl = process.env.CANVAS_BASE_URL || "https://udp.instructure.com";
+    const userToken = session?.userId
+      ? await getUserCanvasToken(session.userId, session.isOwner)
+      : null;
 
-    if (CANVAS_TOKEN && body.bio) {
-      // Intento de actualización directa en Canvas LMS
+    if (userToken && body.bio) {
       try {
-        await fetch(`${CANVAS_BASE_URL}/api/v1/users/self`, {
+        await fetch(`${baseUrl}/api/v1/users/self`, {
           method: "PUT",
           headers: {
-            Authorization: `Bearer ${CANVAS_TOKEN}`,
+            Authorization: `Bearer ${userToken}`,
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({
-            user: {
-              bio: body.bio,
-            },
-          }),
+          body: JSON.stringify({ user: { bio: body.bio } }),
         });
       } catch (err) {
         console.warn("No se pudo actualizar remotamente en Canvas:", err);
@@ -44,7 +49,7 @@ export async function PUT(req: Request) {
       message: "Perfil actualizado y sincronizado en Canvas",
       data: body,
     });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: "Error al guardar perfil en Canvas" },
       { status: 500 }

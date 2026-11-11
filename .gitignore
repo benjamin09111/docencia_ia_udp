@@ -26,6 +26,7 @@ agent-services/__pycache__/
 
 # Scratch scripts and temp data
 scratch/
+.tokens_cache.json
 
 
 # Documento interno de vulnerabilidades (no publicar mientras el repo sea público)

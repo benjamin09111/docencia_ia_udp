@@ -8,7 +8,7 @@
  * - `jti`: identificador nuevo en CADA login (previene fijación de sesión).
  */
 
-export type SessionRole = "docente" | "admin";
+export type SessionRole = "admin" | "docente" | "ayudante" | "estudiante";
 
 export interface SessionClaims {
   role: SessionRole;
@@ -112,7 +112,7 @@ const signClaims = (claims: SessionClaims) => signPayload(claims);
 export async function verifySessionToken(token: string | undefined, now = nowS()): Promise<SessionClaims | null> {
   const claims = (await verifyPayload(token)) as SessionClaims | null;
   if (!claims) return null;
-  if (claims.role !== "docente" && claims.role !== "admin") return null;
+  if (!["admin", "docente", "ayudante", "estudiante"].includes(claims.role)) return null;
   // Las versiones antiguas incluían PII en una cookie firmada pero no cifrada.
   // Se invalidan para forzar una sesión nueva con claims mínimos.
   if ("email" in claims || "name" in claims) return null;

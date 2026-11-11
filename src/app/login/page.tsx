@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { safeNextPath } from "@/utils/safeRedirect";
 import { useRouter } from "next/navigation";
 import { GraduationCap, ShieldCheck, Lock, ArrowRight, AlertCircle, Loader2, User } from "lucide-react";
+import { DevRoleSelector } from "@/components/auth/DevRoleSelector";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -12,9 +13,8 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!identifier.trim() || !password.trim()) {
+  const performLogin = async (idVal: string, passVal: string) => {
+    if (!idVal.trim() || !passVal.trim()) {
       setError("Por favor ingresa tu correo institucional y contraseña.");
       return;
     }
@@ -26,7 +26,7 @@ export default function LoginPage() {
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ identifier, password }),
+        body: JSON.stringify({ identifier: idVal, password: passVal }),
       });
 
       const data = await res.json();
@@ -46,9 +46,20 @@ export default function LoginPage() {
     }
   };
 
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    performLogin(identifier, password);
+  };
+
+  const handleDevSelect = (devId: string, devPass: string) => {
+    setIdentifier(devId);
+    setPassword(devPass);
+    performLogin(devId, devPass);
+  };
+
   return (
     <div className="min-h-screen bg-[#F5F6F8] flex flex-col justify-between p-4 sm:p-6 font-sans">
-      <header className="max-w-md w-full mx-auto flex items-center justify-between border-b border-gray-200 pb-3 mb-6">
+      <header className="max-w-lg w-full mx-auto flex items-center justify-between border-b border-gray-200 pb-3 mb-4">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded bg-[#B71C1C] text-white flex items-center justify-center font-bold shadow-2xs">
             <GraduationCap size={18} />
@@ -67,28 +78,28 @@ export default function LoginPage() {
         </span>
       </header>
 
-      <main className="flex-1 flex items-center justify-center py-4">
-        <div className="max-w-md w-full bg-white border border-[#E0E3E6] rounded-[4px] p-6 sm:p-8 shadow-canvas-card space-y-5">
-          <div className="text-center space-y-1.5">
-            <div className="w-12 h-12 mx-auto rounded-full bg-red-50 text-[#B71C1C] flex items-center justify-center mb-3 border border-red-100">
-              <Lock size={22} />
+      <main className="flex-1 flex items-center justify-center py-2">
+        <div className="max-w-lg w-full bg-white border border-[#E0E3E6] rounded-[4px] p-6 sm:p-8 shadow-canvas-card space-y-4">
+          <div className="text-center space-y-1">
+            <div className="w-11 h-11 mx-auto rounded-full bg-red-50 text-[#B71C1C] flex items-center justify-center mb-2 border border-red-100">
+              <Lock size={20} />
             </div>
-            <h2 className="text-lg font-bold text-[#2D3B45]">Acceso Institucional Canvas UDP</h2>
+            <h2 className="text-base font-bold text-[#2D3B45]">Acceso Institucional UDP</h2>
             <p className="text-xs text-[#6B7780]">
-              Inicia sesión con tus credenciales de Escuela para acceder al panel docente.
+              Inicia sesión con tus credenciales de Escuela para acceder a tus cursos y herramientas IA.
             </p>
           </div>
 
           {error && (
-            <div className="p-3 bg-rose-50 border border-rose-200 text-[#B71C1C] rounded-[4px] text-xs flex items-center gap-2 animate-fadeIn">
-              <AlertCircle size={15} className="shrink-0" />
+            <div className="p-2.5 bg-rose-50 border border-rose-200 text-[#B71C1C] rounded-[4px] text-xs flex items-center gap-2">
+              <AlertCircle size={14} className="shrink-0" />
               <span>{error}</span>
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-3">
             <div>
-              <label className="block text-xs font-semibold text-[#2D3B45] mb-1.5">
+              <label className="block text-xs font-semibold text-[#2D3B45] mb-1">
                 Correo Institucional o Usuario
               </label>
               <div className="relative">
@@ -96,17 +107,17 @@ export default function LoginPage() {
                   type="text"
                   value={identifier}
                   onChange={(e) => setIdentifier(e.target.value)}
-                  placeholder="ej: benjamin.morales3@mail.udp.cl o dev1"
+                  placeholder="ej: benjamin.morales3@mail.udp.cl o dev"
                   autoFocus
                   required
-                  className="w-full pl-8 pr-3 py-2 text-sm bg-gray-50 border border-[#E0E3E6] rounded-[4px] focus:bg-white focus:outline-hidden focus:border-[#B71C1C] transition-colors"
+                  className="w-full pl-8 pr-3 py-2 text-xs bg-gray-50 border border-[#E0E3E6] rounded-[4px] focus:bg-white focus:outline-hidden focus:border-[#B71C1C] transition-colors"
                 />
-                <User size={14} className="absolute left-2.5 top-3 text-gray-400" />
+                <User size={14} className="absolute left-2.5 top-2.5 text-gray-400" />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-[#2D3B45] mb-1.5">
+              <label className="block text-xs font-semibold text-[#2D3B45] mb-1">
                 Contraseña
               </label>
               <div className="relative">
@@ -116,9 +127,9 @@ export default function LoginPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Ingresa tu contraseña..."
                   required
-                  className="w-full pl-8 pr-3 py-2 text-sm bg-gray-50 border border-[#E0E3E6] rounded-[4px] focus:bg-white focus:outline-hidden focus:border-[#B71C1C] transition-colors"
+                  className="w-full pl-8 pr-3 py-2 text-xs bg-gray-50 border border-[#E0E3E6] rounded-[4px] focus:bg-white focus:outline-hidden focus:border-[#B71C1C] transition-colors"
                 />
-                <Lock size={14} className="absolute left-2.5 top-3 text-gray-400" />
+                <Lock size={14} className="absolute left-2.5 top-2.5 text-gray-400" />
               </div>
             </div>
 
@@ -129,7 +140,7 @@ export default function LoginPage() {
             >
               {loading ? (
                 <>
-                  <Loader2 size={15} className="animate-spin" />
+                  <Loader2 size={14} className="animate-spin" />
                   <span>Autenticando...</span>
                 </>
               ) : (
@@ -140,10 +151,13 @@ export default function LoginPage() {
               )}
             </button>
           </form>
+
+          {/* Selector de roles y cuentas para desarrolladores y testing */}
+          <DevRoleSelector onSelect={handleDevSelect} />
         </div>
       </main>
 
-      <footer className="text-center text-[11px] text-gray-500 mt-4 py-3 border-t border-gray-200">
+      <footer className="text-center text-[11px] text-gray-500 mt-2 py-2 border-t border-gray-200">
         Portal Institucional • Universidad Diego Portales © 2026
       </footer>
     </div>

@@ -3,6 +3,7 @@ import { getSession } from "@/lib/server/auth";
 import { fetchCanvasCourses } from "@/services/canvas";
 import { findUserById } from "@/lib/server/userStore";
 import { getSandboxCoursesForUser } from "@/lib/server/sandboxCourses";
+import { getUserCanvasToken } from "@/lib/server/userTokenStore";
 
 export async function GET(req: NextRequest) {
   try {
@@ -14,23 +15,28 @@ export async function GET(req: NextRequest) {
     const user = await findUserById(session.userId);
     if (!user) return NextResponse.json({ error: "Sesión requerida." }, { status: 401 });
 
-    const isOwner = Boolean(session.isOwner);
-    const hasCanvasToken = Boolean(process.env.CANVAS_API_TOKEN && process.env.CANVAS_API_TOKEN.trim().length > 10);
-    const sandboxCourses = await getSandboxCoursesForUser(user.id);
+    // 1. Cada cuenta consulta con su propio token adjuntado
+    const userToken = await getUserCanvasToken(user.id, session.isOwner);
+    const sandboxCourses = await getSandboxCoursesForUser(user.id, session.role);
 
-    // 1. Si es el titular y tiene token activo de Canvas, sincroniza cursos favoritos oficiales de Canvas
-    if (isOwner && hasCanvasToken) {
+    if (userToken) {
       try {
-        const liveCanvasCourses = await fetchCanvasCourses();
+        const liveCanvasCourses = await fetchCanvasCourses(userToken);
         if (Array.isArray(liveCanvasCourses) && liveCanvasCourses.length > 0) {
-          return NextResponse.json([...liveCanvasCourses, ...sandboxCourses], { headers: { "Cache-Control": "no-store" } });
+          // Devuelve los cursos oficiales de Canvas correspondientes a ESTA cuenta
+          return NextResponse.json(liveCanvasCourses, {
+            headers: { "Cache-Control": "no-store" },
+          });
         }
       } catch (err) {
-        console.warn("[courses] Canvas API falló, recurriendo a asociaciones de base de datos:", err);
+        console.warn("[courses] Canvas API falló para la cuenta actual:", err);
       }
     }
 
-    return NextResponse.json(sandboxCourses, { headers: { "Cache-Control": "no-store" } });
+    // 2. Si no tiene token adjuntado, devuelve los cursos asignados para su rol/usuario
+    return NextResponse.json(sandboxCourses, {
+      headers: { "Cache-Control": "no-store" },
+    });
   } catch (error) {
     console.error("Error al consultar cursos:", error);
     return NextResponse.json(

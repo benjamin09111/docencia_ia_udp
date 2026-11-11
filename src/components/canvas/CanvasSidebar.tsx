@@ -26,6 +26,18 @@ export const CanvasSidebar: React.FC<CanvasSidebarProps> = ({
   const router = useRouter();
   const pathname = usePathname();
   const [showAccountModal, setShowAccountModal] = useState(false);
+  const [currentUser, setCurrentUser] = useState<{ name: string; role: string } | null>(null);
+
+  React.useEffect(() => {
+    fetch("/api/auth/me")
+      .then((r) => r.json())
+      .then((d) => {
+        if (d?.authenticated && d.user) setCurrentUser(d.user);
+      })
+      .catch(() => {});
+  }, []);
+
+  const displayName = currentUser?.name || userName;
 
   const effectiveRole: UserRole = pathname?.startsWith("/admin")
     ? "admin"
@@ -82,11 +94,15 @@ export const CanvasSidebar: React.FC<CanvasSidebarProps> = ({
           className={`w-full flex flex-col items-center py-1.5 px-1 text-center transition-colors relative group cursor-pointer ${
             activeNav === "account" || showAccountModal ? "bg-white text-[#B71C1C]" : "text-gray-200 hover:bg-[#333333]"
           }`}
-          title={`Cuenta institucional: ${userName}`}
+          title={`Cuenta institucional: ${displayName}`}
         >
           <div className="relative">
-            <div className="w-8 h-8 rounded-full border border-gray-400 overflow-hidden flex items-center justify-center bg-gray-600">
-              {userAvatar ? <img src={userAvatar} alt={userName} className="w-full h-full object-cover" /> : <User size={18} className="text-white" />}
+            <div className="w-8 h-8 rounded-full border border-gray-400 overflow-hidden flex items-center justify-center bg-gray-600 text-xs font-bold text-white">
+              {userAvatar ? (
+                <img src={userAvatar} alt={displayName} className="w-full h-full object-cover" />
+              ) : (
+                displayName.slice(0, 2).toUpperCase()
+              )}
             </div>
             <span className="absolute -top-1 -right-1 bg-[#B71C1C] text-white text-[9px] font-bold rounded-full w-4 h-4 flex items-center justify-center border border-white">
               1

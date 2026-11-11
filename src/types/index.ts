@@ -1,4 +1,4 @@
-export type UserRole = "admin" | "teacher" | "student";
+export type UserRole = "admin" | "teacher" | "student" | "docente" | "ayudante" | "estudiante" | "assistant";
 
 export interface CanvasUser {
   id: number;
