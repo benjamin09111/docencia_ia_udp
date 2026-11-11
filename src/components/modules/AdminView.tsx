@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { Bot, Building2, LockKeyhole, Users } from "lucide-react";
-import { InstitutionalFaculty } from "@/constants/institutionalHierarchy";
+import { InstitutionalFaculty, INSTITUTIONAL_FACULTIES } from "@/constants/institutionalHierarchy";
 import { AdminFacultySelector } from "./admin/hierarchy/AdminFacultySelector";
 import { AdminAgentsTableTab } from "./admin/AdminAgentsTableTab";
 import { AdminFacultyWorkspace } from "./admin/AdminFacultyWorkspace";
@@ -21,8 +21,9 @@ const tabs: Array<{ id: AdminTab; label: string; icon: React.ReactNode; locked?:
 ];
 
 export const AdminView: React.FC = () => {
+  const ficFaculty = INSTITUTIONAL_FACULTIES.find((f) => f.id === "fac_ingenieria") || INSTITUTIONAL_FACULTIES[0];
   const [active, setActive] = useState<AdminTab>("facultades");
-  const [faculty, setFaculty] = useState<InstitutionalFaculty | null>(null);
+  const [faculty, setFaculty] = useState<InstitutionalFaculty | null>(ficFaculty);
   const selectTab = (tab: AdminTab, locked?: boolean) => { if (!locked) { setActive(tab); setFaculty(null); } };
   const content = () => {
     if (active === "principal") return <AdminPrincipalView />;

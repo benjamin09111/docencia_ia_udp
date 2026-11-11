@@ -22,6 +22,8 @@ export async function GET(req: NextRequest) {
       name: user.name,
       role: session.role,
       isOwner: Boolean(session.isOwner),
+      faculty: "Facultad de Ingeniería y Ciencias",
+      school: "Escuela de Informática y Telecomunicaciones",
       hasCanvasToken,
       tokenMasked: hasCanvasToken && token ? maskToken(token) : null,
     },

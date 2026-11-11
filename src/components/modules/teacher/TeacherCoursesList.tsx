@@ -6,6 +6,7 @@ import { CourseSection } from "@/types/attendance";
 import { Layers, List, BookOpen, Sparkles } from "lucide-react";
 import { CanvasItemGroup, CanvasItemRow } from "@/components/canvas/CanvasItemGroup";
 import { CanvasToolbar } from "@/components/canvas/CanvasToolbar";
+import { CanvasTokenStatusBar } from "@/components/canvas/CanvasTokenStatusBar";
 import { enrichCourseList, groupCoursesBySubject, EnrichedCourseSection } from "@/utils/courseGrouping";
 import { TeacherSubjectGroupCard } from "./TeacherSubjectGroupCard";
 
@@ -53,7 +54,10 @@ export const TeacherCoursesList: React.FC<TeacherCoursesListProps> = ({
   }, [filteredEnriched]);
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
+      {/* Estado del Token de Canvas y Afiliación FIC */}
+      <CanvasTokenStatusBar onTokenChanged={() => window.location.reload()} />
+
       {/* Barra de herramientas Canvas */}
       <CanvasToolbar
         searchQuery={searchQuery}
