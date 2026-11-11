@@ -97,7 +97,7 @@ class AgenticLoopEngine:
                 max_tokens=min(2000, settings.max_tokens_budget),
             )
             if not res.get("error") and res.get("content"):
-                content = res["content"]
+                content = self._sanitize_output(res["content"])
                 usage = res.get("usage") or {}
                 tokens = int(usage.get("total_tokens") or (len(content) // 4 + len(user_message) // 4))
                 return content, f"OpenRouter:{res.get('model_used', settings.default_openrouter_model)}", tokens
@@ -111,13 +111,30 @@ class AgenticLoopEngine:
                     model=settings.default_frontier_model,
                     contents=f"{system_prompt}\n\nMensaje del usuario:\n{user_message}",
                 )
-                reply = response.text or "Respuesta generada."
+                reply = self._sanitize_output(response.text or "Respuesta generada.")
                 tokens_est = len(reply) // 4 + len(user_message) // 4
                 return reply, f"Gemini:{settings.default_frontier_model}", tokens_est
             except Exception:
                 pass
 
         return None
+
+    def _sanitize_output(self, text: str) -> str:
+        if not text:
+            return text
+        dangerous_tokens = [
+            "AGENT_SERVICE_API_KEY",
+            "OPENROUTER_API_KEY",
+            "SESSION_SECRET",
+            "SUPABASE_SERVICE_ROLE_KEY",
+            "CANVAS_API_TOKEN",
+            "class AgenticLoopEngine",
+            "def run_turn",
+            "DIRECTIVA DE BLINDAJE INSTITUCIONAL",
+        ]
+        if any(token in text for token in dangerous_tokens):
+            return "Respuesta protegida por la política de seguridad institucional. Los agentes operan exclusivamente en el ámbito pedagógico."
+        return text
 
     def _build_contextual_response(
         self,

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSession } from "@/lib/server/auth";
+import { getSession, requireRole } from "@/lib/server/auth";
 import { fetchCanvasUser } from "@/services/canvas";
 import { getUserCanvasToken } from "@/lib/server/userTokenStore";
 

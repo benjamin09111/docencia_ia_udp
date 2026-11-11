@@ -6,6 +6,7 @@ import { postAgentServices } from "@/lib/server/agentServicesClient";
 import { resolveAiCourseCode, toAgentCourseNodeId } from "@/lib/server/aiCoursePolicy";
 import { buildLocalAiChatReply } from "@/lib/server/aiChatFallback";
 import { pseudonymizePersonNames } from "@/lib/server/aiPseudonymize";
+import { validateAiInput, sanitizeAiOutput } from "@/lib/server/aiGuardrails";
 
 const MAX_MESSAGE_CHARS = 8_000;
 const CHAT_TIMEOUT_MS = 45_000;
@@ -16,11 +17,6 @@ type PyChatResponse = {
   sources?: string[];
 };
 
-/**
- * Chat institucional. Hoy las sesiones firmadas solo emiten docente|admin
- * (incl. vistas alumno en DEV). Cuando exista rol alumno, ampliar requireRole
- * y restringir agentRole a tutores teóricos/técnicos.
- */
 export async function POST(req: NextRequest) {
   const auth = await requireRole(req);
   if ("response" in auth) return auth.response;
@@ -33,11 +29,21 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "El mensaje es requerido." }, { status: 400 });
     }
 
+    // 1. Guardrail de entrada: Anti-Inyecciones, Anti-Extracción y Rate Limiting
+    const guardrail = validateAiInput(message, auth.session.userId);
+    if (!guardrail.allowed) {
+      return NextResponse.json(
+        { error: guardrail.reason, code: guardrail.category },
+        { status: 403, headers: { "Cache-Control": "no-store" } }
+      );
+    }
+
+    // 2. Filtro de privacidad y PII
     const privacy = checkAiPrivacy(message);
     if (!privacy.allowed) {
       return NextResponse.json(
         {
-          error: "La consulta contiene datos personales o sensibles. Elimínalos o reemplázalos por alias antes de usar IA.",
+          error: "La consulta contiene datos personales o sensibles. Elimínalos antes de usar IA.",
           code: "personal_data_blocked",
         },
         { status: 422, headers: { "Cache-Control": "no-store" } }
@@ -60,20 +66,22 @@ export async function POST(req: NextRequest) {
     );
 
     if (upstream.ok && upstream.data.reply) {
+      const sanitizedReply = sanitizeAiOutput(upstream.data.reply);
       const response: AiChatResponse = {
-        reply: upstream.data.reply,
+        reply: sanitizedReply,
         agentRole,
-        tokensUsed: upstream.data.tokens_estimated || Math.round(upstream.data.reply.length / 4),
+        tokensUsed: upstream.data.tokens_estimated || Math.round(sanitizedReply.length / 4),
         sources: upstream.data.sources || ["Agente Jerárquico UDP"],
       };
       return NextResponse.json(response);
     }
 
     const local = buildLocalAiChatReply(agentRole, safeMessage, safeCourseName, safeCourseCode);
+    const sanitizedLocalReply = sanitizeAiOutput(local.reply);
     const response: AiChatResponse = {
-      reply: local.reply,
+      reply: sanitizedLocalReply,
       agentRole,
-      tokensUsed: Math.round(local.reply.length / 4),
+      tokensUsed: Math.round(sanitizedLocalReply.length / 4),
       sources: local.sources,
     };
     return NextResponse.json(response);

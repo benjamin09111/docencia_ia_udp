@@ -4,6 +4,7 @@ import { checkAiPrivacy } from "@/lib/server/aiPrivacy";
 import { postAgentServices } from "@/lib/server/agentServicesClient";
 import { resolveAiCourseCode, toAgentCourseNodeId } from "@/lib/server/aiCoursePolicy";
 import { pseudonymizePersonNames } from "@/lib/server/aiPseudonymize";
+import { validateAiInput, sanitizeAiOutput } from "@/lib/server/aiGuardrails";
 import type { AiSubmissionEvaluationRequest, AiSubmissionEvaluationResult } from "@/types/ai";
 
 const MAX_SOLUTION_CHARS = 40_000;
@@ -43,6 +44,16 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "La rúbrica es requerida." }, { status: 400 });
     }
 
+    // 1. Guardrail de entrada: Anti-Inyección de Prompts en entregas de estudiantes
+    const guardrail = validateAiInput(body.studentSolution, auth.session.userId);
+    if (!guardrail.allowed) {
+      return NextResponse.json(
+        { error: guardrail.reason, code: guardrail.category },
+        { status: 403, headers: { "Cache-Control": "no-store" } }
+      );
+    }
+
+    // 2. Filtro de privacidad y PII
     const privacy = checkAiPrivacy(body.studentSolution);
     if (!privacy.allowed) {
       return NextResponse.json(
@@ -82,15 +93,15 @@ export async function POST(req: NextRequest) {
     const result: AiSubmissionEvaluationResult = {
       notaSugerida: upstream.data.nota_sugerida,
       decimasSugeridas: upstream.data.decimas_sugeridas ?? 0,
-      resumenFeedback: upstream.data.resumen_feedback || "",
+      resumenFeedback: sanitizeAiOutput(upstream.data.resumen_feedback || ""),
       criteriosEvaluados: (upstream.data.criterios_evaluados || []).map((c) => ({
         criterio: c.criterio,
         puntajeObtenido: c.puntaje_obtenido,
         puntajeMax: c.puntaje_max,
-        citaTextual: c.cita_textual,
-        comentario: c.comentario,
+        citaTextual: sanitizeAiOutput(c.cita_textual),
+        comentario: sanitizeAiOutput(c.comentario),
       })),
-      sugerenciasMejora: upstream.data.sugerencias_mejora || [],
+      sugerenciasMejora: (upstream.data.sugerencias_mejora || []).map((s) => sanitizeAiOutput(s)),
     };
 
     return NextResponse.json(result, { headers: { "Cache-Control": "no-store" } });
