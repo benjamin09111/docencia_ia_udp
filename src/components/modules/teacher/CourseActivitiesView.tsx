@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
+import Link from "next/link";
+import { ACTIVITY_REVIEW_COURSE_ID, ACTIVITY_REVIEW_COURSE_CODE } from "@/types/activityReview";
 import { CourseDeliverable, StudentSubmission } from "@/types";
 import { CanvasToolbar } from "@/components/canvas/CanvasToolbar";
 import { CanvasItemGroup } from "@/components/canvas/CanvasItemGroup";
@@ -101,6 +103,12 @@ export const CourseActivitiesView: React.FC<CourseActivitiesViewProps> = ({
 
   return (
     <div className="space-y-4">
+      {courseId === ACTIVITY_REVIEW_COURSE_ID && courseCode === ACTIVITY_REVIEW_COURSE_CODE && (
+        <Link href={`/docente/cursos/${courseId}/actividad-correccion`}
+          className="inline-flex rounded-[3px] border border-[#C7CDD1] bg-[#F5F6F8] px-3 py-2 text-sm font-semibold text-[#B71C1C] hover:bg-[#E8EAED]">
+          Actividad y Corrección
+        </Link>
+      )}
       <CanvasToolbar
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
