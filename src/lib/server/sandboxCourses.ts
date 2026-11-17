@@ -53,7 +53,7 @@ const DEFAULT_ADMIN_COURSES: CanvasCourse[] = [
   { id: 900005, name: "Proyecto en TICs II (CIT3203)", code: "CIT3203_CA01", term: "2026-2 Piloto", students_count: 28, is_automated: true, agent_id: "agent_cit3621", source: "sandbox" },
 ];
 
-export async function getSandboxCoursesForUser(userId: string, role = "docente"): Promise<CanvasCourse[]> {
+export async function getAssignedSandboxCoursesForUser(userId: string): Promise<CanvasCourse[]> {
   // 1. Cursos específicos mapeados al ID de usuario
   if (USER_SPECIFIC_COURSES[userId]) {
     return USER_SPECIFIC_COURSES[userId];
@@ -84,6 +84,13 @@ export async function getSandboxCoursesForUser(userId: string, role = "docente")
       if (courses.length > 0) return courses;
     }
   } catch {}
+
+  return [];
+}
+
+export async function getSandboxCoursesForUser(userId: string, role = "docente"): Promise<CanvasCourse[]> {
+  const assigned = await getAssignedSandboxCoursesForUser(userId);
+  if (assigned.length > 0) return assigned;
 
   // 3. Fallback según rol
   if (role === "admin") return DEFAULT_ADMIN_COURSES;
