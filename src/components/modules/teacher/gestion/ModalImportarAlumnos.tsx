@@ -59,8 +59,14 @@ export const ModalImportarAlumnos: React.FC<Props> = ({ nombreArchivo, filas, on
     >
       <div className="space-y-3">
         <div className="flex flex-wrap gap-2">
-          <CanvasBadge variant="success" size="md">{validas.length} válidas</CanvasBadge>
-          {conErrores > 0 && <CanvasBadge variant="danger" size="md">{conErrores} con errores (no se cargarán)</CanvasBadge>}
+          <CanvasBadge variant="success" size="md">
+            {validas.length} {validas.length === 1 ? "fila válida" : "filas válidas"}
+          </CanvasBadge>
+          {conErrores > 0 && (
+            <CanvasBadge variant="danger" size="md">
+              {conErrores} {conErrores === 1 ? "fila con errores (no se cargará)" : "filas con errores (no se cargarán)"}
+            </CanvasBadge>
+          )}
         </div>
         {conErrores > 0 && (
           <Aviso tipo="advertencia">
