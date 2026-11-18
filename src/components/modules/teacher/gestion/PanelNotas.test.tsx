@@ -124,8 +124,10 @@ describe("PanelNotas", () => {
     expect(notaFinal("Soto, Luis")).toBe("2.5");
     expect(within(fila("Soto, Luis")).getByText("Reprobado")).toBeTruthy();
     expect(puts).toHaveLength(0);
+    expect((screen.getByRole("button", { name: /Exportar Excel/ }) as HTMLButtonElement).disabled).toBe(true);
     fireEvent.click(screen.getByRole("button", { name: "Salir de simulación" }));
     expect(notaFinal("Soto, Luis")).toBe("4.0");
+    expect((screen.getByRole("button", { name: /Exportar Excel/ }) as HTMLButtonElement).disabled).toBe(false);
   });
 
   it("si el guardado falla, revierte la nota y muestra el error", async () => {

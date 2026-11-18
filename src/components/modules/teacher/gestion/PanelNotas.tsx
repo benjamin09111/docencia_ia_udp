@@ -11,20 +11,19 @@ import { esNotaValida, tieneDecimales } from "@/utils/gestion/validacionNota";
 import { formatearNota } from "@/utils/gestion/redondeo";
 import { useTablaNotas } from "./useTablaNotas";
 import { TablaNotas } from "./TablaNotas";
+import { BotonExportarActa } from "./BotonExportarActa";
 import type { AccionesCeldas, ReglasCeldas } from "./FilaNotas";
 import { Aviso } from "./piezasFormulario";
 
 interface Props {
   curso: CursoConEvaluaciones;
   onIrAAlumnos: () => void;
-  /** Botón de exportar (lo agrega la pestaña; recibe los datos calculados). */
-  renderExportar?: (datos: ReturnType<typeof useTablaNotas>) => React.ReactNode;
 }
 
 const normalizar = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
 
 /** Pestaña Notas: tabla editable con nota final en vivo, guardado automático y modo simulación. */
-export const PanelNotas: React.FC<Props> = ({ curso, onIrAAlumnos, renderExportar }) => {
+export const PanelNotas: React.FC<Props> = ({ curso, onIrAAlumnos }) => {
   const tabla = useTablaNotas(curso);
   const [busqueda, setBusqueda] = useState("");
   const [avisoInvalido, setAvisoInvalido] = useState<string | null>(null);
@@ -73,7 +72,15 @@ export const PanelNotas: React.FC<Props> = ({ curso, onIrAAlumnos, renderExporta
             onSecondaryClick={tabla.alternarSimulacion}
           />
         </div>
-        {renderExportar && <div className="lg:pt-0.5">{renderExportar(tabla)}</div>}
+        <div className="lg:pt-0.5">
+          <BotonExportarActa
+            curso={curso}
+            alumnos={tabla.alumnos}
+            notas={tabla.notas}
+            resultados={tabla.resultados}
+            simulacion={tabla.simulacion}
+          />
+        </div>
       </div>
 
       <div className="flex flex-wrap items-center gap-2 text-xs">
