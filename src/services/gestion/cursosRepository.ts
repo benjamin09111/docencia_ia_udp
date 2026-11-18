@@ -1,5 +1,5 @@
 import { getSupabaseAdmin } from "@/lib/server/supabaseAdmin";
-import type { Curso, CursoConEvaluaciones } from "@/types/gestion";
+import type { CursoConEvaluaciones, CursoResumen } from "@/types/gestion";
 import type { CursoInput, EvaluacionInput } from "@/utils/gestion/esquemasCurso";
 import { ErrorGestion, errorDeBase } from "./errores";
 import { aCurso, aEvaluacion, ordenarEvaluaciones } from "./mapeos";
@@ -13,13 +13,23 @@ const MSJ_CURSO_DUPLICADO = "Ya tienes un curso con ese código, sección y seme
 
 const db = () => getSupabaseAdmin();
 
+/** Conteo embebido de PostgREST: `evaluaciones(count)` → [{ count: 6 }]. */
+const conteo = (v: unknown): number => (Array.isArray(v) && v[0] ? Number(v[0].count) || 0 : 0);
+
 /** Cursos del docente; `ownerUserId = null` lista todos (uso de admin). */
-export async function listarCursos(ownerUserId: string | null): Promise<Curso[]> {
-  let consulta = db().from("cursos").select("*").order("created_at", { ascending: false });
+export async function listarCursos(ownerUserId: string | null): Promise<CursoResumen[]> {
+  let consulta = db()
+    .from("cursos")
+    .select("*, evaluaciones(count), alumnos(count)")
+    .order("created_at", { ascending: false });
   if (ownerUserId) consulta = consulta.eq("owner_user_id", ownerUserId);
   const { data, error } = await consulta;
   if (error) throw errorDeBase("listarCursos", error);
-  return (data ?? []).map(aCurso);
+  return (data ?? []).map((fila) => ({
+    ...aCurso(fila),
+    total_evaluaciones: conteo(fila.evaluaciones),
+    total_alumnos: conteo(fila.alumnos),
+  }));
 }
 
 export async function obtenerCurso(cursoId: string): Promise<CursoConEvaluaciones | null> {

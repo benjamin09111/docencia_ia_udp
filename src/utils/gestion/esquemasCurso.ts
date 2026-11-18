@@ -47,7 +47,10 @@ export const cursoInputSchema = z
     nota_minima: nota,
     nota_maxima: nota,
     nota_aprobacion: nota,
-    exigencia_pct: z.number().gt(0).max(100),
+    exigencia_pct: z
+      .number({ error: "Ingresa el % de exigencia." })
+      .gt(0, "La exigencia debe ser mayor que 0%.")
+      .max(100, "La exigencia no puede superar 100%."),
     nota_eximicion: nota.nullable(),
     nota_minima_examen: nota.nullable(),
     decimas_totales: z

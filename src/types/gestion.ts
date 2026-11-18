@@ -82,6 +82,12 @@ export interface CursoConEvaluaciones extends Curso {
   evaluaciones: Evaluacion[];
 }
 
+/** Fila de la lista de cursos del docente. */
+export interface CursoResumen extends Curso {
+  total_evaluaciones: number;
+  total_alumnos: number;
+}
+
 export interface Alumno {
   id: string;
   curso_id: string;

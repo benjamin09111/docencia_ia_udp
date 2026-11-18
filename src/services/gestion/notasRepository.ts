@@ -38,6 +38,19 @@ export async function listarNotas(cursoId: string): Promise<Nota[]> {
   return (data ?? []).map(aNota);
 }
 
+/** Cantidad de notas por evaluación (para advertir antes de borrar una evaluación). */
+export async function contarNotasPorEvaluacion(evaluacionIds: string[]): Promise<Record<string, number>> {
+  const conteo: Record<string, number> = {};
+  if (evaluacionIds.length === 0) return conteo;
+  const { data, error } = await db().from("notas").select("evaluacion_id").in("evaluacion_id", evaluacionIds);
+  if (error) throw errorDeBase("contarNotasPorEvaluacion", error);
+  for (const fila of data ?? []) {
+    const id = String(fila.evaluacion_id);
+    conteo[id] = (conteo[id] ?? 0) + 1;
+  }
+  return conteo;
+}
+
 /** Verifica que todas las evaluaciones y alumnos pertenezcan al curso. */
 async function verificarPertenencia(cursoId: string, evaluacionIds: string[], alumnoIds: string[]) {
   const evalDelCurso = new Set((await listarEvaluaciones(cursoId)).map((e) => e.id));

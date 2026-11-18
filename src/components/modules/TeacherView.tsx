@@ -14,7 +14,8 @@ import { getSavedSections, getSectionByCourseCode, INITIAL_SECTIONS } from "@/se
 import { fetchSectionsFromSupabase, isSupabaseConfigured } from "@/services/attendanceDbService";
 import { ImportCourseExcelModal } from "./common/ImportCourseExcelModal";
 import { TeacherPendingSummary } from "./teacher/TeacherPendingSummary";
-import { BookOpen, Megaphone, Bot, User } from "lucide-react";
+import { BookOpen, Megaphone, Bot, User, ClipboardList } from "lucide-react";
+import { GestionCursosList } from "./teacher/gestion/GestionCursosList";
 import { UserRole } from "@/types";
 
 interface TeacherViewProps {
@@ -61,6 +62,11 @@ export const TeacherView: React.FC<TeacherViewProps> = ({
     setActiveTab("quick_announcements");
   };
 
+  // Módulo 1: volver desde /docente/gestion/... abre directamente su pestaña (?vista=gestion)
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("vista") === "gestion") setActiveTab("gestion");
+  }, []);
+
   useEffect(() => {
     if (!openedCourseId) {
       onActiveCourseChange?.(null);
@@ -88,6 +94,7 @@ export const TeacherView: React.FC<TeacherViewProps> = ({
 
   const navItems: CourseNavItem[] = [
     { id: "courses", label: "Mis cursos", icon: <BookOpen size={15} /> },
+    { id: "gestion", label: "Gestión y calificaciones", icon: <ClipboardList size={15} /> },
     { id: "quick_announcements", label: "Anuncios rápidos", icon: <Megaphone size={15} /> },
     { id: "my_agent", label: "Mi agente", icon: <Bot size={15} /> },
     { id: "my_profile", label: "Mi perfil", icon: <User size={15} /> },
@@ -153,6 +160,8 @@ export const TeacherView: React.FC<TeacherViewProps> = ({
             onAnnounceCourses={handleAnnounceForCourses}
           />
         )}
+
+        {activeTab === "gestion" && <GestionCursosList />}
 
         {activeTab === "quick_announcements" && (
           <TeacherQuickAnnouncementsView
