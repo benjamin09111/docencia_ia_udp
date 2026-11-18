@@ -40,7 +40,7 @@ export const TablaNotas: React.FC<Props> = ({
           Alumno
         </th>
         {evaluaciones.map((e) => (
-          <th key={e.id} scope="col" className="p-2.5 text-center whitespace-nowrap">
+          <th key={e.id} scope="col" className="px-2 py-2.5 text-center whitespace-nowrap">
             <div>{e.nombre}</div>
             <div className="font-normal normal-case tracking-normal text-[10.5px]">{e.ponderacion}%</div>
           </th>
@@ -56,7 +56,7 @@ export const TablaNotas: React.FC<Props> = ({
             NP
           </th>
         )}
-        <th scope="col" className="p-2.5 text-center bg-yellow-100/70 whitespace-nowrap">
+        <th scope="col" className="p-2.5 text-center bg-yellow-100/70 w-20">
           Nota final
         </th>
         <th scope="col" className="p-2.5 text-left">

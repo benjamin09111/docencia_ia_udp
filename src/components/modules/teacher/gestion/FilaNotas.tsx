@@ -55,15 +55,22 @@ export const FilaNotas: React.FC<Props> = React.memo(
     const nombre = `${alumno.nombres} ${alumno.apellidos}`;
     return (
       <tr className="border-b border-[#E0E3E6] last:border-b-0 hover:bg-[#F9FAFB]">
-        <th scope="row" className="sticky left-0 z-[1] bg-white p-2.5 text-left font-normal border-r border-[#E0E3E6] min-w-[200px]">
-          <div className="text-xs font-semibold text-[#2D3B45] truncate">
+        <th
+          scope="row"
+          className="sticky left-0 z-[1] bg-white p-2.5 text-left font-normal border-r border-[#E0E3E6]"
+        >
+          {/* El ancho máximo va en el texto: las celdas de tabla ignoran max-width. */}
+          <div
+            className="text-xs font-semibold text-[#2D3B45] truncate max-w-[130px] sm:max-w-[170px]"
+            title={`${alumno.apellidos}, ${alumno.nombres}`}
+          >
             {alumno.apellidos}, {alumno.nombres}
           </div>
           <div className="text-[11px] text-[#6B7780] font-mono">{alumno.rut}</div>
         </th>
 
         {evaluaciones.map((e, col) => (
-          <td key={e.id} className="p-1.5 text-center">
+          <td key={e.id} className="px-1 py-1.5 text-center">
             <CeldaNota
               valor={notas?.[e.id] ?? null}
               etiqueta={`${e.nombre} de ${nombre}`}
@@ -112,9 +119,12 @@ export const FilaNotas: React.FC<Props> = React.memo(
           {resultado.nota_final === null ? "Pendiente" : formatearNota(resultado.nota_final)}
         </td>
 
-        <td className="p-2.5 min-w-[170px]" title={resultado.motivos.join(" ")}>
+        <td className="p-2 min-w-[124px]" title={resultado.motivos.join(" ")}>
           <CanvasBadge variant={VARIANTE[resultado.estado]}>{resultado.estado}</CanvasBadge>
-          {resultado.motivos[0] && <p className="text-[10.5px] text-[#6B7780] mt-1 line-clamp-2">{resultado.motivos[0]}</p>}
+          {/* max-w hace que el motivo se parta en líneas aunque la tabla use min-w-max */}
+          {resultado.motivos[0] && (
+            <p className="text-[10.5px] text-[#6B7780] mt-1 max-w-[124px] whitespace-normal line-clamp-2">{resultado.motivos[0]}</p>
+          )}
         </td>
       </tr>
     );
