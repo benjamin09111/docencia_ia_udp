@@ -1,4 +1,4 @@
-import type { CursoConEvaluaciones, CursoResumen } from "@/types/gestion";
+import type { Alumno, AlumnoNuevo, CursoConEvaluaciones, CursoResumen } from "@/types/gestion";
 import type { CursoInput } from "@/utils/gestion/esquemasCurso";
 import type { CursoBorrador } from "@/utils/gestion/borradorCurso";
 
@@ -82,4 +82,34 @@ export async function actualizarCursoApi(cursoId: string, input: CursoInput): Pr
     body: JSON.stringify(input),
   });
   return r.curso;
+}
+
+// ── Alumnos ──────────────────────────────────────────────────────────────────
+
+const urlAlumnos = (cursoId: string, alumnoId?: string) =>
+  `/api/gestion/cursos/${encodeURIComponent(cursoId)}/alumnos${alumnoId ? `/${encodeURIComponent(alumnoId)}` : ""}`;
+
+export async function listarAlumnosApi(cursoId: string): Promise<Alumno[]> {
+  return (await pedirJson<{ alumnos: Alumno[] }>(urlAlumnos(cursoId))).alumnos;
+}
+
+/** Agrega uno o varios alumnos; el servidor revalida y rechaza el lote completo si hay errores. */
+export async function crearAlumnosApi(cursoId: string, alumnos: AlumnoNuevo[]): Promise<Alumno[]> {
+  const r = await pedirJson<{ alumnos: Alumno[] }>(urlAlumnos(cursoId), {
+    method: "POST",
+    body: JSON.stringify({ alumnos }),
+  });
+  return r.alumnos;
+}
+
+export async function actualizarAlumnoApi(cursoId: string, alumnoId: string, datos: AlumnoNuevo): Promise<Alumno> {
+  const r = await pedirJson<{ alumno: Alumno }>(urlAlumnos(cursoId, alumnoId), {
+    method: "PATCH",
+    body: JSON.stringify(datos),
+  });
+  return r.alumno;
+}
+
+export async function eliminarAlumnoApi(cursoId: string, alumnoId: string): Promise<void> {
+  await pedirJson<{ ok: true }>(urlAlumnos(cursoId, alumnoId), { method: "DELETE" });
 }

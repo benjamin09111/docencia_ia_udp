@@ -8,6 +8,7 @@ import { CanvasCourseNav, type CourseNavItem } from "@/components/canvas/CanvasC
 import { mensajeDeError, obtenerCursoApi, type CursoDetalle } from "@/services/gestion/clienteApi";
 import { EncabezadoCurso } from "./EncabezadoCurso";
 import { PanelConfiguracion } from "./PanelConfiguracion";
+import { PanelAlumnos } from "./PanelAlumnos";
 import { Aviso } from "./piezasFormulario";
 
 export type PestanaCurso = "notas" | "alumnos" | "configuracion";
@@ -45,6 +46,8 @@ export const GestionCursoWorkspace: React.FC<{ cursoId: string }> = ({ cursoId }
     switch (pestana) {
       case "configuracion":
         return <PanelConfiguracion detalle={detalle} onGuardado={cargar} />;
+      case "alumnos":
+        return <PanelAlumnos cursoId={detalle.curso.id} />;
       default:
         return <Aviso tipo="info">Esta sección se habilita en la siguiente etapa del módulo.</Aviso>;
     }
