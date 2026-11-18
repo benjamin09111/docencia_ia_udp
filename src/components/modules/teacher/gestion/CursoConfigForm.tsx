@@ -93,7 +93,7 @@ export const CursoConfigForm: React.FC<Props> = ({
 
       {mensaje && <Aviso tipo="error">{mensaje}</Aviso>}
 
-      <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 sticky bottom-0 bg-white/95 py-3 border-t border-[#E0E3E6]">
+      <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 sticky bottom-0 z-10 bg-white py-3 border-t border-[#E0E3E6] shadow-[0_-2px_6px_rgba(0,0,0,0.05)]">
         {onCancelar && (
           <CanvasButton variant="outline" onClick={onCancelar} disabled={guardando}>
             Cancelar
