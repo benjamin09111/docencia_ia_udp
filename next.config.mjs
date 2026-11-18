@@ -37,6 +37,10 @@ if (process.env.NODE_ENV === "production") {
 const nextConfig = {
   poweredByHeader: false,
   productionBrowserSourceMaps: false,
+  // Módulo 1: los prompts de IA viven en /prompts y la ruta los lee en tiempo de ejecución.
+  outputFileTracingIncludes: {
+    "/api/gestion/programa/extraer": ["./prompts/**/*"],
+  },
   async headers() {
     return [
       {

@@ -1,5 +1,6 @@
 import type { CursoConEvaluaciones, CursoResumen } from "@/types/gestion";
 import type { CursoInput } from "@/utils/gestion/esquemasCurso";
+import type { CursoBorrador } from "@/utils/gestion/borradorCurso";
 
 /**
  * Cliente del NAVEGADOR para /api/gestion (Módulo 1).
@@ -62,6 +63,17 @@ export async function crearCursoApi(input: CursoInput): Promise<CursoConEvaluaci
     body: JSON.stringify(input),
   });
   return r.curso;
+}
+
+export type ResultadoExtraccionApi =
+  | { fuente: "ia"; borrador: CursoBorrador; avisos: string[] }
+  | { fuente: "vacio"; borrador: CursoBorrador; motivo: string };
+
+/** Sube el PDF del programa y recibe un borrador para revisar (no guarda nada). */
+export async function extraerProgramaApi(archivo: File): Promise<ResultadoExtraccionApi> {
+  const datos = new FormData();
+  datos.append("programa", archivo);
+  return pedirJson<ResultadoExtraccionApi>("/api/gestion/programa/extraer", { method: "POST", body: datos });
 }
 
 export async function actualizarCursoApi(cursoId: string, input: CursoInput): Promise<CursoConEvaluaciones> {
