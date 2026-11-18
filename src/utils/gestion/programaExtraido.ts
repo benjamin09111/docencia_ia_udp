@@ -24,8 +24,21 @@ const tipoEvaluacion = z.preprocess(
   z.enum(TIPOS_EVALUACION).catch("otro")
 );
 
-const textoONull = z.string().trim().max(300).nullable();
-const notaONull = z.number().min(1).max(7).nullable();
+/**
+ * Acepta números escritos como texto ("25", "25,5", "30%"): algunos modelos abiertos
+ * (Qwen, DeepSeek) los devuelven así y no vale la pena gastar el reintento en eso.
+ */
+const numero = <T extends z.ZodType>(schema: T) =>
+  z.preprocess((v) => {
+    if (typeof v !== "string") return v;
+    const limpio = v.trim().replace(/\s*%$/, "").replace(",", ".");
+    return /^-?\d+(\.\d+)?$/.test(limpio) ? Number(limpio) : v;
+  }, schema);
+
+// Los campos opcionales que el modelo omite quedan en null o [] en vez de invalidar la respuesta.
+const textoONull = z.string().trim().max(300).nullable().default(null);
+const notaONull = numero(z.number().min(1).max(7)).nullable().default(null);
+const texto300 = z.string().trim().min(1).transform((s) => s.slice(0, 300));
 
 export const programaExtraidoSchema = z.object({
   curso: z.object({
@@ -40,31 +53,37 @@ export const programaExtraidoSchema = z.object({
       z.object({
         nombre: z.string().trim().min(1).max(80),
         tipo: tipoEvaluacion,
-        ponderacion_total: z.number().gt(0).max(100),
-        cantidad: z.number().int().min(1).max(20),
+        ponderacion_total: numero(z.number().gt(0).max(100)),
+        cantidad: numero(z.number().int().min(1).max(20)).default(1),
       })
     )
     .max(30),
-  escala: z.object({
-    nota_minima: notaONull,
-    nota_maxima: notaONull,
-    nota_aprobacion: notaONull,
-    exigencia_pct: z.number().gt(0).max(100).nullable(),
-  }),
-  examen: z.object({ nota_eximicion: notaONull, nota_minima_para_rendir: notaONull }).nullable(),
-  decimas_totales: z.number().min(0).max(3).nullable(),
-  asistencia_minima_pct: z.number().min(0).max(100).nullable(),
+  escala: z
+    .object({
+      nota_minima: notaONull,
+      nota_maxima: notaONull,
+      nota_aprobacion: notaONull,
+      exigencia_pct: numero(z.number().gt(0).max(100)).nullable().default(null),
+    })
+    .default({ nota_minima: null, nota_maxima: null, nota_aprobacion: null, exigencia_pct: null }),
+  examen: z.object({ nota_eximicion: notaONull, nota_minima_para_rendir: notaONull }).nullable().default(null),
+  decimas_totales: numero(z.number().min(0).max(3)).nullable().default(null),
+  asistencia_minima_pct: numero(z.number().min(0).max(100)).nullable().default(null),
   restricciones: z
     .array(
       z.object({
         tipo_evaluacion: tipoEvaluacion,
-        nota_minima: z.number().min(1).max(7),
+        nota_minima: numero(z.number().min(1).max(7)),
         criterio: z.enum(["promedio", "cada_una"]).catch("promedio"),
         descripcion: z.string().trim().max(300).catch(""),
       })
     )
-    .max(10),
-  supuestos: z.array(z.string().trim().min(1).max(300)).max(15),
+    .max(10)
+    .default([]),
+  supuestos: z
+    .array(texto300)
+    .default([])
+    .transform((lista) => lista.slice(0, 15)),
 });
 
 export type ProgramaExtraido = z.infer<typeof programaExtraidoSchema>;

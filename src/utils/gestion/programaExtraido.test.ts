@@ -22,6 +22,25 @@ describe("parsearRespuestaIa", () => {
     expect(r.ok && r.datos.evaluaciones.map((e) => e.tipo)).toEqual(["presentacion", "otro"]);
   });
 
+  it("tolera números como texto y secciones opcionales ausentes (típico de modelos abiertos)", () => {
+    const r = parsearRespuestaIa(
+      JSON.stringify({
+        curso: { nombre: "Curso", codigo: "CIT3000" },
+        evaluaciones: [
+          { nombre: "Solemne", tipo: "solemne", ponderacion_total: "62,5%", cantidad: "2" },
+          { nombre: "Examen", tipo: "examen", ponderacion_total: "37.5" },
+        ],
+        escala: { nota_minima: "1,0", nota_maxima: 7, nota_aprobacion: "4", exigencia_pct: "60%" },
+      })
+    );
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    expect(r.datos.evaluaciones.map((e) => [e.ponderacion_total, e.cantidad])).toEqual([[62.5, 2], [37.5, 1]]);
+    expect(r.datos.escala).toEqual({ nota_minima: 1, nota_maxima: 7, nota_aprobacion: 4, exigencia_pct: 60 });
+    expect(r.datos.curso.seccion).toBeNull();
+    expect([r.datos.examen, r.datos.decimas_totales, r.datos.restricciones, r.datos.supuestos]).toEqual([null, null, [], []]);
+  });
+
   it("rechaza texto sin JSON, JSON roto o tipos incorrectos con un mensaje útil", () => {
     expect(parsearRespuestaIa("No pude leer el programa.")).toEqual({ ok: false, error: "La respuesta no contiene un objeto JSON." });
     expect(parsearRespuestaIa("{ curso: 1 ")).toMatchObject({ ok: false });

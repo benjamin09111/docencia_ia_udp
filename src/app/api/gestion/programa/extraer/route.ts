@@ -31,6 +31,10 @@ export async function POST(req: NextRequest) {
   if ("response" in auth) return auth.response;
 
   try {
+    // Rechaza envíos demasiado grandes antes de leerlos en memoria (margen para el multipart).
+    if (Number(req.headers.get("content-length") || 0) > MAX_BYTES + 64 * 1024) {
+      return jsonSinCache({ error: "El PDF debe pesar menos de 4 MB." }, 413);
+    }
     const form = await req.formData().catch(() => null);
     const archivo = form?.get("programa");
     if (!(archivo instanceof File)) return jsonSinCache({ error: "Adjunta el PDF del programa del curso." }, 400);
