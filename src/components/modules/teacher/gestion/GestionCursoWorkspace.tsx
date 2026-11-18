@@ -9,6 +9,7 @@ import { mensajeDeError, obtenerCursoApi, type CursoDetalle } from "@/services/g
 import { EncabezadoCurso } from "./EncabezadoCurso";
 import { PanelConfiguracion } from "./PanelConfiguracion";
 import { PanelAlumnos } from "./PanelAlumnos";
+import { PanelNotas } from "./PanelNotas";
 import { Aviso } from "./piezasFormulario";
 
 export type PestanaCurso = "notas" | "alumnos" | "configuracion";
@@ -26,7 +27,7 @@ export const GestionCursoWorkspace: React.FC<{ cursoId: string }> = ({ cursoId }
   const router = useRouter();
   const [detalle, setDetalle] = useState<CursoDetalle | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [pestana, setPestana] = useState<PestanaCurso>("configuracion");
+  const [pestana, setPestana] = useState<PestanaCurso>("notas");
 
   const cargar = useCallback(async () => {
     try {
@@ -48,8 +49,8 @@ export const GestionCursoWorkspace: React.FC<{ cursoId: string }> = ({ cursoId }
         return <PanelConfiguracion detalle={detalle} onGuardado={cargar} />;
       case "alumnos":
         return <PanelAlumnos cursoId={detalle.curso.id} />;
-      default:
-        return <Aviso tipo="info">Esta sección se habilita en la siguiente etapa del módulo.</Aviso>;
+      case "notas":
+        return <PanelNotas curso={detalle.curso} onIrAAlumnos={() => setPestana("alumnos")} />;
     }
   }, [detalle, pestana, cargar]);
 

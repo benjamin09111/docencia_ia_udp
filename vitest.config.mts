@@ -6,7 +6,7 @@ export default defineConfig({
     alias: { "@": fileURLToPath(new URL("./src", import.meta.url)) },
   },
   test: {
-    include: ["src/**/*.test.ts"],
-    environment: "node",
+    include: ["src/**/*.test.ts", "src/**/*.test.tsx"],
+    environment: "node", // los tests de componentes usan `// @vitest-environment happy-dom`
   },
 });

@@ -1,6 +1,7 @@
 import type { Alumno, AlumnoNuevo, CursoConEvaluaciones, CursoResumen } from "@/types/gestion";
 import type { CursoInput } from "@/utils/gestion/esquemasCurso";
 import type { CursoBorrador } from "@/utils/gestion/borradorCurso";
+import type { GuardarNotasInput } from "@/utils/gestion/esquemasNotas";
 
 /**
  * Cliente del NAVEGADOR para /api/gestion (Módulo 1).
@@ -112,4 +113,23 @@ export async function actualizarAlumnoApi(cursoId: string, alumnoId: string, dat
 
 export async function eliminarAlumnoApi(cursoId: string, alumnoId: string): Promise<void> {
   await pedirJson<{ ok: true }>(urlAlumnos(cursoId, alumnoId), { method: "DELETE" });
+}
+
+// ── Notas ────────────────────────────────────────────────────────────────────
+
+export interface NotaApi {
+  evaluacion_id: string;
+  alumno_id: string;
+  valor: number;
+  origen: string;
+}
+
+const urlNotas = (cursoId: string) => `/api/gestion/cursos/${encodeURIComponent(cursoId)}/notas`;
+
+export async function obtenerNotasApi(cursoId: string): Promise<{ alumnos: Alumno[]; notas: NotaApi[] }> {
+  return pedirJson(urlNotas(cursoId));
+}
+
+export async function guardarNotasApi(cursoId: string, cambios: GuardarNotasInput): Promise<void> {
+  await pedirJson<{ ok: true }>(urlNotas(cursoId), { method: "PUT", body: JSON.stringify(cambios) });
 }
