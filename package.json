@@ -8,7 +8,9 @@
     "start": "next start",
     "lint": "next lint",
     "security:scan": "node scripts/security/check-no-pii.mjs",
-    "test": "vitest run"
+    "test": "vitest run",
+    "seed:m1": "node --env-file=.env.local scripts/modulo1/seed-demo.mjs",
+    "seed:m1:archivos": "node scripts/modulo1/generar-archivos-demo.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.117.2",

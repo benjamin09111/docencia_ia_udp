@@ -1,0 +1,94 @@
+%PDF-1.4
+%âãÏÓ
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [7 0 R 9 0 R] /Count 2 >>
+endobj
+3 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>
+endobj
+4 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>
+endobj
+5 0 obj
+<< /Title (Programa Arquitectura de Software \(demo\)) /Producer (Act-IA demo) >>
+endobj
+6 0 obj
+<< /Length 3726 >>
+stream
+BT /F2 16 Tf 56 780 Td (Programa de Asignatura) Tj ET
+BT /F2 12 Tf 56 750 Td (Arquitectura de Software \(CIT3000\) - Sección 2) Tj ET
+BT /F1 10 Tf 56 730 Td (Universidad Diego Portales - Facultad de Ingeniería y Ciencias) Tj ET
+BT /F1 10 Tf 56 716 Td (Escuela de Informática y Telecomunicaciones) Tj ET
+BT /F1 10 Tf 56 702 Td (Semestre: 2026-2 \(Primavera\)) Tj ET
+BT /F1 10 Tf 56 688 Td (Docente: Prof. Demo Act-IA - correo de contacto: docente.demo@ejemplo.test) Tj ET
+BT /F1 10 Tf 56 674 Td (Créditos: 6 SCT. Sesiones semanales: 2 cátedras y 1 ayudantía.) Tj ET
+BT /F1 10 Tf 56 660 Td (Documento ficticio creado para la demostración del proyecto Act-IA.) Tj ET
+BT /F2 12 Tf 56 626 Td (1. Descripción de la asignatura) Tj ET
+BT /F1 10 Tf 56 606 Td (La asignatura introduce los fundamentos de la arquitectura de software: atributos de calidad,) Tj ET
+BT /F1 10 Tf 56 592 Td (escenarios, tácticas, patrones arquitectónicos y documentación de vistas. El estudiante diseña,) Tj ET
+BT /F1 10 Tf 56 578 Td (evalúa y justifica arquitecturas para sistemas de mediana complejidad, considerando los) Tj ET
+BT /F1 10 Tf 56 564 Td (trade-offs entre rendimiento, disponibilidad, seguridad y mantenibilidad.) Tj ET
+BT /F2 12 Tf 56 530 Td (2. Resultados de aprendizaje) Tj ET
+BT /F1 10 Tf 56 510 Td (- Especificar requisitos de calidad mediante escenarios medibles.) Tj ET
+BT /F1 10 Tf 56 496 Td (- Seleccionar tácticas y patrones arquitectónicos justificando sus consecuencias.) Tj ET
+BT /F1 10 Tf 56 482 Td (- Documentar una arquitectura con vistas de contexto, contenedores y componentes \(modelo C4\).) Tj ET
+BT /F1 10 Tf 56 468 Td (- Evaluar arquitecturas alternativas con criterios explícitos.) Tj ET
+BT /F2 12 Tf 56 434 Td (3. Unidades) Tj ET
+BT /F1 10 Tf 56 414 Td (- Unidad 1: Atributos de calidad y escenarios.) Tj ET
+BT /F1 10 Tf 56 400 Td (- Unidad 2: Tácticas de disponibilidad, rendimiento y seguridad.) Tj ET
+BT /F1 10 Tf 56 386 Td (- Unidad 3: Patrones: capas, microservicios, orientado a eventos.) Tj ET
+BT /F1 10 Tf 56 372 Td (- Unidad 4: Documentación y evaluación de arquitecturas.) Tj ET
+BT /F2 12 Tf 56 338 Td (4. Metodología) Tj ET
+BT /F1 10 Tf 56 318 Td (Clases expositivas con discusión de casos, talleres prácticos en ayudantía y un proyecto) Tj ET
+BT /F1 10 Tf 56 304 Td (aplicado en tres entregas \(tareas\).) Tj ET
+BT /F2 12 Tf 56 270 Td (5. Evaluación) Tj ET
+BT /F1 10 Tf 56 250 Td (La nota final \(NF\) del curso se calcula como: NF = 80% Nota de Presentación \(NP\) + 20% Examen.) Tj ET
+BT /F1 10 Tf 56 236 Td (La Nota de Presentación se compone de:) Tj ET
+BT /F1 10 Tf 56 222 Td (- Solemne 1: 31,25% de la NP.) Tj ET
+BT /F1 10 Tf 56 208 Td (- Solemne 2: 31,25% de la NP.) Tj ET
+BT /F1 10 Tf 56 194 Td (- Tareas: 3 tareas de igual ponderación, que en conjunto valen 37,5% de la NP.) Tj ET
+BT /F1 10 Tf 56 180 Td (Escala de notas de 1,0 a 7,0, con un 60% de exigencia. La nota mínima de aprobación es 4,0.) Tj ET
+BT /F1 10 Tf 56 166 Td (Eximición: los estudiantes con NP igual o superior a 5,5 se eximen del examen y su nota final es) Tj ET
+BT /F1 10 Tf 56 152 Td (la NP.) Tj ET
+BT /F1 10 Tf 56 138 Td (Requisito de aprobación: el promedio de las solemnes debe ser igual o superior a 4,0. Si no se) Tj ET
+BT /F1 10 Tf 56 124 Td (cumple, el estudiante reprueba la asignatura, independiente de su nota final.) Tj ET
+BT /F1 10 Tf 56 110 Td (Décimas: las actividades formativas de ayudantía otorgan décimas, hasta un máximo de 5 décimas) Tj ET
+BT /F1 10 Tf 56 96 Td (\(0,5 puntos\) en el semestre, que se suman a la nota final.) Tj ET
+BT /F1 10 Tf 56 82 Td (Asistencia: se exige un 75% de asistencia mínima a cátedras. Quien no cumpla queda Reprobado por) Tj ET
+BT /F1 10 Tf 56 68 Td (Inasistencia \(RI\).) Tj ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 6 0 R >>
+endobj
+8 0 obj
+<< /Length 258 >>
+stream
+BT /F2 12 Tf 56 766 Td (6. Bibliografía) Tj ET
+BT /F1 10 Tf 56 746 Td (- Bass, L., Clements, P. y Kazman, R. Software Architecture in Practice. 4a edición.) Tj ET
+BT /F1 10 Tf 56 732 Td (- Richards, M. y Ford, N. Fundamentals of Software Architecture.) Tj ET
+endstream
+endobj
+9 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 8 0 R >>
+endobj
+xref
+0 10
+0000000000 65535 f 
+0000000015 00000 n 
+0000000064 00000 n 
+0000000127 00000 n 
+0000000224 00000 n 
+0000000326 00000 n 
+0000000423 00000 n 
+0000004201 00000 n 
+0000004337 00000 n 
+0000004646 00000 n 
+trailer
+<< /Size 10 /Root 1 0 R /Info 5 0 R >>
+startxref
+4782
+%%EOF
