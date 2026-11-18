@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { requireRole } from "./auth";
+import { invalidRequestOriginResponse, isTrustedMutation } from "./requestSecurity";
 import { AdminConfigError } from "./supabaseAdmin";
 import type { SessionClaims } from "./session";
 import type { CursoConEvaluaciones } from "@/types/gestion";
@@ -23,8 +24,17 @@ export function jsonSinCache(cuerpo: unknown, status = 200): NextResponse {
 
 const noEncontrado = (): Rechazo => ({ response: jsonSinCache({ error: "Curso no encontrado." }, 404) });
 
-/** Sesión de docente o admin con userId (necesario para ser dueño de cursos). */
+const METODOS_DE_LECTURA = new Set(["GET", "HEAD", "OPTIONS"]);
+
+/**
+ * Sesión de docente o admin con userId (necesario para ser dueño de cursos).
+ * Las peticiones que modifican datos además deben venir del mismo origen (anti-CSRF),
+ * igual que las rutas de sesión y Canvas (requestSecurity.ts).
+ */
 export async function requireDocente(req: NextRequest): Promise<{ session: SessionClaims } | Rechazo> {
+  if (!METODOS_DE_LECTURA.has(req.method) && !isTrustedMutation(req)) {
+    return { response: invalidRequestOriginResponse() };
+  }
   const auth = await requireRole(req, ["docente", "admin"]);
   if ("response" in auth) return auth;
   if (!auth.session.userId) return { response: jsonSinCache({ error: "Sesión requerida." }, 401) };
