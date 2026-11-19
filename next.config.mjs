@@ -35,6 +35,9 @@ if (process.env.NODE_ENV === "production") {
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  experimental: {
+    agentUpgrade: "security",
+  },
   serverExternalPackages: ["pdfjs-dist"],
   outputFileTracingIncludes: {
     "/api/actividad-correccion/*": [
