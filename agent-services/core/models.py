@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import List, Optional, Dict, Any
+from typing import Literal, List, Optional, Dict, Any
 from pydantic import BaseModel, Field
 
 class AgentLevel(str, Enum):
@@ -61,6 +61,7 @@ class RubricItem(BaseModel):
 class SubmissionEvaluationRequest(BaseModel):
     student_solution: str
     assignment_title: str
+    assignment_context: str = ""
     course_id: str = "course:cit3000"
     rubric: List[RubricItem]
     max_decimas: float = 0.6
@@ -73,6 +74,8 @@ class CriteriaScore(BaseModel):
     comentario: str
 
 class SubmissionEvaluationResponse(BaseModel):
+    metodo: Literal["ia", "heuristica"] = "heuristica"
+    resumen_entrega: str = ""
     nota_sugerida: float
     decimas_sugeridas: float
     resumen_feedback: str
