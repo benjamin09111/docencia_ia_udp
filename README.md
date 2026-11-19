@@ -11,3 +11,17 @@ Repositorio de documentación, investigación estratégica y arquitectura técni
 - **[`contexto.md`](./contexto.md)**: Documento de postulación oficial al *Fondo Estudiantil Talento IA - UDP* para el proyecto **Act-IA** (agentes de IA para revisión y pautas en entregas iterativas).
 - **[`OTRA_APP.md`](./OTRA_APP.md)**: Especificación funcional y modelo de seguridad anti-fraude para **PassLink / AsistLink** (sistema inteligente de control de asistencia presencial e híbrida).
 - **[`new_info.md`](./new_info.md)**: Minuta de dolores reales, requerimientos levantados y validación con el profesor de CREA-UDP.
+
+### Piloto de Actividad y Corrección
+
+En **Docencia → Arquitectura de Software (CIT3000) → Actividades → Actividad y Corrección**
+se puede publicar una tarea con pauta, compartir su enlace de entrega y aprobar la corrección
+desde el historial. El estudiante asignado al curso abre el mismo enlace para subir su PDF
+y consultar el resultado publicado.
+
+Para levantarlo en un entorno de pruebas, usa Node 22.13 o superior, aplica
+`20261116_activity_review_pilot.sql` al Supabase del entorno y configura las sesiones de la app.
+Ejecuta `agent-services` con la misma `AGENT_SERVICE_API_KEY` que usa Next.js y configura
+`AGENT_SERVICES_URL`. La corrección asistida requiere habilitar `AI_EXTERNAL_PROCESSING_ENABLED`
+en Next.js. Con `OPENROUTER_API_KEY` en el servicio se usa corrección semántica. El servicio
+también admite corrección heurística para demostraciones con entregas ficticias.

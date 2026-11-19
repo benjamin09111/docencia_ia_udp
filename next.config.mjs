@@ -35,6 +35,14 @@ if (process.env.NODE_ENV === "production") {
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  serverExternalPackages: ["pdfjs-dist"],
+  outputFileTracingIncludes: {
+    "/api/actividad-correccion/*": [
+      "./node_modules/pdfjs-dist/standard_fonts/**/*",
+      "./node_modules/pdfjs-dist/cmaps/**/*",
+      "./node_modules/pdfjs-dist/legacy/build/pdf.worker.mjs",
+    ],
+  },
   poweredByHeader: false,
   productionBrowserSourceMaps: false,
   // Módulo 1: los prompts de IA viven en /prompts y la ruta los lee en tiempo de ejecución.

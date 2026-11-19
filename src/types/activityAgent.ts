@@ -1,4 +1,5 @@
 import { InstruccionItem } from "./actividadesFormativas";
+import type { ActivityCriterion } from "./activityReview";
 
 export interface ActivityAgentRequest {
   courseCode: string;
@@ -16,6 +17,8 @@ export interface ActivityAgentDraft {
   content: string;
   instructions: InstruccionItem[];
   methodologyId?: string;
+  rubric?: ActivityCriterion[];
+  source?: "ia" | "plantilla";
   pointsPossible: number;
   assessment: "decimas" | "nota";
   decimas: string;

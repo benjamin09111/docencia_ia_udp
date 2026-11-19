@@ -15,6 +15,8 @@ type PyDesignResponse = {
   description?: string;
   instructions?: Array<{ paso: number; titulo: string; descripcion: string; puntaje: number }>;
   decimas_sugeridas?: number;
+  rubric?: Array<{ criterio: string; puntaje_max: number; descriptores: string[] }>;
+  model_used?: string;
 };
 
 export async function POST(req: NextRequest) {
@@ -59,8 +61,15 @@ export async function POST(req: NextRequest) {
     );
 
     if (upstream.ok && upstream.data.title && Array.isArray(upstream.data.instructions)) {
+      const fromTemplate = !upstream.data.model_used || upstream.data.model_used.includes("deterministic fallback");
       const draft: ActivityAgentDraft = {
         title: upstream.data.title,
+        source: fromTemplate ? "plantilla" : "ia",
+        rubric: !fromTemplate ? upstream.data.rubric?.map(item => ({
+          name: item.criterio,
+          description: item.descriptores.join("\n"),
+          points: item.puntaje_max,
+        })) : undefined,
         description: upstream.data.description || "",
         content: body.content,
         instructions: upstream.data.instructions.map((step, idx) => ({
@@ -80,6 +89,7 @@ export async function POST(req: NextRequest) {
 
     const draft: ActivityAgentDraft = {
       title: `Taller: ${body.objective.trim()}`,
+      source: "plantilla",
       description: `Actividad ${modality} de ${body.duration || "45 minutos"}, orientada a ${body.objective.trim()}. Se alinea con ${content} del programa oficial de ${body.courseName}.`,
       content: body.content,
       instructions: [
